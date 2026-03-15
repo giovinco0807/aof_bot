@@ -749,6 +749,7 @@ class PacketCapture:
             hs.bb_seat = -1
             hs.hero_acted = False
             hs.last_auto_play_time = 0.0
+            hs.pre_folded = False
 
             # Emit GUI event: new hand started (even in spectator mode)
             self._emit_gui_hand_update(hs)
