@@ -782,7 +782,7 @@ class PacketCapture:
                 # here rather than waiting for an opponent's ActionBRC.
                 # -------------------------------------------------------
                 if self.enable_solver and hs.is_aof:
-                    self._check_solver_advice(hs)
+                    self._execute_async(self._check_solver_advice, hs)
 
                 # Emit GUI event: new hand with hero cards
                 self._emit_gui_hand_update(hs)
@@ -814,7 +814,7 @@ class PacketCapture:
             print(f"  Hero cards: {' '.join(cards)} {'[AoF]' if is_allin else ''}")
 
             if self.enable_solver and hs.is_aof:
-                self._check_solver_advice(hs)
+                self._execute_async(self._check_solver_advice, hs)
 
             self._emit_gui_hand_update(hs)
 
@@ -912,7 +912,7 @@ class PacketCapture:
         # Skip if this ActionBRC is hero's own action (already acted guard
         # inside _check_solver_advice handles it, but skip here for clarity).
         if self.enable_solver and hs.hero_cards and hs.is_aof and not is_hero:
-            self._check_solver_advice(hs)
+            self._execute_async(self._check_solver_advice, hs)
 
         # Emit GUI event: action update
         self._emit_gui_hand_update(hs)
@@ -942,7 +942,7 @@ class PacketCapture:
 
         # Write ALL showdown cards for Android cross-verification
         if all_cards:
-            self._write_showdown_cards(all_cards, self.hand_count)
+            self._execute_async(self._write_showdown_cards, all_cards, self.hand_count)
 
     def _on_winner(self, table_id: int, pkt: dict):
         hs = self._get_table(table_id)
@@ -1095,7 +1095,7 @@ class PacketCapture:
                 name = room.get("roomName", "")
                 print(f"  >>> Room {rid} \"{name}\" has {current} player(s) - auto-leaving! <<<")
                 try:
-                    self._auto_click_leave()
+                    self._execute_async(self._auto_click_leave)
                 except Exception as e:
                     print(f"  [AutoLeave] ERROR: {e}")
                     import traceback
@@ -1498,7 +1498,7 @@ class PacketCapture:
         ofc.hand_complete = True
 
         # Save to DB
-        self._save_ofc_hand(ofc, player_data)
+        self._execute_async(self._save_ofc_hand, ofc, player_data)
 
     def _on_pine_sitdown(self, table_id: int, pkt: dict):
         ofc = self._get_ofc_table(table_id)
