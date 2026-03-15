@@ -995,8 +995,8 @@ class PacketCapture:
         if self.hero_uid and hs.hero_seat >= 0:
             self.hero_hands_played += 1
 
-        # Save hand to database
-        self._save_hand(hs)
+        # Save hand to database (non-blocking: offload to background thread)
+        self._execute_async(self._save_hand, hs)
 
         # Check auto-exit conditions
         self._check_auto_exit(hs, profits)
