@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>AoF GTO Range Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Consolas, monospace; background: #1a1a2e; color: #eee; padding: 20px; }
+h1 { text-align: center; margin-bottom: 16px; font-size: 22px; color: #e94560; }
+.controls { display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+.controls label { font-size: 14px; color: #aaa; }
+.controls select { background: #16213e; color: #eee; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; font-size: 14px; }
+.charts-container { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+.chart-panel { background: #16213e; border-radius: 8px; padding: 16px; border: 1px solid #333; }
+.chart-title { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #e94560; }
+.chart-subtitle { text-align: center; font-size: 11px; color: #888; margin-bottom: 10px; }
+.grid { display: grid; grid-template-columns: repeat(14, 1fr); gap: 1px; }
+.cell {
+  width: 38px; height: 32px; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: bold; border-radius: 2px; cursor: default; position: relative;
+}
+.cell.header { background: transparent; color: #888; font-size: 11px; }
+.cell.hand { transition: transform 0.1s; }
+.cell.hand:hover { transform: scale(1.15); z-index: 10; outline: 2px solid #fff; }
+.cell .freq { font-size: 8px; position: absolute; bottom: 1px; right: 2px; color: rgba(0,0,0,0.6); }
+.legend { display: flex; gap: 4px; align-items: center; justify-content: center; margin-top: 12px; font-size: 11px; }
+.legend-bar { width: 200px; height: 14px; border-radius: 3px; }
+.legend span { color: #888; }
+.summary { text-align: center; font-size: 12px; color: #aaa; margin-top: 6px; }
+.tooltip {
+  display: none; position: fixed; background: #0f3460; color: #eee; padding: 8px 12px;
+  border-radius: 6px; font-size: 12px; z-index: 100; pointer-events: none; border: 1px solid #e94560;
+}
+</style>
+</head>
+<body>
+<h1>AoF GTO Push/Fold Range Charts</h1>
+<div class="controls">
+  <label>Players: <select id="selPlayers"><option value="2">2 (HU)</option><option value="3">3-Max</option><option value="4" selected>4-Max</option></select></label>
+  <label>Stack: <select id="selStack"></select></label>
+  <label>Rake: <select id="selRake"><option value="">No Rake</option><option value="_rake2pct" selected>2% / 3BB cap</option></select></label>
+</div>
+<div class="charts-container" id="chartsContainer"></div>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+const STACKS = [1,2,3,4,5,6,7,8,10,12,15,20];
+
+function handName(r, c) {
+  if (r === c) return RANKS[r] + RANKS[c];
+  if (r < c) return RANKS[r] + RANKS[c] + 's';
+  return RANKS[c] + RANKS[r] + 'o';
+}
+
+function combos(r, c) {
+  if (r === c) return 6;
+  if (r < c) return 4;
+  return 12;
+}
+
+function freqColor(f) {
+  if (f < 0.01) return 'rgba(20,30,60,0.8)';
+  const r = Math.round(30 + 200 * f);
+  const g = Math.round(60 + 140 * (1 - Math.abs(f - 0.5) * 2));
+  const b = Math.round(80 * (1 - f));
+  return `rgb(${r},${g},${b})`;
+}
+
+function textColor(f) {
+  return f > 0.3 ? '#000' : '#aaa';
+}
+
+const selStack = document.getElementById('selStack');
+STACKS.forEach(s => {
+  const opt = document.createElement('option');
+  opt.value = s; opt.textContent = s + 'BB';
+  if (s === 8) opt.selected = true;
+  selStack.appendChild(opt);
+});
+
+async function loadChart() {
+  const np = document.getElementById('selPlayers').value;
+  const st = selStack.value;
+  const rake = document.getElementById('selRake').value;
+  const filename = `aof_${np}p_${st}bb${rake}.json`;
+
+  let data;
+  try {
+    const resp = await fetch(`/charts/${filename}`);
+    if (!resp.ok) throw new Error('Not found');
+    data = await resp.json();
+  } catch(e) {
+    document.getElementById('chartsContainer').innerHTML =
+      `<p style="color:#e94560">Chart not found: ${filename}</p>`;
+    return;
+  }
+
+  const container = document.getElementById('chartsContainer');
+  container.innerHTML = '';
+
+  for (const chart of data.charts) {
+    const freqMap = {};
+    for (const entry of chart.entries) {
+      freqMap[entry.hand] = entry.allin_freq;
+    }
+
+    const panel = document.createElement('div');
+    panel.className = 'chart-panel';
+
+    const title = document.createElement('div');
+    title.className = 'chart-title';
+    const posLabel = chart.position;
+    const priorLabel = chart.prior_actions ?
+      ` | Prior: ${chart.prior_actions.split('').map(c => c==='A'?'Push':'Fold').join(' \u2192 ')}` : '';
+    title.textContent = `${posLabel}${priorLabel}`;
+    panel.appendChild(title);
+
+    const subtitle = document.createElement('div');
+    subtitle.className = 'chart-subtitle';
+    subtitle.textContent = chart.description;
+    panel.appendChild(subtitle);
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    const corner = document.createElement('div');
+    corner.className = 'cell header';
+    grid.appendChild(corner);
+    for (let c = 0; c < 13; c++) {
+      const h = document.createElement('div');
+      h.className = 'cell header';
+      h.textContent = RANKS[c];
+      grid.appendChild(h);
+    }
+
+    let pushCombos = 0, totalCombos = 0, mixedCount = 0;
+
+    for (let r = 0; r < 13; r++) {
+      const rh = document.createElement('div');
+      rh.className = 'cell header';
+      rh.textContent = RANKS[r];
+      grid.appendChild(rh);
+
+      for (let c = 0; c < 13; c++) {
+        const name = handName(r, c);
+        const freq = freqMap[name] !== undefined ? freqMap[name] : 0.5;
+        const cb = combos(r, c);
+        totalCombos += cb;
+        pushCombos += freq * cb;
+        if (freq > 0.05 && freq < 0.95) mixedCount++;
+
+        const cell = document.createElement('div');
+        cell.className = 'cell hand';
+        cell.style.backgroundColor = freqColor(freq);
+        cell.style.color = textColor(freq);
+
+        if (freq > 0.95) {
+          cell.textContent = name;
+        } else if (freq < 0.05) {
+          cell.textContent = name;
+          cell.style.opacity = '0.5';
+        } else {
+          cell.innerHTML = `${name}<span class="freq">${Math.round(freq*100)}</span>`;
+        }
+
+        if (r === c) cell.style.borderBottom = '2px solid rgba(255,255,255,0.3)';
+        else if (r < c) cell.title = 'suited';
+
+        cell.addEventListener('mouseenter', (e) => {
+          const tt = document.getElementById('tooltip');
+          const type = r === c ? 'Pair' : (r < c ? 'Suited' : 'Offsuit');
+          tt.innerHTML = `<b>${name}</b> (${type}, ${cb} combos)<br>Push: <b>${(freq*100).toFixed(1)}%</b>`;
+          tt.style.display = 'block';
+          tt.style.left = (e.clientX + 12) + 'px';
+          tt.style.top = (e.clientY - 40) + 'px';
+        });
+        cell.addEventListener('mouseleave', () => {
+          document.getElementById('tooltip').style.display = 'none';
+        });
+        cell.addEventListener('mousemove', (e) => {
+          const tt = document.getElementById('tooltip');
+          tt.style.left = (e.clientX + 12) + 'px';
+          tt.style.top = (e.clientY - 40) + 'px';
+        });
+
+        grid.appendChild(cell);
+      }
+    }
+
+    panel.appendChild(grid);
+
+    const legend = document.createElement('div');
+    legend.className = 'legend';
+    legend.innerHTML = `<span>Fold</span>
+      <div class="legend-bar" style="background: linear-gradient(to right, rgba(20,30,60,0.8), ${freqColor(0.25)}, ${freqColor(0.5)}, ${freqColor(0.75)}, ${freqColor(1.0)})"></div>
+      <span>Push</span>`;
+    panel.appendChild(legend);
+
+    const summary = document.createElement('div');
+    summary.className = 'summary';
+    const pushPct = (pushCombos / totalCombos * 100).toFixed(1);
+    const pureCount = chart.entries.filter(e => e.allin_freq > 0.5).length;
+    summary.textContent = `Range: ${pushPct}% (${pureCount}/169 hands push >50%, ${mixedCount} mixed)`;
+    panel.appendChild(summary);
+
+    container.appendChild(panel);
+  }
+}
+
+document.getElementById('selPlayers').addEventListener('change', loadChart);
+document.getElementById('selStack').addEventListener('change', loadChart);
+document.getElementById('selRake').addEventListener('change', loadChart);
+
+loadChart();
+</script>
+</body>
+</html>

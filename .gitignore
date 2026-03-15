@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Rust
+solver/target/
+solver/solver_src.zip
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AI Assistants
+.claude/
+.gemini/
+
+# Data files (databases, logs, large binaries)
+automation/data/*.db
+automation/data/*.db-wal
+automation/data/*.db-shm
+automation/data/*.db-journal
+automation/data/*.csv
+automation/data/*.json
+automation/data/*.png
+automation/data/card_samples/
+automation/data/debug/
+data/
+
+# Debug / temp screenshots in root
+*.png
+*.log
+
+# Generated HTML
+sim_results.html
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Automation assets (debug images, large screenshots)
+automation/assets/debug_*.png
+automation/assets/screenshot_ref.png
+automation/assets/calibrate.png
