@@ -113,14 +113,24 @@ class PcController:
         print(f"  [PC] pygetwindow not available, using absolute coordinates")
         return True
 
-    def _find_button_by_image(self, btn_name: str):
+    def _get_table_count(self) -> int:
+        """Auto-detect 1-table or 2-table mode based on window width."""
+        win_rect = self._get_window_rect()
+        if win_rect:
+            ww = win_rect[2]
+            # 1-table: ~1064px, 2-table: ~1600px+
+            if ww > 1200:
+                return 2
+        return 1
+
+    def _find_button_by_image(self, btn_name: str, table_index: int = 0):
         """Find button using real-time color detection within PPPoker window.
         
         FOLD = red/dark-red button
         ALL-IN = gold/yellow button
         
-        Scans bottom 20% of the window for colored rectangular regions.
-        Falls back to template matching if color detection fails.
+        For 2-table mode: splits the window horizontally and scans only
+        the half corresponding to table_index (0=left, 1=right).
         """
         try:
             import cv2
@@ -132,10 +142,26 @@ class PcController:
                 return None
             wx, wy, ww, wh = win_rect
 
-            # Screenshot the bottom 50% of the window
+            # Determine scan region based on table count
+            num_tables = self._get_table_count()
+            if num_tables == 2:
+                # 2-table layout: [Lobby ~30% | Table1 ~35% | Table2 ~35%]
+                # Skip the lobby (~30% left), then split remaining into 2
+                lobby_w = int(ww * 0.30)
+                table_area_w = ww - lobby_w
+                half_w = table_area_w // 2
+                scan_x = lobby_w + (table_index * half_w)
+                scan_w = half_w
+                print(f"  [PC] 2-table mode: scanning table {table_index} "
+                      f"x={scan_x}-{scan_x + scan_w} (window={ww}px)")
+            else:
+                scan_x = 0
+                scan_w = ww
+
+            # Screenshot the bottom 50% of the scan region
             bottom_h = int(wh * 0.5)
             bottom_y = wh - bottom_h
-            region = (wx, wy + bottom_y, ww, bottom_h)
+            region = (wx + scan_x, wy + bottom_y, scan_w, bottom_h)
             screen_img = pyautogui.screenshot(region=region)
             screen = cv2.cvtColor(np.array(screen_img), cv2.COLOR_RGB2BGR)
             hsv = cv2.cvtColor(screen, cv2.COLOR_BGR2HSV)
@@ -183,13 +209,14 @@ class PcController:
 
             if not candidates:
                 # Save debug images to understand why detection failed
-                debug_path = ASSETS_DIR / f"debug_{btn_name}_screen.png"
-                mask_path = ASSETS_DIR / f"debug_{btn_name}_mask.png"
+                debug_path = ASSETS_DIR / f"debug_{btn_name}_t{table_index}_screen.png"
+                mask_path = ASSETS_DIR / f"debug_{btn_name}_t{table_index}_mask.png"
                 cv2.imwrite(str(debug_path), screen)
                 cv2.imwrite(str(mask_path), mask)
                 n_contours = len(contours)
                 mask_pixels = cv2.countNonZero(mask)
-                print(f"  [PC] {btn_name}: no candidates (contours={n_contours}, mask_px={mask_pixels})")
+                print(f"  [PC] {btn_name} (table {table_index}): no candidates "
+                      f"(contours={n_contours}, mask_px={mask_pixels})")
                 print(f"  [PC] Debug saved: {debug_path}")
                 # Fall back to template matching
                 return self._find_button_by_template(btn_name)
@@ -199,9 +226,9 @@ class PcController:
             area, bx, by, bw, bh = candidates[0]
 
             # Center, converted to screen coordinates
-            cx = wx + bx + bw // 2
+            cx = wx + scan_x + bx + bw // 2
             cy = wy + bottom_y + by + bh // 2
-            print(f"  [PC] {btn_name}: color-detected at ({cx},{cy}) "
+            print(f"  [PC] {btn_name} (table {table_index}): color-detected at ({cx},{cy}) "
                   f"size={bw}x{bh} area={area}")
             return (cx, cy)
 
@@ -343,10 +370,10 @@ class PcController:
         """Get button position (image recognition or fixed coordinates)."""
         # Try image recognition first if enabled
         if self.config.get("use_image_recognition", True):
-            pos = self._find_button_by_image(btn_name) # image rec doesn't support multi-table cleanly yet
+            pos = self._find_button_by_image(btn_name, table_index)
             if pos:
                 return pos
-            print(f"  [PC] {btn_name}: image recognition failed, NOT clicking")
+            print(f"  [PC] {btn_name} (table {table_index}): image recognition failed, NOT clicking")
             return None
 
         # Fixed coordinates mode
