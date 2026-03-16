@@ -530,6 +530,14 @@ class PacketCapture:
         self.ofc_hands_saved = 0
         self.gui_queue = gui_queue  # Queue for sending structured data to GUI
 
+        # Cloud database (Supabase) for multi-PC hand sharing
+        self.cloud_db = None
+        try:
+            from cloud_db import CloudDB
+            self.cloud_db = CloudDB()
+        except Exception as e:
+            print(f"  [Cloud] Cloud DB not available: {e}")
+
     def _get_table(self, table_id: int) -> HandState:
         if table_id not in self.tables:
             self.tables[table_id] = HandState(table_id=table_id)
@@ -1640,6 +1648,13 @@ class PacketCapture:
 
         # Also send to API server for Rust-side player_stats (Bayesian model)
         self._send_hand_to_api(player_ids, actions, cards, hs)
+
+        # Cloud sync (Supabase)
+        if self.cloud_db and self.cloud_db.enabled:
+            try:
+                self.cloud_db.save_hand(record)
+            except Exception as e:
+                print(f"  [Cloud] Error: {e}")
 
     # ============ API Integration ============
 
