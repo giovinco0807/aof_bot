@@ -583,6 +583,7 @@ class PacketCapture:
 
         np = len(hs.seats)
         self._emit_gui("hand_update", {
+            "table_id": hs.table_id,
             "hand_num": self.hand_count,
             "num_players": np,
             "hero_cards": hs.hero_cards,
