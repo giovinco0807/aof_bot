@@ -558,8 +558,8 @@ class PacketCapture:
             return
         uid_map = self.seat_uid_map.get(hs.table_id, {})
         name_map = self.seat_name_map.get(hs.table_id, {})
-        # Show ALL known seats (union of current hand + persistent table seats)
-        all_sids = sorted(set(hs.seats.keys()) | set(uid_map.keys()))
+        # Only show seats participating in the current hand
+        all_sids = sorted(hs.seats.keys())
         seats_data = []
         for sid in all_sids:
             seat = hs.seats.get(sid)
