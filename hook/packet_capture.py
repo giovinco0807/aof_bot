@@ -2110,11 +2110,26 @@ class PacketCapture:
                     def do_gto_action():
                         import time
                         time.sleep(0.3)
-                        if should_push:
-                            self.adb.tap_allin(delay=True, table_index=tbl_idx)
-                        else:
-                            self.adb.tap_fold(delay=True, table_index=tbl_idx)
-                            time.sleep(3.0)
+                        max_retries = 3
+                        for attempt in range(max_retries):
+                            if getattr(hs, 'hero_acted', False):
+                                break  # Server confirmed action
+                            if getattr(hs, 'hand_complete', False):
+                                break  # Hand is over
+                            if attempt > 0:
+                                print(f"  [AutoPlay] Retry #{attempt} (no server confirmation yet)")
+                                time.sleep(0.5)  # Wait for button to appear
+                            if should_push:
+                                self.adb.tap_allin(delay=attempt == 0, table_index=tbl_idx)
+                            else:
+                                self.adb.tap_fold(delay=attempt == 0, table_index=tbl_idx)
+                            # Wait for server confirmation
+                            for _ in range(30):  # 3 seconds
+                                time.sleep(0.1)
+                                if getattr(hs, 'hero_acted', False) or getattr(hs, 'hand_complete', False):
+                                    break
+                        if not getattr(hs, 'hero_acted', False) and not getattr(hs, 'hand_complete', False):
+                            print(f"  [AutoPlay] WARNING: action not confirmed after {max_retries} attempts!")
                     self._execute_async(do_gto_action)
                     return
 
