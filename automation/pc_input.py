@@ -245,8 +245,10 @@ class PcController:
         """Fallback: find button using template matching."""
         btn = self.config["buttons"].get(btn_name, {})
         img_name = btn.get("image", "")
+        if not img_name:
+            return None
         img_path = ASSETS_DIR / img_name
-        if not img_path.exists():
+        if not img_path.is_file():
             return None
 
         try:
