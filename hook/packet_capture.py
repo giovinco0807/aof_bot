@@ -930,6 +930,17 @@ class PacketCapture:
         # Emit GUI event: action update
         self._emit_gui_hand_update(hs)
 
+        # Reactive pre-allin: after opponent folds, check if BB can pre-allin
+        if (not is_hero
+                and action_type in (ACTION_FOLD, ACTION_FAST_FOLD)
+                and hs.is_aof
+                and hs.hero_cards
+                and not hs.pre_folded
+                and not hs.hero_acted
+                and hs.hero_seat == hs.bb_seat
+                and hs.bb_seat >= 0):
+            self._try_reactive_pre_allin(hs, table_id)
+
     def _on_showhand(self, table_id: int, pkt: dict):
         hs = self._get_table(table_id)
         infos = pkt.get("info", [])
@@ -1916,6 +1927,103 @@ class PacketCapture:
             if "A" in s:  # BB only acts if someone pushed
                 priors.append(s)
         return priors
+
+    def _try_reactive_pre_allin(self, hs, table_id: int):
+        """Reactive pre-allin: after opponents fold, check if the remaining
+        possible prior extensions all lead to 100% push for BB.
+
+        Example: 4P, CO Fold, BTN Fold → prior so far = "FF"
+        Remaining: only SB to act → check "FFA" (SB pushes)
+        If 100% push → pre-allin!
+        """
+        if not getattr(self, 'auto_play', False) or not getattr(self, 'adb', None):
+            return
+
+        np = len(hs.seats)
+        if np < 2 or np > 4:
+            return
+
+        try:
+            from gto_lookup import GtoLookup, cards_to_hand_name
+            if not hasattr(self, '_gto_lookup') or self._gto_lookup is None:
+                self._gto_lookup = GtoLookup()
+
+            c1, c2 = hs.hero_cards[0:2], hs.hero_cards[2:4]
+            hand_name = cards_to_hand_name(c1, c2)
+
+            # Build current prior string from actions seen so far
+            # action_order contains seat_ids in order of action
+            current_prior = ""
+            for sid in hs.action_order:
+                if sid == hs.hero_seat:
+                    continue  # Skip hero
+                seat = hs.seats.get(sid)
+                if seat and seat.action in ("F", "A"):
+                    current_prior += seat.action
+
+            # How many players haven't acted yet (excluding BB)?
+            players_before_bb = np - 1
+            acted_count = len(current_prior)
+            remaining = players_before_bb - acted_count
+
+            if remaining < 0:
+                return
+
+            if remaining == 0:
+                # All opponents have acted, just check the one final prior
+                if "A" not in current_prior:
+                    return  # All folded, BB wins automatically
+                freq = self._gto_lookup.get_push_freq(hand_name, np, "BB", current_prior)
+                if freq < 0:
+                    return
+                if freq >= 0.95:
+                    print(f"\n  >>> REACTIVE PRE-ALLIN: {hand_name} BB, prior='{current_prior}', freq={freq:.0%} <<<")
+                    hs.pre_folded = True
+                    try:
+                        tbl_idx = list(self.tables.keys()).index(table_id)
+                    except ValueError:
+                        tbl_idx = 0
+                    def do_pre_allin():
+                        import time
+                        time.sleep(0.3)
+                        self.adb.tap_allin(delay=True, table_index=tbl_idx)
+                    self._execute_async(do_pre_allin)
+                return
+
+            # Generate all possible extensions for remaining players
+            from itertools import product
+            checked = 0
+            for combo in product("AF", repeat=remaining):
+                full_prior = current_prior + "".join(combo)
+                if "A" not in full_prior:
+                    continue  # All fold = BB wins, no action needed
+                freq = self._gto_lookup.get_push_freq(hand_name, np, "BB", full_prior)
+                if freq < 0:
+                    continue  # No chart
+                if freq < 0.95:
+                    return  # Not 100% push for this extension
+                checked += 1
+
+            if checked == 0:
+                return
+
+            print(f"\n  >>> REACTIVE PRE-ALLIN: {hand_name} BB, prior='{current_prior}+?', "
+                  f"all {checked} extensions are 100% push <<<")
+            hs.pre_folded = True
+
+            try:
+                tbl_idx = list(self.tables.keys()).index(table_id)
+            except ValueError:
+                tbl_idx = 0
+
+            def do_pre_allin():
+                import time
+                time.sleep(0.3)
+                self.adb.tap_allin(delay=True, table_index=tbl_idx)
+            self._execute_async(do_pre_allin)
+
+        except Exception as e:
+            print(f"  [ReactivePreAllin] Error: {e}")
 
     def _auto_play_allin(self, table_id: int):
         """Auto-play based on GTO chart lookup. Falls back to ALL-IN if no chart."""
