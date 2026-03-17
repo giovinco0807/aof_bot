@@ -19,6 +19,7 @@ Usage:
 import random
 import time
 import json
+import threading
 import math
 from pathlib import Path
 
@@ -70,6 +71,7 @@ class PcController:
         self.config = self._load_config()
         self.enabled = False  # Safety: must be explicitly enabled
         self._window = None
+        self._click_lock = threading.Lock()  # Serialize tap operations for multi-table
 
     def _load_config(self) -> dict:
         if CONFIG_PATH.exists():
@@ -398,32 +400,34 @@ class PcController:
         return (x, y)
 
     def tap(self, x: int, y: int, jitter: bool = True):
-        """Click at screen position using SetForegroundWindow + SetCursorPos + mouse_event."""
-        try:
-            import ctypes
-            import ctypes.wintypes as wt
+        """Click at screen position using SetForegroundWindow + SetCursorPos + mouse_event.
+        Thread-safe: uses _click_lock to prevent concurrent mouse interference."""
+        with self._click_lock:
+            try:
+                import ctypes
+                import ctypes.wintypes as wt
 
-            if jitter:
-                sigma = self.config.get("tap_jitter_sigma", 4)
-                x += int(random.gauss(0, sigma))
-                y += int(random.gauss(0, sigma))
+                if jitter:
+                    sigma = self.config.get("tap_jitter_sigma", 4)
+                    x += int(random.gauss(0, sigma))
+                    y += int(random.gauss(0, sigma))
 
-            # Find window handle and bring to front
-            hwnd = self._find_hwnd()
-            if hwnd:
-                ctypes.windll.user32.SetForegroundWindow(hwnd)
-                time.sleep(0.3)
+                # Find window handle and bring to front
+                hwnd = self._find_hwnd()
+                if hwnd:
+                    ctypes.windll.user32.SetForegroundWindow(hwnd)
+                    time.sleep(0.3)
 
-            # Move cursor to position
-            ctypes.windll.user32.SetCursorPos(x, y)
-            time.sleep(0.3 + random.random() * 0.2)
+                # Move cursor to position
+                ctypes.windll.user32.SetCursorPos(x, y)
+                time.sleep(0.3 + random.random() * 0.2)
 
-            # Mouse down (hold briefly), then up
-            ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)  # LEFTDOWN
-            time.sleep(0.10 + random.random() * 0.05)
-            ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)  # LEFTUP
-        except Exception as e:
-            print(f"  [PC] Error in tap() at ({x}, {y}): {e}")
+                # Mouse down (hold briefly), then up
+                ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)  # LEFTDOWN
+                time.sleep(0.10 + random.random() * 0.05)
+                ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)  # LEFTUP
+            except Exception as e:
+                print(f"  [PC] Error in tap() at ({x}, {y}): {e}")
 
     def _find_hwnd(self):
         """Find the PPPoker window handle (HWND)."""
