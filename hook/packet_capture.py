@@ -2119,9 +2119,9 @@ class PacketCapture:
                                 print(f"  [AutoPlay] Retry #{attempt} (no server confirmation yet)")
                                 time.sleep(0.3)
                             if should_push:
-                                self.adb.tap_allin(delay=False, table_index=tbl_idx)
+                                self.adb.tap_allin(delay=(attempt == 0), table_index=tbl_idx)
                             else:
-                                self.adb.tap_fold(delay=False, table_index=tbl_idx)
+                                self.adb.tap_fold(delay=(attempt == 0), table_index=tbl_idx)
                             # Wait for server confirmation (1.5s)
                             for _ in range(15):
                                 time.sleep(0.1)
