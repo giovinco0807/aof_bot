@@ -389,6 +389,7 @@ class HandState:
     hero_acted: bool = False  # Track if hero has already acted this hand
     last_auto_play_time: float = 0.0 # Time when bot last attempted an action
     pre_folded: bool = False  # Track if we already clicked pre-action fold reservation
+    pre_allined: bool = False  # Track if we already clicked pre-action all-in reservation
 
     def get_position_map(self) -> Dict[int, str]:
         """Return dict of {seat_id: position_name} based on SB and BB seats.
@@ -759,6 +760,7 @@ class PacketCapture:
             hs.hero_acted = False
             hs.last_auto_play_time = 0.0
             hs.pre_folded = False
+            hs.pre_allined = False
 
             # Emit GUI event: new hand started (even in spectator mode)
             self._emit_gui_hand_update(hs)
@@ -936,6 +938,7 @@ class PacketCapture:
                 and hs.is_aof
                 and hs.hero_cards
                 and not hs.pre_folded
+                and not hs.pre_allined
                 and not hs.hero_acted
                 and hs.hero_seat == hs.bb_seat
                 and hs.bb_seat >= 0):
@@ -1898,7 +1901,7 @@ class PacketCapture:
 
             # All valid priors are ~100% push! Pre-allin!
             print(f"\n  >>> PRE-ACTION ALL-IN: {hand_name} is 100% push as BB ({checked} priors checked) <<<")
-            hs.pre_folded = True  # Reuse flag to prevent double-click
+            hs.pre_allined = True  # Prevent double-click
 
             try:
                 table_keys = list(self.tables.keys())
@@ -1978,7 +1981,7 @@ class PacketCapture:
                     return
                 if freq >= 0.95:
                     print(f"\n  >>> REACTIVE PRE-ALLIN: {hand_name} BB, prior='{current_prior}', freq={freq:.0%} <<<")
-                    hs.pre_folded = True
+                    hs.pre_allined = True
                     try:
                         tbl_idx = list(self.tables.keys()).index(table_id)
                     except ValueError:
@@ -2009,7 +2012,7 @@ class PacketCapture:
 
             print(f"\n  >>> REACTIVE PRE-ALLIN: {hand_name} BB, prior='{current_prior}+?', "
                   f"all {checked} extensions are 100% push <<<")
-            hs.pre_folded = True
+            hs.pre_allined = True
 
             try:
                 tbl_idx = list(self.tables.keys()).index(table_id)
@@ -2055,7 +2058,7 @@ class PacketCapture:
             # Do not click anything if the hand is already over (prevents rabbit-hunt misclicks)
             return
 
-        if getattr(hs, 'pre_folded', False):
+        if getattr(hs, 'pre_folded', False) or getattr(hs, 'pre_allined', False):
             # We already clicked the pre-action reservation button for this hand
             return
 
