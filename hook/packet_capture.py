@@ -850,6 +850,9 @@ class PacketCapture:
                                 time.sleep(0.5)  # Wait for UI to show the buttons
                                 self.adb.tap_fold(delay=True, table_index=tbl_idx)
                             self._execute_async(do_pre_fold)
+                    else:
+                        # Pre-allin for BB: if hand is 100% push for ALL possible priors
+                        self._try_pre_allin(hs, table_id, hand_name)
                 except Exception as e:
                     print(f"  [PreAction] Error: {e}")
         else:
@@ -1848,6 +1851,71 @@ class PacketCapture:
                 print(f"  [AsyncExec] Error: {e}")
         t = threading.Thread(target=worker, daemon=True)
         t.start()
+
+    def _try_pre_allin(self, hs, table_id: int, hand_name: str):
+        """Pre-allin for BB: if hero is BB and the hand is 100% push for ALL
+        possible prior action scenarios where BB must act, click All-in immediately."""
+        if not getattr(self, 'auto_play', False) or not getattr(self, 'adb', None):
+            return
+        if hs.bb_seat < 0 or hs.hero_seat != hs.bb_seat:
+            return  # Only for BB
+
+        np = len(hs.seats)
+        if np < 2 or np > 4:
+            return
+
+        try:
+            from gto_lookup import GtoLookup
+            if not hasattr(self, '_gto_lookup') or self._gto_lookup is None:
+                self._gto_lookup = GtoLookup()
+
+            # Generate priors where BB actually needs to act
+            # (at least one player pushed — if ALL fold, BB wins automatically)
+            all_priors = self._generate_bb_priors(np)
+
+            checked = 0
+            for prior in all_priors:
+                freq = self._gto_lookup.get_push_freq(hand_name, np, "BB", prior)
+                if freq < 0:  # No chart for this prior (doesn't occur in practice)
+                    continue
+                if freq < 0.95:  # Not ~100% push for this prior
+                    return
+                checked += 1
+
+            if checked == 0:
+                return  # No valid priors found
+
+            # All valid priors are ~100% push! Pre-allin!
+            print(f"\n  >>> PRE-ACTION ALL-IN: {hand_name} is 100% push as BB ({checked} priors checked) <<<")
+            hs.pre_folded = True  # Reuse flag to prevent double-click
+
+            try:
+                table_keys = list(self.tables.keys())
+                tbl_idx = table_keys.index(table_id)
+            except ValueError:
+                tbl_idx = 0
+
+            def do_pre_allin():
+                import time
+                time.sleep(0.5)
+                self.adb.tap_allin(delay=True, table_index=tbl_idx)
+            self._execute_async(do_pre_allin)
+
+        except Exception as e:
+            print(f"  [PreAllin] Error: {e}")
+
+    def _generate_bb_priors(self, np: int) -> list:
+        """Generate prior action strings where BB needs to act.
+        Only includes scenarios where at least one player pushed (A),
+        because if ALL fold, BB wins automatically and doesn't act."""
+        from itertools import product
+        num_before_bb = np - 1
+        priors = []
+        for combo in product("AF", repeat=num_before_bb):
+            s = "".join(combo)
+            if "A" in s:  # BB only acts if someone pushed
+                priors.append(s)
+        return priors
 
     def _auto_play_allin(self, table_id: int):
         """Auto-play based on GTO chart lookup. Falls back to ALL-IN if no chart."""
