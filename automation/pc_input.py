@@ -418,15 +418,15 @@ class PcController:
                 hwnd = self._find_hwnd()
                 if hwnd:
                     ctypes.windll.user32.SetForegroundWindow(hwnd)
-                    time.sleep(0.3)
+                    time.sleep(0.1)
 
                 # Move cursor to position
                 ctypes.windll.user32.SetCursorPos(x, y)
-                time.sleep(0.3 + random.random() * 0.2)
+                time.sleep(0.05 + random.random() * 0.05)
 
                 # Mouse down (hold briefly), then up
                 ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)  # LEFTDOWN
-                time.sleep(0.10 + random.random() * 0.05)
+                time.sleep(0.03 + random.random() * 0.02)
                 ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)  # LEFTUP
             except Exception as e:
                 print(f"  [PC] Error in tap() at ({x}, {y}): {e}")

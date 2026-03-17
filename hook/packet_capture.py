@@ -2068,9 +2068,8 @@ class PacketCapture:
             print(f"\n  >>> AUTO FOLD (no cards info) <<<")
             def do_fold_no_cards():
                 import time
-                time.sleep(1.0)
+                time.sleep(0.3)
                 self.adb.tap_fold(delay=False, table_index=tbl_idx)
-                time.sleep(3.0)
             self._execute_async(do_fold_no_cards)
             return
 
@@ -2109,22 +2108,22 @@ class PacketCapture:
                     print(f"  [AutoPlay] Queueing adb.tap_{'allin' if should_push else 'fold'}() on table {tbl_idx}")
                     def do_gto_action():
                         import time
-                        time.sleep(0.3)
+                        time.sleep(0.1)
                         max_retries = 3
                         for attempt in range(max_retries):
                             if getattr(hs, 'hero_acted', False):
-                                break  # Server confirmed action
+                                break
                             if getattr(hs, 'hand_complete', False):
-                                break  # Hand is over
+                                break
                             if attempt > 0:
                                 print(f"  [AutoPlay] Retry #{attempt} (no server confirmation yet)")
-                                time.sleep(0.5)  # Wait for button to appear
+                                time.sleep(0.3)
                             if should_push:
-                                self.adb.tap_allin(delay=attempt == 0, table_index=tbl_idx)
+                                self.adb.tap_allin(delay=False, table_index=tbl_idx)
                             else:
-                                self.adb.tap_fold(delay=attempt == 0, table_index=tbl_idx)
-                            # Wait for server confirmation
-                            for _ in range(30):  # 3 seconds
+                                self.adb.tap_fold(delay=False, table_index=tbl_idx)
+                            # Wait for server confirmation (1.5s)
+                            for _ in range(15):
                                 time.sleep(0.1)
                                 if getattr(hs, 'hero_acted', False) or getattr(hs, 'hand_complete', False):
                                     break
@@ -2137,9 +2136,8 @@ class PacketCapture:
             print(f"\n  >>> AUTO FOLD (pos unknown: {hand_name}) <<<")
             def do_fold_unknown():
                 import time
-                time.sleep(1.0)
+                time.sleep(0.3)
                 self.adb.tap_fold(delay=False, table_index=tbl_idx)
-                time.sleep(3.0)
             self._execute_async(do_fold_unknown)
 
         except Exception as e:
