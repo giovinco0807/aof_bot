@@ -273,6 +273,34 @@ class TwoTableGUI:
         self.var_stats = tk.StringVar(value="Hands: 0")
         ttk.Label(settings, textvariable=self.var_stats).pack(side="right")
 
+        # --- Delay Tuning Row ---
+        delay_row = ttk.Frame(self.root, padding=3)
+        delay_row.pack(fill="x", padx=5)
+
+        pc_cfg_path = Path(__file__).parent / "data" / "pc_config.json"
+        pc_cfg = {}
+        if pc_cfg_path.exists():
+            with open(pc_cfg_path, "r") as f:
+                pc_cfg = json.load(f)
+
+        ttk.Label(delay_row, text="Min Delay:").pack(side="left")
+        self.var_delay_floor = tk.DoubleVar(value=pc_cfg.get("delay_floor", 0.4))
+        tk.Scale(delay_row, variable=self.var_delay_floor, from_=0.1, to=2.0,
+                 resolution=0.1, orient="horizontal", length=120,
+                 command=lambda v: self._update_delay_config()).pack(side="left")
+
+        ttk.Label(delay_row, text="Max:").pack(side="left", padx=(5, 0))
+        self.var_delay_cap = tk.DoubleVar(value=pc_cfg.get("delay_cap", 6.0))
+        tk.Scale(delay_row, variable=self.var_delay_cap, from_=1.0, to=10.0,
+                 resolution=0.5, orient="horizontal", length=120,
+                 command=lambda v: self._update_delay_config()).pack(side="left")
+
+        ttk.Label(delay_row, text="Hesitation %:").pack(side="left", padx=(5, 0))
+        self.var_hesitation = tk.DoubleVar(value=pc_cfg.get("hesitation_prob", 0.15) * 100)
+        tk.Scale(delay_row, variable=self.var_hesitation, from_=0, to=50,
+                 resolution=5, orient="horizontal", length=100,
+                 command=lambda v: self._update_delay_config()).pack(side="left")
+
         # --- Dual GTO Panels (side by side) ---
         panels_frame = ttk.Frame(self.root)
         panels_frame.pack(fill="both", expand=True, padx=5, pady=3)
@@ -411,6 +439,27 @@ class TwoTableGUI:
             if self.capture:
                 self.capture.stop()
             self.root.after(0, self._on_stopped)
+
+    def _update_delay_config(self):
+        """Save delay tuning values to pc_config.json and update live PcController."""
+        pc_cfg_path = Path(__file__).parent / "data" / "pc_config.json"
+        try:
+            pc_cfg = {}
+            if pc_cfg_path.exists():
+                with open(pc_cfg_path, "r") as f:
+                    pc_cfg = json.load(f)
+            pc_cfg["delay_floor"] = self.var_delay_floor.get()
+            pc_cfg["delay_cap"] = self.var_delay_cap.get()
+            pc_cfg["hesitation_prob"] = self.var_hesitation.get() / 100.0
+            with open(pc_cfg_path, "w") as f:
+                json.dump(pc_cfg, f, indent=2)
+
+            if self.capture and hasattr(self.capture, 'adb') and self.capture.adb:
+                self.capture.adb.config["delay_floor"] = pc_cfg["delay_floor"]
+                self.capture.adb.config["delay_cap"] = pc_cfg["delay_cap"]
+                self.capture.adb.config["hesitation_prob"] = pc_cfg["hesitation_prob"]
+        except Exception:
+            pass
 
     def _on_stop(self):
         if not self.running:
