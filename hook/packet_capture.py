@@ -390,6 +390,7 @@ class HandState:
     last_auto_play_time: float = 0.0 # Time when bot last attempted an action
     pre_folded: bool = False  # Track if we already clicked pre-action fold reservation
     pre_allined: bool = False  # Track if we already clicked pre-action all-in reservation
+    cards_received_time: float = 0.0  # Time when hero cards were received
 
     def get_position_map(self) -> Dict[int, str]:
         """Return dict of {seat_id: position_name} based on SB and BB seats.
@@ -761,6 +762,7 @@ class PacketCapture:
             hs.last_auto_play_time = 0.0
             hs.pre_folded = False
             hs.pre_allined = False
+            hs.cards_received_time = 0.0
 
             # Emit GUI event: new hand started (even in spectator mode)
             self._emit_gui_hand_update(hs)
@@ -786,6 +788,7 @@ class PacketCapture:
                 hs.hero_cards = "".join(cards)
                 is_allin = hand_card.get("isAllin", False)
                 print(f"  Hero cards: {' '.join(cards)} {'[AoF]' if is_allin else ''}")
+                hs.cards_received_time = time.time()
 
                 # -------------------------------------------------------
                 # Trigger solver immediately on card receipt.
@@ -2119,7 +2122,11 @@ class PacketCapture:
                     print(f"  [AutoPlay] Queueing adb.tap_{'allin' if should_push else 'fold'}() on table {tbl_idx}")
                     def do_gto_action():
                         import time
-                        time.sleep(0.1)
+                        # Wait minimum "think time" from when cards were received
+                        min_think = 1.0
+                        elapsed = time.time() - getattr(hs, 'cards_received_time', 0)
+                        if elapsed < min_think:
+                            time.sleep(min_think - elapsed)
                         max_retries = 3
                         for attempt in range(max_retries):
                             if getattr(hs, 'hero_acted', False):
