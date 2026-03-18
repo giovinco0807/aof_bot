@@ -839,7 +839,6 @@ class PacketCapture:
                     hand_name = cards_to_hand_name(c1, c2)
                     if hand_name in ALWAYS_FOLD_HANDS:
                         print(f"\n  >>> PRE-ACTION FOLD: {hand_name} is absolute trash <<<")
-                        hs.pre_folded = True
                         try:
                             table_keys = list(self.tables.keys())
                             tbl_idx = table_keys.index(table_id)
@@ -849,8 +848,20 @@ class PacketCapture:
                         if getattr(self, 'adb', None):
                             def do_pre_fold():
                                 import time
-                                time.sleep(0.5)  # Wait for UI to show the buttons
-                                self.adb.tap_fold(delay=True, table_index=tbl_idx)
+                                time.sleep(0.5)
+                                for attempt in range(3):
+                                    if getattr(hs, 'hero_acted', False) or getattr(hs, 'hand_complete', False):
+                                        break
+                                    if attempt > 0:
+                                        print(f"  [PreFold] Retry #{attempt}")
+                                        time.sleep(0.3)
+                                    self.adb.tap_fold(delay=False, table_index=tbl_idx)
+                                    for _ in range(15):
+                                        time.sleep(0.1)
+                                        if getattr(hs, 'hero_acted', False) or getattr(hs, 'hand_complete', False):
+                                            break
+                                if getattr(hs, 'hero_acted', False):
+                                    hs.pre_folded = True
                             self._execute_async(do_pre_fold)
                     else:
                         # Pre-allin for BB: if hand is 100% push for ALL possible priors
