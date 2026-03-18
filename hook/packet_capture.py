@@ -2123,7 +2123,7 @@ class PacketCapture:
                     def do_gto_action():
                         import time
                         # Wait minimum "think time" from when cards were received
-                        min_think = 1.0
+                        min_think = self.adb.config.get("min_think_time", 1.0) if self.adb else 1.0
                         elapsed = time.time() - getattr(hs, 'cards_received_time', 0)
                         if elapsed < min_think:
                             time.sleep(min_think - elapsed)

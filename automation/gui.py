@@ -190,6 +190,12 @@ class AofBotGUI:
                  resolution=5, orient="horizontal", length=120,
                  command=lambda v: self._update_delay_config()).pack(side="left", padx=5)
 
+        ttk.Label(delay_row1, text="Think (s):").pack(side="left", padx=(10, 0))
+        self.var_think_time = tk.DoubleVar(value=pc_cfg.get("min_think_time", 1.0))
+        tk.Scale(delay_row1, variable=self.var_think_time, from_=0.0, to=3.0,
+                 resolution=0.5, orient="horizontal", length=120,
+                 command=lambda v: self._update_delay_config()).pack(side="left", padx=5)
+
         # --- Control Buttons ---
         ctrl_frame = ttk.Frame(self.root, padding=5)
         ctrl_frame.pack(fill="x", padx=10)
@@ -557,6 +563,7 @@ class AofBotGUI:
             pc_cfg["delay_floor"] = self.var_delay_floor.get()
             pc_cfg["delay_cap"] = self.var_delay_cap.get()
             pc_cfg["hesitation_prob"] = self.var_hesitation.get() / 100.0
+            pc_cfg["min_think_time"] = self.var_think_time.get()
             with open(pc_cfg_path, "w") as f:
                 json.dump(pc_cfg, f, indent=2)
 
@@ -565,6 +572,7 @@ class AofBotGUI:
                 self.capture.adb.config["delay_floor"] = pc_cfg["delay_floor"]
                 self.capture.adb.config["delay_cap"] = pc_cfg["delay_cap"]
                 self.capture.adb.config["hesitation_prob"] = pc_cfg["hesitation_prob"]
+                self.capture.adb.config["min_think_time"] = pc_cfg["min_think_time"]
         except Exception:
             pass
 
