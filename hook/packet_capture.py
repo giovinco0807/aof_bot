@@ -200,8 +200,10 @@ def init_hands_db(db_path: Path = HANDS_DB_PATH):
             player_id TEXT NOT NULL,
             seat_id INTEGER,
             position TEXT,
+            prior_actions TEXT,
             action TEXT,
             cards TEXT,
+            stack_bb REAL DEFAULT 0,
             profit_chips REAL DEFAULT 0,
             profit_bb REAL DEFAULT 0,
             FOREIGN KEY (hand_id) REFERENCES hands(id)
@@ -232,6 +234,13 @@ def init_hands_db(db_path: Path = HANDS_DB_PATH):
         conn.execute("ALTER TABLE player_stats ADD COLUMN total_profit_bb REAL DEFAULT 0")
         conn.execute("ALTER TABLE player_stats ADD COLUMN showdown_count INTEGER DEFAULT 0")
         conn.execute("ALTER TABLE player_stats ADD COLUMN showdown_hands TEXT DEFAULT '[]'")
+
+    # Migrate old hand_players schema to include new situation context
+    try:
+        conn.execute("SELECT prior_actions FROM hand_players LIMIT 1")
+    except sqlite3.OperationalError:
+        conn.execute("ALTER TABLE hand_players ADD COLUMN prior_actions TEXT DEFAULT ''")
+        conn.execute("ALTER TABLE hand_players ADD COLUMN stack_bb REAL DEFAULT 0")
 
     # OFC (Pineapple) hands table
     conn.execute("""
@@ -278,6 +287,8 @@ def save_hand_record(record: dict, db_path: Path = HANDS_DB_PATH):
     cards_list = record["cards"].split(",") if record["cards"] else []
     profits = record.get("profits", {})  # seat_id(str) -> chips
     positions = record.get("positions", [])
+    prior_actions_list = record.get("prior_actions", [])
+    stacks_list = record["stacks"].split(",") if record["stacks"] else []
     bb_size = record["bb_size"]
     now = record["timestamp"]
 
@@ -290,16 +301,20 @@ def save_hand_record(record: dict, db_path: Path = HANDS_DB_PATH):
         card = cards_list[i].strip() if i < len(cards_list) else ""
         seat_id = int(record.get("seat_ids", [i])[i]) if "seat_ids" in record else i
         position = positions[i] if i < len(positions) else ""
+        prior_actions = prior_actions_list[i] if i < len(prior_actions_list) else ""
+        stack_chips = float(stacks_list[i]) if i < len(stacks_list) and stacks_list[i] else 0.0
+        stack_bb = round(stack_chips / bb_size, 2) if bb_size > 0 else 0.0
+
         profit_chips = profits.get(str(seat_id), 0)
         profit_bb = profit_chips / bb_size if bb_size > 0 else 0
 
         # Insert per-player hand record
         conn.execute("""
-            INSERT INTO hand_players (hand_id, player_id, seat_id, position,
-                                      action, cards, profit_chips, profit_bb)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (hand_id, pid, seat_id, position, action, card,
-              profit_chips, round(profit_bb, 2)))
+            INSERT INTO hand_players (hand_id, player_id, seat_id, position, prior_actions,
+                                      action, cards, stack_bb, profit_chips, profit_bb)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (hand_id, pid, seat_id, position, prior_actions, action, card,
+              stack_bb, profit_chips, round(profit_bb, 2)))
 
         # Update player stats
         showdown_card = card if card else ""
@@ -1641,6 +1656,21 @@ class PacketCapture:
         else:
             dealer_seat = hs.dealer_idx  # Fallback to EnterRoom value
 
+        # Build prior_actions for each seat based on action_order
+        prior_actions_list = [""] * len(seat_ids)
+        action_map = {sid: (hs.seats[sid].action or "F") for sid in seat_ids if sid in hs.seats}
+        
+        for i, sid in enumerate(seat_ids):
+            p_acts = []
+            if sid in hs.action_order:
+                idx = hs.action_order.index(sid)
+                for prev_sid in hs.action_order[:idx]:
+                    p_acts.append(action_map.get(prev_sid, "F"))
+            else:
+                for prev_sid in hs.action_order:
+                    p_acts.append(action_map.get(prev_sid, "F"))
+            prior_actions_list[i] = "-".join(p_acts)
+
         record = {
             "timestamp": datetime.now().isoformat(),
             "table_id": str(hs.table_id),
@@ -1658,6 +1688,7 @@ class PacketCapture:
             "profits": profits_map,
             "seat_ids": seat_ids,
             "positions": positions,
+            "prior_actions": prior_actions_list,
         }
 
         try:
