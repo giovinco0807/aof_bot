@@ -851,20 +851,10 @@ class PacketCapture:
                         if getattr(self, 'adb', None):
                             def do_pre_fold():
                                 import time
-                                time.sleep(0.5)
-                                for attempt in range(3):
-                                    if getattr(hs, 'hero_acted', False) or getattr(hs, 'hand_complete', False):
-                                        break
-                                    if attempt > 0:
-                                        print(f"  [PreFold] Retry #{attempt}")
-                                        time.sleep(0.3)
-                                    self.adb.tap_fold(delay=False, table_index=tbl_idx)
-                                    for _ in range(15):
-                                        time.sleep(0.1)
-                                        if getattr(hs, 'hero_acted', False) or getattr(hs, 'hand_complete', False):
-                                            break
-                                if getattr(hs, 'hero_acted', False):
-                                    hs.pre_folded = True
+                                time.sleep(0.5)  # Wait for UI to show the buttons
+                                self.adb.tap_fold(delay=True, table_index=tbl_idx)
+                                # We DO NOT set hs.pre_folded = True.
+                                # If the click fails, _auto_play_allin will catch it when our turn comes.
                             self._execute_async(do_pre_fold)
                     else:
                         # Pre-allin for BB: if hand is 100% push for ALL possible priors
@@ -2127,6 +2117,11 @@ class PacketCapture:
                         elapsed = time.time() - getattr(hs, 'cards_received_time', 0)
                         if elapsed < min_think:
                             time.sleep(min_think - elapsed)
+                            
+                        # Perform human reaction delay here, so we can check hero_acted AFTER
+                        if getattr(self, 'adb', None) and hasattr(self.adb, '_human_delay'):
+                            self.adb._human_delay()
+                            
                         max_retries = 3
                         for attempt in range(max_retries):
                             if getattr(hs, 'hero_acted', False):
@@ -2137,9 +2132,9 @@ class PacketCapture:
                                 print(f"  [AutoPlay] Retry #{attempt} (no server confirmation yet)")
                                 time.sleep(0.3)
                             if should_push:
-                                self.adb.tap_allin(delay=(attempt == 0), table_index=tbl_idx)
+                                self.adb.tap_allin(delay=False, table_index=tbl_idx)
                             else:
-                                self.adb.tap_fold(delay=(attempt == 0), table_index=tbl_idx)
+                                self.adb.tap_fold(delay=False, table_index=tbl_idx)
                             # Wait for server confirmation (1.5s)
                             for _ in range(15):
                                 time.sleep(0.1)
