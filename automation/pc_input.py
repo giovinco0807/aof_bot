@@ -72,6 +72,7 @@ class PcController:
         self.enabled = False  # Safety: must be explicitly enabled
         self._window = None
         self._click_lock = threading.Lock()  # Serialize tap operations for multi-table
+        self._action_lock = threading.Lock() # Serialize entire human delay, scan, and click routines
 
     def _load_config(self) -> dict:
         if CONFIG_PATH.exists():
@@ -483,43 +484,45 @@ class PcController:
 
     def tap_fold(self, delay: bool = True, table_index: int = 0) -> bool:
         """Click the Fold button on the specified table."""
-        try:
-            if not self.enabled:
-                print("  [PC] Auto-input disabled (use --auto-play to enable)")
+        with self._action_lock:
+            try:
+                if not self.enabled:
+                    print("  [PC] Auto-input disabled (use --auto-play to enable)")
+                    return False
+                if delay:
+                    self._human_delay()
+                pos = self._verified_button_pos("fold", table_index)
+                if pos is None:
+                    return False
+                self.tap(pos[0], pos[1])
+                print(f"  [PC] Clicked FOLD at ({pos[0]}, {pos[1]}) on table {table_index}")
+                return True
+            except Exception as e:
+                print(f"  [PC] Error in tap_fold: {e}")
+                import traceback
+                traceback.print_exc()
                 return False
-            if delay:
-                self._human_delay()
-            pos = self._verified_button_pos("fold", table_index)
-            if pos is None:
-                return False
-            self.tap(pos[0], pos[1])
-            print(f"  [PC] Clicked FOLD at ({pos[0]}, {pos[1]}) on table {table_index}")
-            return True
-        except Exception as e:
-            print(f"  [PC] Error in tap_fold: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
 
     def tap_allin(self, delay: bool = True, table_index: int = 0) -> bool:
         """Click the AllIn button on the specified table."""
-        try:
-            if not self.enabled:
-                print("  [PC] Auto-input disabled (use --auto-play to enable)")
+        with self._action_lock:
+            try:
+                if not self.enabled:
+                    print("  [PC] Auto-input disabled (use --auto-play to enable)")
+                    return False
+                if delay:
+                    self._human_delay()
+                pos = self._verified_button_pos("allin", table_index)
+                if pos is None:
+                    return False
+                self.tap(pos[0], pos[1])
+                print(f"  [PC] Clicked ALL IN at ({pos[0]}, {pos[1]}) on table {table_index}")
+                return True
+            except Exception as e:
+                print(f"  [PC] Error in tap_allin: {e}")
+                import traceback
+                traceback.print_exc()
                 return False
-            if delay:
-                self._human_delay()
-            pos = self._verified_button_pos("allin", table_index)
-            if pos is None:
-                return False
-            self.tap(pos[0], pos[1])
-            print(f"  [PC] Clicked ALL IN at ({pos[0]}, {pos[1]}) on table {table_index}")
-            return True
-        except Exception as e:
-            print(f"  [PC] Error in tap_allin: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
 
     def tap_leave(self, delay: bool = True, table_index: int = 0) -> bool:
         """Click the Leave button, then confirm dialog on the specified table."""

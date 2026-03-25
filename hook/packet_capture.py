@@ -289,6 +289,7 @@ def save_hand_record(record: dict, db_path: Path = HANDS_DB_PATH):
     positions = record.get("positions", [])
     prior_actions_list = record.get("prior_actions", [])
     stacks_list = record["stacks"].split(",") if record["stacks"] else []
+    names_list = record.get("names", [])
     bb_size = record["bb_size"]
     now = record["timestamp"]
 
@@ -304,6 +305,7 @@ def save_hand_record(record: dict, db_path: Path = HANDS_DB_PATH):
         prior_actions = prior_actions_list[i] if i < len(prior_actions_list) else ""
         stack_chips = float(stacks_list[i]) if i < len(stacks_list) and stacks_list[i] else 0.0
         stack_bb = round(stack_chips / bb_size, 2) if bb_size > 0 else 0.0
+        player_name = names_list[i] if i < len(names_list) else ""
 
         profit_chips = profits.get(str(seat_id), 0)
         profit_bb = profit_chips / bb_size if bb_size > 0 else 0
@@ -319,22 +321,23 @@ def save_hand_record(record: dict, db_path: Path = HANDS_DB_PATH):
         # Update player stats
         showdown_card = card if card else ""
         conn.execute("""
-            INSERT INTO player_stats (player_id, hands_seen, hands_pushed,
+            INSERT INTO player_stats (player_id, player_name, hands_seen, hands_pushed,
                                       total_profit_chips, total_profit_bb,
                                       showdown_count, showdown_hands, last_seen)
-            VALUES (?, 1, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(player_id) DO UPDATE SET
+                player_name = COALESCE(NULLIF(?, ''), player_stats.player_name),
                 hands_seen = hands_seen + 1,
                 hands_pushed = hands_pushed + ?,
                 total_profit_chips = total_profit_chips + ?,
                 total_profit_bb = total_profit_bb + ?,
                 showdown_count = showdown_count + ?,
                 last_seen = ?
-        """, (pid, pushed, profit_chips, round(profit_bb, 2),
+        """, (pid, player_name, pushed, profit_chips, round(profit_bb, 2),
               1 if showdown_card else 0,
               json.dumps([showdown_card]) if showdown_card else "[]",
               now,
-              pushed, profit_chips, round(profit_bb, 2),
+              player_name, pushed, profit_chips, round(profit_bb, 2),
               1 if showdown_card else 0, now))
 
         # Append showdown hand to JSON array
@@ -484,7 +487,7 @@ class PacketCapture:
                  hero_uid: int = 0, auto_play: bool = False,
                  max_hands: int = 0, stop_time: str = "",
                  leave_if_disadvantaged: bool = False,
-                 gui_queue=None):
+                 gui_queue=None, enable_exploit: bool = True):
         self.process_name = process_name
         self.verbose = verbose
         self.enable_solver = enable_solver
@@ -496,6 +499,19 @@ class PacketCapture:
         self.session = None
         self.script = None
         self.running = False
+
+        sys.path.insert(0, str(Path(__file__).parent.parent / "automation"))
+        if enable_exploit:
+            try:
+                from exploit_manager import ExploitManager
+                self.exploit_manager = ExploitManager()
+                print("  [Init] Exploit Manager enabled")
+            except Exception as e:
+                print(f"  [Init] Failed to load ExploitManager: {e}")
+                self.exploit_manager = None
+        else:
+            print("  [Init] Exploit Manager disabled by GUI config")
+            self.exploit_manager = None
 
         # Auto-exit conditions
         self.max_hands = max_hands          # 0 = unlimited
@@ -537,6 +553,7 @@ class PacketCapture:
         self.tables: Dict[int, HandState] = {}
         self.hand_count = 0
         self.hands_saved = 0
+        self.session_profit = 0
         # Persistent seat->UID mapping per table (survives hand resets)
         self.seat_uid_map: Dict[int, Dict[int, int]] = {}  # table_id -> {seat_id -> uid}
         self.seat_name_map: Dict[int, Dict[int, str]] = {} # table_id -> {seat_id -> name}
@@ -934,8 +951,9 @@ class PacketCapture:
             # Blind posts/antes don't count as the hero's actual decision turn
             if action_type not in (ACTION_SB, ACTION_BB, ACTION_ANTE):
                 hs.hero_acted = True
-            # Disarm auto-play if hero folded
+            # Disarm auto-play if hero folded, but preserve cards for DB
             if action_type in (ACTION_FOLD, ACTION_FAST_FOLD):
+                hs.hero_cards_for_db = hs.hero_cards  # Keep for hand history
                 hs.hero_cards = ""
                 hs.last_auto_play_time = 0.0
 
@@ -1026,6 +1044,11 @@ class PacketCapture:
             net_profit += chips
             sign = "+" if chips >= 0 else ""
             print(f"  Profit: seat={seat} {sign}{chips}")
+
+            if seat == hs.hero_seat and hs.hero_seat >= 0:
+                self.session_profit += chips
+                prof_sign = "+" if self.session_profit >= 0 else ""
+                print(f"  >>> HERO SESSION P/L: {prof_sign}{self.session_profit} <<<")
 
         hs.rake_chips = -net_profit
         if hs.rake_chips > 0:
@@ -1134,26 +1157,22 @@ class PacketCapture:
             self.entered_rooms.add(rid)
 
         # Auto-leave: rooms with <=1 player that we previously entered
-        for idx, room in enumerate(rooms):
-            rid = room.get("roomId", 0)
-            current = room.get("currentPlayerNum", 0)
-            if current <= 1 and rid in self.entered_rooms:
-                name = room.get("roomName", "")
-                print(f"  >>> Room {rid} \"{name}\" has {current} player(s) - auto-leaving! <<<")
-                try:
-                    self._execute_async(self._auto_click_leave)
-                except Exception as e:
-                    print(f"  [AutoLeave] ERROR: {e}")
-                    import traceback
-                    traceback.print_exc()
-                self.entered_rooms.discard(rid)
-                # Clean up table state
-                for tid in list(self.tables.keys()):
-                    if tid == rid:
-                        del self.tables[tid]
-                for tid in list(self.ofc_tables.keys()):
-                    if tid == rid:
-                        del self.ofc_tables[tid]
+        # [DISABLED] CAUSES BUG DURING 2-TABLE STARTUP. 
+        # Users manually wait for opponents at heads-up tables anyway, so forceful auto-leave is detrimental.
+        # for idx, room in enumerate(rooms):
+        #     rid = room.get("roomId", 0)
+        #     current = room.get("currentPlayerNum", 0)
+        #     if current <= 1 and rid in self.entered_rooms:
+        #         name = room.get("roomName", "")
+        #         print(f"  >>> Room {rid} \"{name}\" has {current} player(s) - auto-leaving DISABLED <<<")
+        #         self.entered_rooms.discard(rid)
+        #         # Clean up table state
+        #         for tid in list(self.tables.keys()):
+        #             if tid == rid:
+        #                 del self.tables[tid]
+        #         for tid in list(self.ofc_tables.keys()):
+        #             if tid == rid:
+        #                 del self.ofc_tables[tid]
 
     def _auto_click_leave(self):
         """Leave a table by clicking hamburger menu -> 'ゲームから退出'."""
@@ -1631,7 +1650,12 @@ class PacketCapture:
             player_ids.append(str(uid) if uid else "")
             stacks.append(str(seat.chips))
             actions.append(seat.action if seat.action else "?")
-            cards.append(seat.cards if seat.cards else "")
+            # Always record hero's known cards, even on fold
+            hero_cards = hs.hero_cards or getattr(hs, 'hero_cards_for_db', '')
+            if sid == hs.hero_seat and not seat.cards and hero_cards:
+                cards.append(hero_cards)
+            else:
+                cards.append(seat.cards if seat.cards else "")
 
         board_str = "".join(hs.board)
 
@@ -1639,19 +1663,29 @@ class PacketCapture:
         profits_map = {str(sid): hs.profits.get(sid, 0) for sid in seat_ids}
 
         # Determine BB seat from action_order (last to act = BB)
+        # Determine BB seat from action_order (last to act = BB)
         POS_NAMES = {
             2: ["SB", "BB"],
             3: ["BTN", "SB", "BB"],
             4: ["CO", "BTN", "SB", "BB"],
         }
         positions = [""] * len(seat_ids)
-        if hs.action_order and len(hs.action_order) == len(seat_ids):
-            bb_seat = hs.action_order[-1]  # Last to act is always BB in AoF
+        
+        # If BB gets a walk (everyone folded), the BB doesn't act and isn't in action_order.
+        # We can append the missing seat to the end to complete the sequence.
+        act_order = list(hs.action_order)
+        if len(act_order) == len(seat_ids) - 1:
+            missing_seats = set(seat_ids) - set(act_order)
+            if len(missing_seats) == 1:
+                act_order.append(list(missing_seats)[0])
+
+        if act_order and len(act_order) == len(seat_ids):
+            bb_seat = act_order[-1]  # Last to act is always BB in AoF
             dealer_seat = bb_seat
             pos_names = POS_NAMES.get(len(seat_ids), [])
             if len(pos_names) == len(seat_ids):
-                # Map action_order to position names, then to seat_ids order
-                ao_to_pos = {sid: pos for sid, pos in zip(hs.action_order, pos_names)}
+                # Map act_order to position names, then to seat_ids order
+                ao_to_pos = {sid: pos for sid, pos in zip(act_order, pos_names)}
                 positions = [ao_to_pos.get(sid, "") for sid in seat_ids]
         else:
             dealer_seat = hs.dealer_idx  # Fallback to EnterRoom value
@@ -1689,6 +1723,7 @@ class PacketCapture:
             "seat_ids": seat_ids,
             "positions": positions,
             "prior_actions": prior_actions_list,
+            "names": [hs.seats[sid].name if sid in hs.seats else "" for sid in seat_ids],
         }
 
         try:
@@ -1790,6 +1825,11 @@ class PacketCapture:
         num_players = len(seat_ids)
         stack_bb = hero_seat.chips / hs.bb_size if hs.bb_size > 0 else 8.0
         hand = hs.hero_cards
+
+        # --- LOCAL EXPLOIT OVERRIDE (Moved to _auto_play_allin) ---
+        # The logic has been shifted strictly to the `_auto_play_allin` Native Engine
+        # to correctly wait for UI animations to finish rendering the Call button.
+        # ----------------------------------------------------------
 
         # Try exploit endpoint first (uses Bayesian opponent model)
         try:
@@ -1936,7 +1976,8 @@ class PacketCapture:
 
             # All valid priors are ~100% push! Pre-allin!
             print(f"\n  >>> PRE-ACTION ALL-IN: {hand_name} is 100% push as BB ({checked} priors checked) <<<")
-            hs.pre_allined = True  # Prevent double-click
+            # NOTE: pre_allined is NOT set because the actual click is disabled.
+            # _auto_play_allin will handle the click when ActionNotifyBRC arrives.
 
             try:
                 table_keys = list(self.tables.keys())
@@ -1945,9 +1986,12 @@ class PacketCapture:
                 tbl_idx = 0
 
             def do_pre_allin():
-                import time
-                time.sleep(0.5)
-                self.adb.tap_allin(delay=True, table_index=tbl_idx)
+                # DISABLED: Tapping all-in coordinates during pre-action actually clicks "Check/Fold" in PPPoker AoF!
+                # This causes premium hands to instantly fold.
+                pass
+                # import time
+                # time.sleep(0.5)
+                # self.adb.tap_allin(delay=True, table_index=tbl_idx)
             self._execute_async(do_pre_allin)
 
         except Exception as e:
@@ -2016,15 +2060,18 @@ class PacketCapture:
                     return
                 if freq >= 0.95:
                     print(f"\n  >>> REACTIVE PRE-ALLIN: {hand_name} BB, prior='{current_prior}', freq={freq:.0%} <<<")
-                    hs.pre_allined = True
+                    # NOTE: pre_allined is NOT set because the actual click is disabled.
+                    # _auto_play_allin will handle the click when ActionNotifyBRC arrives.
                     try:
                         tbl_idx = list(self.tables.keys()).index(table_id)
                     except ValueError:
                         tbl_idx = 0
                     def do_pre_allin():
-                        import time
-                        time.sleep(0.3)
-                        self.adb.tap_allin(delay=True, table_index=tbl_idx)
+                        # DISABLED: Clicks Check/Fold
+                        pass
+                        # import time
+                        # time.sleep(0.3)
+                        # self.adb.tap_allin(delay=True, table_index=tbl_idx)
                     self._execute_async(do_pre_allin)
                 return
 
@@ -2047,7 +2094,8 @@ class PacketCapture:
 
             print(f"\n  >>> REACTIVE PRE-ALLIN: {hand_name} BB, prior='{current_prior}+?', "
                   f"all {checked} extensions are 100% push <<<")
-            hs.pre_allined = True
+            # NOTE: pre_allined is NOT set because the actual click is disabled.
+            # _auto_play_allin will handle the click when ActionNotifyBRC arrives.
 
             try:
                 tbl_idx = list(self.tables.keys()).index(table_id)
@@ -2055,9 +2103,11 @@ class PacketCapture:
                 tbl_idx = 0
 
             def do_pre_allin():
-                import time
-                time.sleep(0.3)
-                self.adb.tap_allin(delay=True, table_index=tbl_idx)
+                # DISABLED: Clicks Check/Fold
+                pass
+                # import time
+                # time.sleep(0.3)
+                # self.adb.tap_allin(delay=True, table_index=tbl_idx)
             self._execute_async(do_pre_allin)
 
         except Exception as e:
@@ -2128,10 +2178,33 @@ class PacketCapture:
 
             if hero_pos:
                 freq = self._gto_lookup.get_push_freq(hand_name, np, hero_pos, prior)
-                if freq >= 0:
-                    should_push = freq >= 0.5
-                    action = "PUSH" if should_push else "FOLD"
-                    print(f"\n  >>> AUTO GTO: {hand_name} | {np}P {hero_pos} prior='{prior}' | "
+                should_push = freq >= 0.5 if freq >= 0 else False
+                action = "PUSH" if should_push else "FOLD"
+                
+                # --- APPLY EXPLOITS ---
+                if getattr(self, "exploit_manager", None):
+                    try:
+                        opponent_uids = []
+                        uid_map = self.seat_uid_map.get(table_id, {})
+                        for sid, seat in hs.seats.items():
+                            if sid != hs.hero_seat:
+                                uid = seat.uid or uid_map.get(sid, 0)
+                                if uid: opponent_uids.append(str(uid))
+                                
+                        for uid_str in opponent_uids:
+                            decision = self.exploit_manager.get_adjusted_decision(uid_str, hand_name, np, prior)
+                            if decision is not None:
+                                should_push = decision
+                                action = "PUSH" if should_push else "FOLD"
+                                freq = 1.0 if should_push else 0.0
+                                print(f"\n  >>> NODE-LOCK EXPLOIT OVERRIDE vs {uid_str}: {hand_name} | -> {action} <<<")
+                                break
+                    except Exception as e:
+                        print(f"  [ExploitManager in AutoPlay] Error: {e}")
+                # ------------------------
+                
+                if freq >= 0 or getattr(self, "exploit_manager", None) is not None:
+                    print(f"\n  >>> AUTO GTO/EXPLOIT: {hand_name} | {np}P {hero_pos} prior='{prior}' | "
                           f"freq={freq*100:.0f}% -> {action} <<<")
 
                     # Emit to GUI
