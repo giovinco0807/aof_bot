@@ -519,6 +519,7 @@ class PacketCapture:
         self.leave_if_disadvantaged = leave_if_disadvantaged
         self.hero_hands_played = 0          # hands played by hero at current table
         self.has_left = False               # prevent double-leave
+        self.captcha_active = False          # CAPTCHA freeze flag
         # Auto-play controller (PC-native first, ADB fallback)
         self.adb = None
         if auto_play:
@@ -687,6 +688,9 @@ class PacketCapture:
             "PineSitDownBRC": self._on_pine_sitdown,
             "PineStandUpBRC": self._on_pine_standup,
             "PineRoomStatusBRC": self._on_pine_room_status,
+            # CAPTCHA
+            "ShowCaptchaRSP": self._on_show_captcha,
+            "CaptchaRSP": self._on_captcha_result,
         }.get(name)
 
         if handler:
@@ -1602,6 +1606,43 @@ class PacketCapture:
             ofc.players[sid] = OFCPlayerState(uid=uid, seat_id=sid, name=name, chips=chips)
         print(f"  [OFC RoomStatus] table={table_id} players={len(players)}")
 
+    # ============ CAPTCHA Handlers ============
+
+    def _on_show_captcha(self, table_id: int, pkt: dict):
+        """Handle CAPTCHA display — pause all auto-play and alert the user."""
+        print(f"\n{'='*60}")
+        print(f"  [CAPTCHA] ⚠️  CAPTCHA DETECTED on table {table_id}!")
+        print(f"  [CAPTCHA] Auto-play PAUSED on ALL tables.")
+        print(f"  [CAPTCHA] Packet data: {json.dumps(pkt, ensure_ascii=False)}")
+        print(f"{'='*60}\n")
+
+        # Freeze auto-play on all tables
+        self.captcha_active = True
+        for tid, hs in self.tables.items():
+            hs.pending_auto_play = False
+
+        # Play alert sound (Windows beep — repeat 5 times)
+        try:
+            import winsound
+            for _ in range(5):
+                winsound.Beep(1000, 300)  # 1000Hz, 300ms
+                import time
+                time.sleep(0.2)
+        except Exception:
+            pass  # Non-Windows fallback: no sound
+
+    def _on_captcha_result(self, table_id: int, pkt: dict):
+        """Handle CAPTCHA result — resume auto-play if solved."""
+        print(f"\n{'='*60}")
+        print(f"  [CAPTCHA] CaptchaRSP received on table {table_id}")
+        print(f"  [CAPTCHA] Packet data: {json.dumps(pkt, ensure_ascii=False)}")
+        print(f"  [CAPTCHA] Auto-play RESUMED.")
+        print(f"{'='*60}\n")
+
+        # Resume auto-play
+        self.captcha_active = False
+
+
     def _save_ofc_hand(self, ofc: OFCHandState, player_data: list):
         """Save a completed OFC hand to the database."""
         try:
@@ -2116,6 +2157,9 @@ class PacketCapture:
     def _auto_play_allin(self, table_id: int):
         """Auto-play based on GTO chart lookup. Falls back to ALL-IN if no chart."""
         if not getattr(self, 'auto_play', False) or not getattr(self, 'adb', None) or getattr(self, 'has_left', False):
+            return
+        if getattr(self, 'captcha_active', False):
+            print(f"  [AutoPlay] BLOCKED — CAPTCHA active")
             return
         import time
 

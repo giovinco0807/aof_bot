@@ -48,6 +48,9 @@ const INTERESTING_PACKETS = new Set([
     "PineSitDownBRC",
     "PineStandUpBRC",
     "PineRoomStatusBRC",
+    // CAPTCHA
+    "ShowCaptchaRSP",
+    "CaptchaRSP",
 ]);
 
 function initIl2cppExports(gameAssembly) {
@@ -95,6 +98,29 @@ function readIl2cppString(strObj) {
 }
 
 // ============ Protobuf Field Readers (offsets from Il2CppDumper) ============
+
+// Dump raw hex bytes from an object for reverse-engineering unknown packets
+function dumpObjectHex(ptr, length) {
+    try {
+        return ArrayBuffer.wrap(ptr, length)
+            ? ptr.readByteArray(length)
+                ? Array.from(new Uint8Array(ptr.readByteArray(length)))
+                    .map(b => ('0' + b.toString(16)).slice(-2))
+                    .join(' ')
+                : ""
+            : "";
+    } catch (e) {
+        try {
+            const bytes = [];
+            for (let i = 0; i < length; i++) {
+                bytes.push(('0' + ptr.add(i).readU8().toString(16)).slice(-2));
+            }
+            return bytes.join(' ');
+        } catch (e2) {
+            return "dump_error: " + e2.message;
+        }
+    }
+}
 
 function readPacketFields(obj, className) {
     const data = {};
@@ -271,6 +297,31 @@ function readPacketFields(obj, className) {
             case "PineRoomStatusBRC":
                 // pinePlayingStatus_=0x18(RepeatedField<PinePlayingStatus>)
                 data.players = readRepeatedPinePlayingStatus(obj.add(0x18).readPointer());
+                break;
+
+            case "ShowCaptchaRSP":
+            case "CaptchaRSP":
+                // Unknown field layout — dump raw memory for analysis
+                data._rawHex = dumpObjectHex(obj, 256);
+                // Try common protobuf int32 fields at typical offsets
+                try { data.field_0x1C = obj.add(0x1C).readS32(); } catch(e) {}
+                try { data.field_0x20 = obj.add(0x20).readS32(); } catch(e) {}
+                try { data.field_0x24 = obj.add(0x24).readS32(); } catch(e) {}
+                try { data.field_0x28 = obj.add(0x28).readS64().toNumber(); } catch(e) {}
+                // Try reading pointer at 0x20 as Il2Cpp string
+                try {
+                    const strPtr = obj.add(0x20).readPointer();
+                    if (!strPtr.isNull()) {
+                        data.field_0x20_str = readIl2cppString(strPtr);
+                    }
+                } catch(e) {}
+                // Try reading pointer at 0x28 as Il2Cpp string (could be image URL)
+                try {
+                    const strPtr2 = obj.add(0x28).readPointer();
+                    if (!strPtr2.isNull()) {
+                        data.field_0x28_str = readIl2cppString(strPtr2);
+                    }
+                } catch(e) {}
                 break;
 
             default:
