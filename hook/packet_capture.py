@@ -1609,51 +1609,45 @@ class PacketCapture:
     # ============ CAPTCHA Handlers ============
 
     def _on_show_captcha(self, table_id: int, pkt: dict):
-        """Handle CAPTCHA display — auto-solve math, pause for slider."""
-        print(f"\n{'='*60}")
-        print(f"  [CAPTCHA] ⚠️  CAPTCHA DETECTED on table {table_id}!")
-        print(f"  [CAPTCHA] Packet data: {json.dumps({k:v for k,v in pkt.items() if k != '_rawHex'}, ensure_ascii=False)}")
-        print(f"{'='*60}\n")
-
-        # Extract math question fields
+        """Handle CAPTCHA display — auto-solve math, alert for slider."""
+        operator = pkt.get("operator", -1)
         operand1 = pkt.get("operand1", 0)
         operand2 = pkt.get("operand2", 0)
-        operator = pkt.get("operator", 0)
         choices = pkt.get("choices", [])
         choices2 = pkt.get("choices2", [])
         timeout = pkt.get("timeout", 30)
 
-        # Compute the correct answer
-        if operator == 0:
-            answer = operand1 + operand2
-            op_str = "+"
-        elif operator == 1:
-            answer = operand1 - operand2
-            op_str = "-"
-        elif operator == 2:
-            answer = operand1 * operand2
-            op_str = "×"
-        else:
-            answer = operand1 + operand2  # Default to addition
-            op_str = f"?({operator})"
-
-        print(f"  [CAPTCHA] Math: {operand1} {op_str} {operand2} = {answer}")
-        print(f"  [CAPTCHA] Choices from packet: {choices} / {choices2}")
-        print(f"  [CAPTCHA] Timeout: {timeout}s")
+        print(f"\n{'='*60}")
+        print(f"  [CAPTCHA] ⚠️  CAPTCHA DETECTED on table {table_id}!")
+        print(f"  [CAPTCHA] type={'MATH' if operator == 0 else 'SLIDER'} (operator={operator})")
+        print(f"  [CAPTCHA] Packet: {json.dumps({k:v for k,v in pkt.items() if k != '_rawHex'}, ensure_ascii=False)}")
+        print(f"{'='*60}\n")
 
         # Freeze auto-play while we solve
         self.captcha_active = True
         for tid, hs in self.tables.items():
             hs.pending_auto_play = False
 
-        # Attempt auto-solve in a background thread (don't block the packet handler)
-        import threading
-        t = threading.Thread(
-            target=self._solve_captcha_math,
-            args=(table_id, answer, choices, choices2),
-            daemon=True
-        )
-        t.start()
+        if operator == 0:
+            # ===== MATH CAPTCHA: auto-solve =====
+            answer = operand1 + operand2
+            print(f"  [CAPTCHA] Math: {operand1} + {operand2} = {answer}")
+            print(f"  [CAPTCHA] Choices: {choices} / {choices2}")
+            print(f"  [CAPTCHA] Timeout: {timeout}s")
+
+            import threading
+            t = threading.Thread(
+                target=self._solve_captcha_math,
+                args=(table_id, answer, choices, choices2),
+                daemon=True
+            )
+            t.start()
+        else:
+            # ===== SLIDER / OTHER CAPTCHA: alert only =====
+            print(f"  [CAPTCHA] ⚠️  SLIDER CAPTCHA — manual intervention required!")
+            print(f"  [CAPTCHA] Auto-play PAUSED. Solve manually, bot will resume on CaptchaRSP.")
+            import threading
+            threading.Thread(target=self._captcha_alert, daemon=True).start()
 
     def _solve_captcha_math(self, table_id: int, answer: int, choices: list, choices2: list):
         """Auto-solve a math CAPTCHA by clicking the correct answer button."""
