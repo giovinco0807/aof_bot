@@ -300,28 +300,34 @@ function readPacketFields(obj, className) {
                 break;
 
             case "ShowCaptchaRSP":
+                // Fields decoded from hex dump analysis:
+                // 0x18: operand1 (int32) - first number in math question
+                // 0x1C: operand2 (int32) - second number (or captcha type)
+                // 0x20: operator (int32) - 0=add, 1=sub, 2=mul?
+                // 0x28: answer choices (pointer to RepeatedField<int> or similar)
+                // 0x30: pointer (possibly more choices or image data)
+                // 0x38: timeout (int32, seconds)
+                data.operand1 = obj.add(0x18).readS32();
+                data.operand2 = obj.add(0x1C).readS32();
+                data.operator = obj.add(0x20).readS32();
+                data.timeout = obj.add(0x38).readS32();
+                // Try reading answer choices from RepeatedField at 0x28
+                try {
+                    data.choices = readRepeatedInt(obj.add(0x28).readPointer());
+                } catch(e) { data.choices = []; }
+                // Also try at 0x30
+                try {
+                    data.choices2 = readRepeatedInt(obj.add(0x30).readPointer());
+                } catch(e) { data.choices2 = []; }
+                // Raw hex for debugging (first 128 bytes)
+                data._rawHex = dumpObjectHex(obj, 128);
+                break;
+
             case "CaptchaRSP":
-                // Unknown field layout — dump raw memory for analysis
-                data._rawHex = dumpObjectHex(obj, 256);
-                // Try common protobuf int32 fields at typical offsets
-                try { data.field_0x1C = obj.add(0x1C).readS32(); } catch(e) {}
-                try { data.field_0x20 = obj.add(0x20).readS32(); } catch(e) {}
-                try { data.field_0x24 = obj.add(0x24).readS32(); } catch(e) {}
-                try { data.field_0x28 = obj.add(0x28).readS64().toNumber(); } catch(e) {}
-                // Try reading pointer at 0x20 as Il2Cpp string
-                try {
-                    const strPtr = obj.add(0x20).readPointer();
-                    if (!strPtr.isNull()) {
-                        data.field_0x20_str = readIl2cppString(strPtr);
-                    }
-                } catch(e) {}
-                // Try reading pointer at 0x28 as Il2Cpp string (could be image URL)
-                try {
-                    const strPtr2 = obj.add(0x28).readPointer();
-                    if (!strPtr2.isNull()) {
-                        data.field_0x28_str = readIl2cppString(strPtr2);
-                    }
-                } catch(e) {}
+                // Response/result of CAPTCHA
+                data.code = obj.add(0x18).readS32();
+                data.result = obj.add(0x1C).readS32();
+                data._rawHex = dumpObjectHex(obj, 128);
                 break;
 
             default:

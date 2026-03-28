@@ -1609,40 +1609,233 @@ class PacketCapture:
     # ============ CAPTCHA Handlers ============
 
     def _on_show_captcha(self, table_id: int, pkt: dict):
-        """Handle CAPTCHA display — pause all auto-play and alert the user."""
+        """Handle CAPTCHA display — auto-solve math, pause for slider."""
         print(f"\n{'='*60}")
         print(f"  [CAPTCHA] ⚠️  CAPTCHA DETECTED on table {table_id}!")
-        print(f"  [CAPTCHA] Auto-play PAUSED on ALL tables.")
-        print(f"  [CAPTCHA] Packet data: {json.dumps(pkt, ensure_ascii=False)}")
+        print(f"  [CAPTCHA] Packet data: {json.dumps({k:v for k,v in pkt.items() if k != '_rawHex'}, ensure_ascii=False)}")
         print(f"{'='*60}\n")
 
-        # Freeze auto-play on all tables
+        # Extract math question fields
+        operand1 = pkt.get("operand1", 0)
+        operand2 = pkt.get("operand2", 0)
+        operator = pkt.get("operator", 0)
+        choices = pkt.get("choices", [])
+        choices2 = pkt.get("choices2", [])
+        timeout = pkt.get("timeout", 30)
+
+        # Compute the correct answer
+        if operator == 0:
+            answer = operand1 + operand2
+            op_str = "+"
+        elif operator == 1:
+            answer = operand1 - operand2
+            op_str = "-"
+        elif operator == 2:
+            answer = operand1 * operand2
+            op_str = "×"
+        else:
+            answer = operand1 + operand2  # Default to addition
+            op_str = f"?({operator})"
+
+        print(f"  [CAPTCHA] Math: {operand1} {op_str} {operand2} = {answer}")
+        print(f"  [CAPTCHA] Choices from packet: {choices} / {choices2}")
+        print(f"  [CAPTCHA] Timeout: {timeout}s")
+
+        # Freeze auto-play while we solve
         self.captcha_active = True
         for tid, hs in self.tables.items():
             hs.pending_auto_play = False
 
-        # Play alert sound (Windows beep — repeat 5 times)
+        # Attempt auto-solve in a background thread (don't block the packet handler)
+        import threading
+        t = threading.Thread(
+            target=self._solve_captcha_math,
+            args=(table_id, answer, choices, choices2),
+            daemon=True
+        )
+        t.start()
+
+    def _solve_captcha_math(self, table_id: int, answer: int, choices: list, choices2: list):
+        """Auto-solve a math CAPTCHA by clicking the correct answer button."""
+        import time
+
+        # Wait for the CAPTCHA UI to fully render
+        time.sleep(1.5)
+
+        # If we have answer choices from the packet, determine which button index to click
+        all_choices = choices if choices else choices2
+        button_idx = -1
+        if all_choices and answer in all_choices:
+            button_idx = all_choices.index(answer)
+            print(f"  [CAPTCHA] Answer {answer} found at index {button_idx} in choices {all_choices}")
+
+        if button_idx < 0:
+            # No choices in packet — use OCR to find the button
+            print(f"  [CAPTCHA] No choices in packet, trying OCR...")
+            button_idx = self._ocr_find_captcha_answer(table_id, answer)
+
+        if button_idx >= 0 and self.adb:
+            # Click the correct button
+            # CAPTCHA buttons are 3 buttons at the bottom of the popup
+            # From the screenshot: roughly at equal spacing in the center of the window
+            self._click_captcha_button(table_id, button_idx)
+        else:
+            # Fallback: alert the user
+            print(f"  [CAPTCHA] ⚠️  Could not auto-solve! Manual intervention needed!")
+            self._captcha_alert()
+
+    def _ocr_find_captcha_answer(self, table_id: int, answer: int) -> int:
+        """Use OCR to read the 3 CAPTCHA answer buttons and return the index of the correct one."""
+        try:
+            import pyautogui
+            import re
+
+            # Find the PPPoker window
+            try:
+                import pygetwindow as gw
+            except ImportError:
+                return -1
+
+            wins = gw.getWindowsWithTitle("PPPoker")
+            if not wins:
+                return -1
+
+            win = wins[0]
+            # Take a screenshot of the window region
+            # The CAPTCHA popup is in the center of the active table
+            screenshot = pyautogui.screenshot(region=(win.left, win.top, win.width, win.height))
+
+            # Try to use pytesseract for OCR
+            try:
+                import pytesseract
+                # Focus on the bottom half where answers are
+                h = screenshot.height
+                w = screenshot.width
+                # Crop to the middle area (where CAPTCHA popup usually appears)
+                # The CAPTCHA appears on one of the table panes
+                text = pytesseract.image_to_string(screenshot, config='--psm 6 digits')
+                print(f"  [CAPTCHA OCR] Full text: {text.strip()}")
+
+                # Find all numbers in the OCR text
+                numbers = [int(n) for n in re.findall(r'\b\d+\b', text)]
+                print(f"  [CAPTCHA OCR] Numbers found: {numbers}")
+
+                # The answer should be among them
+                if answer in numbers:
+                    # Find which of the 3 answer buttons
+                    # Use image_to_data for position info
+                    data = pytesseract.image_to_data(screenshot, output_type=pytesseract.Output.DICT)
+                    answer_str = str(answer)
+                    button_positions = []
+                    for i, txt in enumerate(data['text']):
+                        if txt.strip() == answer_str:
+                            x = data['left'][i] + data['width'][i] // 2
+                            y = data['top'][i] + data['height'][i] // 2
+                            button_positions.append((x, y))
+
+                    if button_positions:
+                        # Click at the found position
+                        bx, by = button_positions[0]
+                        abs_x = win.left + bx
+                        abs_y = win.top + by
+                        print(f"  [CAPTCHA OCR] Found '{answer}' at screen ({abs_x}, {abs_y})")
+                        pyautogui.click(abs_x, abs_y)
+                        print(f"  [CAPTCHA] ✅ Clicked answer {answer}!")
+                        return 99  # Signal: already clicked directly
+            except ImportError:
+                print(f"  [CAPTCHA] pytesseract not installed, trying manual approach...")
+
+            return -1
+        except Exception as e:
+            print(f"  [CAPTCHA OCR Error] {e}")
+            return -1
+
+    def _click_captcha_button(self, table_id: int, button_idx: int):
+        """Click the CAPTCHA answer button at the given index (0=left, 1=center, 2=right)."""
+        if button_idx == 99:
+            return  # Already clicked via OCR
+
+        try:
+            import pyautogui
+
+            try:
+                import pygetwindow as gw
+            except ImportError:
+                self._captcha_alert()
+                return
+
+            wins = gw.getWindowsWithTitle("PPPoker")
+            if not wins:
+                self._captcha_alert()
+                return
+
+            win = wins[0]
+
+            # CAPTCHA button positions (relative to window)
+            # From the screenshot analysis: 3 buttons at the bottom of the popup
+            # The popup is roughly centered in a table pane
+            # Table panes are side by side, each ~340px wide
+            # Button row: ~75% down from top of window
+            # Button spacing: 3 buttons evenly across ~200px
+
+            # Determine which table pane the CAPTCHA is on
+            table_keys = list(self.tables.keys())
+            try:
+                tbl_idx = table_keys.index(table_id)
+            except ValueError:
+                tbl_idx = 0
+
+            # Window is divided into panels (lobby + table1 + table2)
+            # Each table pane is roughly 1/3 of the window
+            pane_width = win.width // 3
+            pane_x = pane_width * (tbl_idx + 1)  # Skip lobby pane
+            pane_center_x = pane_x + pane_width // 2
+
+            # Button Y is roughly 73% down the window height
+            btn_y = int(win.height * 0.73)
+
+            # 3 buttons spread ~130px apart, centered
+            btn_spacing = 65
+            btn_positions = [
+                pane_center_x - btn_spacing,  # Left
+                pane_center_x,                 # Center
+                pane_center_x + btn_spacing,   # Right
+            ]
+
+            if 0 <= button_idx < 3:
+                click_x = win.left + btn_positions[button_idx]
+                click_y = win.top + btn_y
+                print(f"  [CAPTCHA] Clicking button {button_idx} at ({click_x}, {click_y})")
+                pyautogui.click(click_x, click_y)
+                print(f"  [CAPTCHA] ✅ Clicked answer button {button_idx}!")
+            else:
+                self._captcha_alert()
+        except Exception as e:
+            print(f"  [CAPTCHA Click Error] {e}")
+            self._captcha_alert()
+
+    def _captcha_alert(self):
+        """Play alert sound for manual CAPTCHA intervention."""
         try:
             import winsound
+            import time
             for _ in range(5):
-                winsound.Beep(1000, 300)  # 1000Hz, 300ms
-                import time
+                winsound.Beep(1000, 300)
                 time.sleep(0.2)
         except Exception:
-            pass  # Non-Windows fallback: no sound
+            pass
 
     def _on_captcha_result(self, table_id: int, pkt: dict):
         """Handle CAPTCHA result — resume auto-play if solved."""
+        code = pkt.get("code", -1)
+        result = pkt.get("result", -1)
         print(f"\n{'='*60}")
-        print(f"  [CAPTCHA] CaptchaRSP received on table {table_id}")
-        print(f"  [CAPTCHA] Packet data: {json.dumps(pkt, ensure_ascii=False)}")
+        print(f"  [CAPTCHA] CaptchaRSP: code={code} result={result}")
         print(f"  [CAPTCHA] Auto-play RESUMED.")
         print(f"{'='*60}\n")
 
         # Resume auto-play
         self.captcha_active = False
-
-
     def _save_ofc_hand(self, ofc: OFCHandState, player_data: list):
         """Save a completed OFC hand to the database."""
         try:
