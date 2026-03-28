@@ -885,10 +885,10 @@ class PacketCapture:
                             tbl_idx = 0
                             
                         if getattr(self, 'adb', None):
-                            def do_pre_fold():
+                            def do_pre_fold(_idx=tbl_idx):
                                 import time
                                 time.sleep(0.5)  # Wait for UI to show the buttons
-                                self.adb.tap_fold(delay=True, table_index=tbl_idx)
+                                self.adb.tap_fold(delay=True, table_index=_idx)
                                 # We DO NOT set hs.pre_folded = True.
                                 # If the click fails, _auto_play_allin will catch it when our turn comes.
                             self._execute_async(do_pre_fold)
@@ -2382,10 +2382,10 @@ class PacketCapture:
 
         if not hs.hero_cards or len(hs.hero_cards) != 4:
             print(f"\n  >>> AUTO FOLD (no cards info) <<<")
-            def do_fold_no_cards():
+            def do_fold_no_cards(_idx=tbl_idx):
                 import time
                 time.sleep(0.3)
-                self.adb.tap_fold(delay=False, table_index=tbl_idx)
+                self.adb.tap_fold(delay=False, table_index=_idx)
             self._execute_async(do_fold_no_cards)
             return
 
@@ -2445,11 +2445,11 @@ class PacketCapture:
                     })
 
                     print(f"  [AutoPlay] Queueing adb.tap_{'allin' if should_push else 'fold'}() on table {tbl_idx}")
-                    def do_gto_action():
+                    def do_gto_action(_push=should_push, _idx=tbl_idx, _hs=hs):
                         import time
                         # Wait minimum "think time" from when cards were received
                         min_think = self.adb.config.get("min_think_time", 1.0) if self.adb else 1.0
-                        elapsed = time.time() - getattr(hs, 'cards_received_time', 0)
+                        elapsed = time.time() - getattr(_hs, 'cards_received_time', 0)
                         if elapsed < min_think:
                             time.sleep(min_think - elapsed)
                             
@@ -2459,43 +2459,43 @@ class PacketCapture:
                             
                         max_retries = 3
                         for attempt in range(max_retries):
-                            if getattr(hs, 'hero_acted', False):
+                            if getattr(_hs, 'hero_acted', False):
                                 break
-                            if getattr(hs, 'hand_complete', False):
+                            if getattr(_hs, 'hand_complete', False):
                                 break
                             if attempt > 0:
                                 print(f"  [AutoPlay] Retry #{attempt} (no server confirmation yet)")
                                 time.sleep(0.3)
-                            if should_push:
-                                self.adb.tap_allin(delay=False, table_index=tbl_idx)
+                            if _push:
+                                self.adb.tap_allin(delay=False, table_index=_idx)
                             else:
-                                self.adb.tap_fold(delay=False, table_index=tbl_idx)
+                                self.adb.tap_fold(delay=False, table_index=_idx)
                             # Wait for server confirmation (1.5s)
                             for _ in range(15):
                                 time.sleep(0.1)
-                                if getattr(hs, 'hero_acted', False) or getattr(hs, 'hand_complete', False):
+                                if getattr(_hs, 'hero_acted', False) or getattr(_hs, 'hand_complete', False):
                                     break
-                        if not getattr(hs, 'hero_acted', False) and not getattr(hs, 'hand_complete', False):
+                        if not getattr(_hs, 'hero_acted', False) and not getattr(_hs, 'hand_complete', False):
                             print(f"  [AutoPlay] WARNING: action not confirmed after {max_retries} attempts!")
                     self._execute_async(do_gto_action)
                     return
 
             # Fallback if position unknown
             print(f"\n  >>> AUTO FOLD (pos unknown: {hand_name}) <<<")
-            def do_fold_unknown():
+            def do_fold_unknown(_idx=tbl_idx):
                 import time
                 time.sleep(0.3)
-                self.adb.tap_fold(delay=False, table_index=tbl_idx)
+                self.adb.tap_fold(delay=False, table_index=_idx)
             self._execute_async(do_fold_unknown)
 
         except Exception as e:
             import traceback
             print(f"  [AutoPlay] Error during chart lookup: {e}")
             traceback.print_exc()
-            def do_fold_error():
+            def do_fold_error(_idx=tbl_idx):
                 import time
                 time.sleep(1.0)
-                self.adb.tap_fold(delay=False, table_index=tbl_idx)
+                self.adb.tap_fold(delay=False, table_index=_idx)
                 time.sleep(3.0)
             self._execute_async(do_fold_error)
 
