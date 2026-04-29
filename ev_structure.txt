@@ -1,0 +1,194 @@
+================================================================================
+  AoF POT/INVESTMENT STRUCTURE ANALYSIS
+================================================================================
+
+  Hand 54253 | 2P | Pot=4000 Rake=0 BB=2000
+  All-in: 1 | Fold: 1
+    A [----] profit=+    2000 <<HERO
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=2000 | Losers=-2000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54255 | 2P | Pot=31360 Rake=640 BB=2000
+  All-in: 2 | Fold: 0
+    A [As3s] profit=+   15360 <<HERO
+    A [7dAh] profit=  -16000
+    Sum(profits)=-640 | Winners=15360 | Losers=-16000
+    -rake=-640 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15360
+
+  Hand 54261 | 3P | Pot=4000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [----] profit=+    2000 <<HERO
+    F [----] profit=+       0
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=2000 | Losers=-2000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54267 | 3P | Pot=4000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [----] profit=+    2000 <<HERO
+    F [----] profit=+       0
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=2000 | Losers=-2000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54274 | 3P | Pot=33320 Rake=680 BB=2000
+  All-in: 2 | Fold: 1
+    A [KdTd] profit=+   17320
+    F [----] profit=   -2000
+    A [3h3c] profit=  -16000 <<HERO
+    Sum(profits)=-680 | Winners=17320 | Losers=-18000
+    -rake=-680 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15320
+
+  Hand 54275 | 3P | Pot=31360 Rake=640 BB=2000
+  All-in: 2 | Fold: 1
+    A [QsQc] profit=+   15360 <<HERO
+    F [----] profit=+       0
+    A [4dAs] profit=  -16000
+    Sum(profits)=-640 | Winners=15360 | Losers=-16000
+    -rake=-640 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15360
+
+  Hand 54276 | 3P | Pot=47040 Rake=960 BB=2000
+  All-in: 3 | Fold: 0
+    A [7h7s] profit=+   31040
+    A [4c6h] profit=  -16000 <<HERO
+    A [As3s] profit=  -16000
+    Sum(profits)=-960 | Winners=31040 | Losers=-32000
+    -rake=-960 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15040
+
+  Hand 54283 | 3P | Pot=33320 Rake=680 BB=2000
+  All-in: 2 | Fold: 1
+    A [7cAd] profit=+   17320
+    F [----] profit=   -2000
+    A [5cAh] profit=  -16000 <<HERO
+    Sum(profits)=-680 | Winners=17320 | Losers=-18000
+    -rake=-680 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15320
+
+  Hand 54284 | 3P | Pot=31360 Rake=640 BB=2000
+  All-in: 2 | Fold: 1
+    A [KsTh] profit=+   15360 <<HERO
+    F [----] profit=+       0
+    A [5s5c] profit=  -16000
+    Sum(profits)=-640 | Winners=15360 | Losers=-16000
+    -rake=-640 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15360
+
+  Hand 54285 | 3P | Pot=4000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [----] profit=+    2000 <<HERO
+    F [----] profit=+       0
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=2000 | Losers=-2000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54286 | 3P | Pot=32340 Rake=660 BB=2000
+  All-in: 2 | Fold: 1
+    A [QcAh] profit=+   16340 <<HERO
+    F [----] profit=   -1000
+    A [4dAs] profit=  -16000
+    Sum(profits)=-660 | Winners=16340 | Losers=-17000
+    -rake=-660 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15340
+
+  Hand 54288 | 3P | Pot=31360 Rake=640 BB=2000
+  All-in: 2 | Fold: 1
+    A [AdTc] profit=+   15360 <<HERO
+    F [----] profit=+       0
+    A [Ks7c] profit=  -16000
+    Sum(profits)=-640 | Winners=15360 | Losers=-16000
+    -rake=-640 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15360
+
+  Hand 54291 | 3P | Pot=31360 Rake=640 BB=2000
+  All-in: 2 | Fold: 1
+    A [9dQs] profit=+   15360 <<HERO
+    F [----] profit=+       0
+    A [4c6c] profit=  -16000
+    Sum(profits)=-640 | Winners=15360 | Losers=-16000
+    -rake=-640 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15360
+
+  Hand 54293 | 3P | Pot=5000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [2d9d] profit=+    3000 <<HERO
+    F [----] profit=   -1000
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=3000 | Losers=-3000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54295 | 3P | Pot=4000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [2d9d] profit=+    2000 <<HERO
+    F [----] profit=+       0
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=2000 | Losers=-2000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54298 | 3P | Pot=31360 Rake=640 BB=2000
+  All-in: 2 | Fold: 1
+    A [9c9h] profit=+   15360 <<HERO
+    F [----] profit=+       0
+    A [Ks3s] profit=  -16000
+    Sum(profits)=-640 | Winners=15360 | Losers=-16000
+    -rake=-640 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15360
+
+  Hand 54299 | 3P | Pot=32340 Rake=660 BB=2000
+  All-in: 2 | Fold: 1
+    A [Ad5d] profit=+   16340
+    F [----] profit=   -1000
+    A [9sTc] profit=  -16000 <<HERO
+    Sum(profits)=-660 | Winners=16340 | Losers=-17000
+    -rake=-660 | check: sum should = -rake: OK
+    Loser investment (from profit) = 16000
+    Winner investment (pot-rake-profit) = 15340
+
+  Hand 54304 | 3P | Pot=4000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [8dTc] profit=+    2000 <<HERO
+    F [----] profit=+       0
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=2000 | Losers=-2000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54307 | 3P | Pot=4000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [7s2d] profit=+    2000 <<HERO
+    F [----] profit=+       0
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=2000 | Losers=-2000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+  Hand 54308 | 3P | Pot=5000 Rake=0 BB=2000
+  All-in: 1 | Fold: 2
+    A [7s2d] profit=+    3000 <<HERO
+    F [----] profit=   -1000
+    F [----] profit=   -2000
+    Sum(profits)=0 | Winners=3000 | Losers=-3000
+    -rake=0 | check: sum should = -rake: OK
+    Winner investment (pot-rake-profit) = 2000
+
+================================================================================

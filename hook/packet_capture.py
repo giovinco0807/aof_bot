@@ -411,21 +411,40 @@ class HandState:
     cards_received_time: float = 0.0  # Time when hero cards were received
 
     def get_position_map(self) -> Dict[int, str]:
-        """Return dict of {seat_id: position_name} based on SB and BB seats.
+        """Return dict of {seat_id: position_name}.
         AoF action order: 4P: CO→BTN→SB→BB, 3P: BTN→SB→BB, 2P: SB→BB
         """
         np = len(self.seats)
         pos_map = {}
+        all_sids = sorted(self.seats.keys())
+
+        # 1. Primary deduction: Use dealer_idx (Button) which is known at EnterRoom/RoundStart.
+        d_idx = getattr(self, 'dealer_idx', -1)
+        if d_idx >= 0 and d_idx in all_sids:
+            idx = all_sids.index(d_idx)
+            if np == 2:
+                # In HU, BTN is the SB and acts first preflop. The other is BB.
+                pos_map[all_sids[idx]] = "SB"
+                pos_map[all_sids[(idx + 1) % np]] = "BB"
+            elif np == 3:
+                pos_map[all_sids[idx]] = "BTN"
+                pos_map[all_sids[(idx + 1) % np]] = "SB"
+                pos_map[all_sids[(idx + 2) % np]] = "BB"
+            elif np == 4:
+                pos_map[all_sids[idx]] = "BTN"
+                pos_map[all_sids[(idx + 1) % np]] = "SB"
+                pos_map[all_sids[(idx + 2) % np]] = "BB"
+                pos_map[all_sids[(idx + 3) % np]] = "CO"
+
+        # 2. Secondary override: If explicit blind action packets were received, they override (safety net).
         if self.sb_seat >= 0: pos_map[self.sb_seat] = "SB"
         if self.bb_seat >= 0: pos_map[self.bb_seat] = "BB"
 
-        all_sids = sorted(self.seats.keys())
+        # 3. Fallback for 3P/4P if dealer was unknown but explicit blinds were present.
         remaining = [s for s in all_sids if s not in pos_map]
-
         if np == 3 and len(remaining) == 1:
             pos_map[remaining[0]] = "BTN"
         elif np == 4 and len(remaining) == 2:
-            # BTN is immediately before SB in clockwise seat order
             if self.sb_seat in all_sids:
                 sb_idx = all_sids.index(self.sb_seat)
                 for s in remaining:
@@ -434,6 +453,7 @@ class HandState:
                         pos_map[s] = "BTN"
                     else:
                         pos_map[s] = "CO"
+        
         return pos_map
 
     def get_hero_position_and_prior(self) -> tuple[str, str]:
@@ -555,6 +575,8 @@ class PacketCapture:
         self.hand_count = 0
         self.hands_saved = 0
         self.session_profit = 0
+        self.session_ev = 0.0          # Equity-based EV profit (chips)
+        self.session_ev_hands = 0      # Hands with showdown EV calculated
         # Persistent seat->UID mapping per table (survives hand resets)
         self.seat_uid_map: Dict[int, Dict[int, int]] = {}  # table_id -> {seat_id -> uid}
         self.seat_name_map: Dict[int, Dict[int, str]] = {} # table_id -> {seat_id -> name}
@@ -826,6 +848,10 @@ class PacketCapture:
                 print(f"  Hero cards: {' '.join(cards)} {'[AoF]' if is_allin else ''}")
                 hs.cards_received_time = time.time()
 
+                # Recovery: if hero_seat is unknown, try to find it from seat_uid_map
+                if hs.hero_seat < 0 and self.hero_uid:
+                    self._try_recover_hero_seat(hs, table_id)
+
                 # -------------------------------------------------------
                 # Trigger solver immediately on card receipt.
                 # This handles the case where hero acts FIRST (UTG/BTN):
@@ -864,6 +890,10 @@ class PacketCapture:
             is_allin = pkt.get("isAllin", False)
             print(f"  Hero cards: {' '.join(cards)} {'[AoF]' if is_allin else ''}")
 
+            # Recovery: if hero_seat is unknown, try to find it from seat_uid_map
+            if hs.hero_seat < 0 and self.hero_uid:
+                self._try_recover_hero_seat(hs, table_id)
+
             if self.enable_solver and hs.is_aof:
                 self._execute_async(self._check_solver_advice, hs)
 
@@ -884,27 +914,75 @@ class PacketCapture:
                         except ValueError:
                             tbl_idx = 0
                             
+                        hero_pos, prior = hs.get_hero_position_and_prior()
+                        is_first = (prior == "")
+                            
                         if getattr(self, 'adb', None):
-                            def do_pre_fold(_idx=tbl_idx):
+                            def do_pre_fold(_idx=tbl_idx, _first=is_first):
                                 import time
-                                time.sleep(0.5)  # Wait for UI to show the buttons
-                                self.adb.tap_fold(delay=True, table_index=_idx)
+                                if _first:
+                                    time.sleep(1.2)  # Wait longer for initial action UI animation
+                                else:
+                                    time.sleep(0.6)  # Wait for UI animation to show the Fold button
+                                self.adb.tap_fold(delay=False, table_index=_idx)
                                 # We DO NOT set hs.pre_folded = True.
-                                # If the click fails, _auto_play_allin will catch it when our turn comes.
                             self._execute_async(do_pre_fold)
                     else:
-                        # Pre-allin for BB: if hand is 100% push for ALL possible priors
+                        # Pre-allin for BB with absolute premium hands
                         self._try_pre_allin(hs, table_id, hand_name)
                 except Exception as e:
                     print(f"  [PreAction] Error: {e}")
         else:
             print(f"  [HandCardRSP] No cards in packet: {list(pkt.keys())}")
 
+    def _try_pre_allin(self, hs, table_id, hand_name):
+        """Pre-reserve All-in for BB with absolute premium hands."""
+        PREMIUM_HANDS = {"AA", "KK", "QQ", "AKs", "AKo", "JJ"}
+        if hand_name in PREMIUM_HANDS:
+            hero_pos, prior = hs.get_hero_position_and_prior()
+            if hero_pos == "BB":
+                print(f"\n  >>> PRE-ACTION ALLIN: {hand_name} is premium (BB) <<<")
+                try:
+                    table_keys = list(self.tables.keys())
+                    tbl_idx = table_keys.index(table_id)
+                except ValueError:
+                    tbl_idx = 0
+                
+                if getattr(self, 'adb', None):
+                    def do_pre_allin(_idx=tbl_idx):
+                        import time
+                        time.sleep(0.6)
+                        self.adb.tap_allin(delay=False, table_index=_idx)
+                        hs.pre_allined = True
+                    self._execute_async(do_pre_allin)
+
     def _on_action_notify(self, table_id: int, pkt: dict):
-        """Handle ActionNotifyBRC - notifies hero it's their turn to act."""
+        """Handle ActionNotifyBRC - notifies hero it's their turn to act.
+        
+        ActionNotifyBRC is ONLY sent to us for our own turn, so if hero_seat
+        is unknown (-1), we can reliably set it from this packet.
+        """
         hs = self._get_table(table_id)
         seat_id = pkt.get("seatId", -1)
         timeout = pkt.get("timeout", 0)
+
+        # Recovery: ActionNotifyBRC is only sent to US for OUR turn.
+        # If hero_seat is unknown, this is a reliable way to detect it.
+        if hs.hero_seat < 0 and seat_id >= 0 and self.hero_uid:
+            hs.hero_seat = seat_id
+            # Also update persistent UID map
+            uid_map = self.seat_uid_map.get(table_id, {})
+            if seat_id in uid_map:
+                pass  # UID already known
+            else:
+                if table_id not in self.seat_uid_map:
+                    self.seat_uid_map[table_id] = {}
+                self.seat_uid_map[table_id][seat_id] = self.hero_uid
+            if seat_id in hs.seats:
+                hs.seats[seat_id].uid = self.hero_uid
+            print(f"  [ActionNotify] ★ HERO RECOVERED: seat {seat_id} (from ActionNotifyBRC)")
+            self._emit_gui_hand_update(hs)
+
         if seat_id == hs.hero_seat:
             print(f"  [ActionNotify] Hero's turn (seat {seat_id}, timeout={timeout}s)")
             self._auto_play_allin(table_id)
@@ -938,6 +1016,11 @@ class PacketCapture:
                 seat.action = "A"  # In AoF, raise = allin
             # SB/BB are not player actions
             seat.chips = remaining
+            # Recovery: if this seat has hero's UID but hero_seat is unknown
+            if hs.hero_seat < 0 and seat.uid == self.hero_uid and self.hero_uid:
+                hs.hero_seat = seat_id
+                print(f"  [ActionBRC] ★ HERO RECOVERED: seat {seat_id} (from existing seat UID)")
+                self._emit_gui_hand_update(hs)
         else:
             # Seat not yet known - check persistent UID map
             uid_map = self.seat_uid_map.get(table_id, {})
@@ -949,6 +1032,11 @@ class PacketCapture:
                 hs.seats[seat_id].action = "F"
             elif action_type in (ACTION_RAISE, ACTION_CALL):
                 hs.seats[seat_id].action = "A"
+            # Recovery: newly created seat has hero's UID
+            if hs.hero_seat < 0 and uid == self.hero_uid and self.hero_uid:
+                hs.hero_seat = seat_id
+                print(f"  [ActionBRC] ★ HERO RECOVERED: seat {seat_id} (from uid_map)")
+                self._emit_gui_hand_update(hs)
 
         is_hero = seat_id == hs.hero_seat
         if is_hero:
@@ -1060,6 +1148,10 @@ class PacketCapture:
 
         hs.pot = total_pot
         hs.hand_complete = True
+
+        # Compute equity-based EV for this hand (non-blocking, after rake is known)
+        if hs.hero_seat >= 0:
+            self._execute_async(self._compute_session_ev, hs, total_pot)
         # Disarm auto-play completely at end of hand
         hs.last_auto_play_time = 0.0
         hs.hero_cards = ""
@@ -1079,6 +1171,35 @@ class PacketCapture:
         pool = pkt.get("pool", [])
         if pool:
             hs.pot = max(pool) if pool else 0
+
+    def _try_recover_hero_seat(self, hs: HandState, table_id: int):
+        """Try to recover hero_seat when it's -1 by scanning seats and uid maps.
+
+        Called when we receive hero's cards but hero_seat is unknown (common
+        on the 2nd table in multi-table mode where EnterRoomRSP may not
+        have included the hero in the initial seat list).
+        """
+        # Method 1: Check existing seats for matching UID
+        for sid, seat in hs.seats.items():
+            if seat.uid == self.hero_uid:
+                hs.hero_seat = sid
+                print(f"  [Recovery] ★ HERO FOUND: seat {sid} (from seats UID)")
+                self._emit_gui_hand_update(hs)
+                return
+
+        # Method 2: Check persistent seat_uid_map
+        uid_map = self.seat_uid_map.get(table_id, {})
+        for sid, uid in uid_map.items():
+            if uid == self.hero_uid:
+                hs.hero_seat = sid
+                # Also update the seat object if it exists
+                if sid in hs.seats:
+                    hs.seats[sid].uid = self.hero_uid
+                print(f"  [Recovery] ★ HERO FOUND: seat {sid} (from seat_uid_map)")
+                self._emit_gui_hand_update(hs)
+                return
+
+        print(f"  [Recovery] hero_seat still unknown (hero_uid={self.hero_uid} not in seats)")
 
     def _on_sitdown(self, table_id: int, pkt: dict):
         hs = self._get_table(table_id)
@@ -1853,6 +1974,149 @@ class PacketCapture:
             print(f"  [DB] OFC hand #{self.ofc_hands_saved} saved (game={ofc.game_id})")
         except Exception as e:
             print(f"  [DB Error] OFC save: {e}")
+
+    # ============ Session EV Calculation ============
+
+    def _compute_session_ev(self, hs: HandState, total_pot: int):
+        """Compute equity-based EV for the hero in this completed hand.
+
+        For showdown hands (hero pushed + at least one opponent pushed):
+        - Computes preflop equity for all all-in players via Monte Carlo
+        - hero_ev = equity × net_pot (after rake)
+        - EV diff = hero_ev - hero_cost (what hero invested)
+
+        For non-showdown hands (hero folded, or everyone folded to hero):
+        - EV = actual profit (no equity calculation needed)
+
+        Supports multiway pots (2P, 3P, 4P showdowns) correctly.
+        """
+        if hs.hero_seat < 0:
+            return
+
+        hero_seat = hs.seats.get(hs.hero_seat)
+        if not hero_seat:
+            return
+
+        # Collect all-in players with their hole cards
+        allin_players = []  # [(seat_id, card_str), ...]
+        for sid, seat in sorted(hs.seats.items()):
+            if seat.action == "A" and seat.cards:
+                allin_players.append((sid, seat.cards))
+
+        hero_action = hero_seat.action
+        hero_actual_profit = hs.profits.get(hs.hero_seat, 0)
+
+        # Case 1: Hero folded → EV = actual loss (blind/ante cost), no equity calc
+        if hero_action == "F":
+            self.session_ev += hero_actual_profit
+            self._print_ev_summary(hero_actual_profit, hero_actual_profit, "fold")
+            return
+
+        # Case 2: Hero pushed but no showdown (everyone else folded)
+        hero_cards_str = hero_seat.cards or getattr(hs, 'hero_cards_for_db', '')
+        if len(allin_players) < 2:
+            # Hero won uncontested
+            self.session_ev += hero_actual_profit
+            self._print_ev_summary(hero_actual_profit, hero_actual_profit, "no-contest")
+            return
+
+        # Case 3: Showdown (2+ players all-in with cards) → compute equity
+        try:
+            from treys import Card, Evaluator, Deck
+
+            evaluator = Evaluator()
+
+            # Parse all hands
+            parsed_hands = []
+            hero_idx = -1
+            for i, (sid, card_str) in enumerate(allin_players):
+                if len(card_str) < 4:
+                    continue
+                c1_str = card_str[0:2]
+                c2_str = card_str[2:4]
+                try:
+                    c1 = Card.new(c1_str)
+                    c2 = Card.new(c2_str)
+                    parsed_hands.append((sid, [c1, c2]))
+                    if sid == hs.hero_seat:
+                        hero_idx = len(parsed_hands) - 1
+                except Exception:
+                    continue
+
+            if hero_idx < 0 or len(parsed_hands) < 2:
+                # Hero's cards not in showdown data
+                self.session_ev += hero_actual_profit
+                self._print_ev_summary(hero_actual_profit, hero_actual_profit, "no-cards")
+                return
+
+            # Monte Carlo equity calculation (preflop, no board)
+            n_sims = 2000
+            wins = [0.0] * len(parsed_hands)
+
+            all_known_cards = []
+            for _, hand in parsed_hands:
+                all_known_cards.extend(hand)
+
+            for _ in range(n_sims):
+                deck = Deck()
+                # Remove known hole cards from deck
+                for card in all_known_cards:
+                    if card in deck.cards:
+                        deck.cards.remove(card)
+                # Deal 5 community cards
+                board = deck.draw(5)
+                # Evaluate each hand
+                scores = [evaluator.evaluate(board, hand) for _, hand in parsed_hands]
+                best_score = min(scores)  # Lower is better in treys
+                # Split among winners
+                winners = [i for i, s in enumerate(scores) if s == best_score]
+                share = 1.0 / len(winners)
+                for w in winners:
+                    wins[w] += share
+
+            equities = [w / n_sims for w in wins]
+
+            # Calculate EV
+            # total_pot = winner's chips = already net of rake
+            # In AoF, all stacks are equal at 8BB
+            hero_equity = equities[hero_idx]
+            stack_size = 8 * hs.bb_size if hs.bb_size > 0 else 16000
+
+            hero_ev_chips = hero_equity * total_pot - stack_size
+            # hero_ev_chips is the EV net profit (can be negative)
+
+            self.session_ev += hero_ev_chips
+            self.session_ev_hands += 1
+
+            eq_pct = hero_equity * 100
+            players_str = f"{num_allin}way" if num_allin > 2 else "HU"
+            self._print_ev_summary(hero_actual_profit, hero_ev_chips, players_str, eq_pct)
+
+        except ImportError:
+            # treys not installed, skip EV calc
+            self.session_ev += hero_actual_profit
+            self._print_ev_summary(hero_actual_profit, hero_actual_profit, "no-treys")
+        except Exception as e:
+            print(f"  [EV] Error computing equity: {e}")
+            self.session_ev += hero_actual_profit
+
+    def _print_ev_summary(self, actual: float, ev: float, mode: str, equity_pct: float = 0):
+        """Print EV summary for a hand and running session totals."""
+        ev_sign = "+" if ev >= 0 else ""
+        act_sign = "+" if actual >= 0 else ""
+        sess_sign = "+" if self.session_ev >= 0 else ""
+        sess_pl_sign = "+" if self.session_profit >= 0 else ""
+
+        if equity_pct > 0:
+            print(f"  [EV] {mode} | equity={equity_pct:.1f}% | "
+                  f"actual={act_sign}{actual:.0f} ev={ev_sign}{ev:.0f} | "
+                  f"SESSION: P/L={sess_pl_sign}{self.session_profit} "
+                  f"EV={sess_sign}{self.session_ev:.0f} "
+                  f"(diff={self.session_ev - self.session_profit:+.0f})")
+        else:
+            print(f"  [EV] {mode} | actual={act_sign}{actual:.0f} | "
+                  f"SESSION: P/L={sess_pl_sign}{self.session_profit} "
+                  f"EV={sess_sign}{self.session_ev:.0f}")
 
     # ============ Hand Recording ============
 

@@ -1,0 +1,33 @@
+===========================================================================
+  EV FORMULA VERIFICATION
+===========================================================================
+
+  Hero: 13076903 | 3127 hands on 2026-04-01
+  -----------------------------------------------------------------
+  Showdowns: 671
+  Actual P/L:            -42.7 BB
+  OLD EV (net_pot/N):   +112.1 BB  (diff:  +154.9 BB)
+  NEW EV (real stack):    -4.5 BB  (diff:   +38.3 BB)
+  Formula bias total:  +116.6 BB  (avg +0.174 BB/hand)
+
+  === STATISTICAL TEST ===
+  Expected SD over 671 showdowns: ~207 BB
+  OLD: z=+0.75 (p=0.455) normal variance
+  NEW: z=+0.18 (p=0.853) normal variance
+  P(this unlucky or worse): 42.7%
+
+  Hero: 13268363 | 2311 hands on 2026-04-01
+  -----------------------------------------------------------------
+  Showdowns: 492
+  Actual P/L:           -236.2 BB
+  OLD EV (net_pot/N):   -103.2 BB  (diff:  +133.0 BB)
+  NEW EV (real stack):  -203.5 BB  (diff:   +32.7 BB)
+  Formula bias total:  +100.3 BB  (avg +0.204 BB/hand)
+
+  === STATISTICAL TEST ===
+  Expected SD over 492 showdowns: ~177 BB
+  OLD: z=+0.75 (p=0.454) normal variance
+  NEW: z=+0.18 (p=0.854) normal variance
+  P(this unlucky or worse): 42.7%
+
+===========================================================================

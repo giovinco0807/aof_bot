@@ -1,0 +1,36 @@
+=== SCHEMA ===
+
+sqlite_sequence: ['name', 'seq']
+
+hands: ['id', 'timestamp', 'table_id', 'num_players', 'bb_size', 'dealer_seat', 'player_ids', 'stacks', 'actions', 'cards', 'board', 'winner_seat', 'pot_chips', 'rake_chips']
+
+hand_players: ['id', 'hand_id', 'player_id', 'seat_id', 'position', 'action', 'cards', 'profit_chips', 'profit_bb', 'prior_actions', 'stack_bb']
+
+player_stats: ['player_id', 'hands_seen', 'hands_pushed', 'total_profit_chips', 'total_profit_bb', 'showdown_count', 'showdown_hands', 'last_seen', 'player_name']
+
+ofc_hands: ['id', 'timestamp', 'table_id', 'game_id', 'num_players', 'dealer_seat', 'player_data', 'stakes']
+
+
+=== SAMPLE HANDS (last 5) ===
+{'id': 53382, 'timestamp': '2026-03-25T01:21:45.618926', 'table_id': '5296791', 'num_players': 4, 'bb_size': 2000.0, 'dealer_seat': 3, 'player_ids': '13386305,9163850,13268363,11364420', 'stacks': '0,0,15000,14000', 'actions': 'A,A,F,F', 'cards': '9cJc,8d8s,,', 'board': '6h7dAcTsQc', 'winner_seat': 1, 'pot_chips': 34300.0, 'rake_chips': 700.0}
+{'id': 53381, 'timestamp': '2026-03-25T01:21:38.301983', 'table_id': '5329466', 'num_players': 2, 'bb_size': 2000.0, 'dealer_seat': 2, 'player_ids': '13268363,13407577', 'stacks': '0,0', 'actions': 'A,A', 'cards': 'AcTc,Td9h', 'board': '3dAd3hJsQd', 'winner_seat': 2, 'pot_chips': 31360.0, 'rake_chips': 640.0}
+{'id': 53380, 'timestamp': '2026-03-25T01:21:29.487460', 'table_id': '5296791', 'num_players': 4, 'bb_size': 2000.0, 'dealer_seat': 2, 'player_ids': '13386305,9163850,13268363,11364420', 'stacks': '0,15000,14000,16000', 'actions': 'A,F,F,F', 'cards': ',,,', 'board': '', 'winner_seat': 0, 'pot_chips': 5000.0, 'rake_chips': 0.0}
+{'id': 53379, 'timestamp': '2026-03-25T01:21:20.085612', 'table_id': '5329466', 'num_players': 2, 'bb_size': 2000.0, 'dealer_seat': 3, 'player_ids': '13268363,13407577', 'stacks': '0,0', 'actions': 'A,A', 'cards': 'Jc8s,7cAc', 'board': 'Jh2d3sAh2s', 'winner_seat': 3, 'pot_chips': 31360.0, 'rake_chips': 640.0}
+{'id': 53378, 'timestamp': '2026-03-25T01:21:19.652094', 'table_id': '5296791', 'num_players': 4, 'bb_size': 2000.0, 'dealer_seat': 1, 'player_ids': '13386305,9163850,13268363,11364420', 'stacks': '15000,0,16000,0', 'actions': 'F,A,F,A', 'cards': ',9s9d,,KsQs', 'board': 'Th6cJsKc6h', 'winner_seat': 3, 'pot_chips': 32340.0, 'rake_chips': 660.0}
+
+
+=== SAMPLE HAND_PLAYERS (last 10) ===
+{'id': 159807, 'hand_id': 53382, 'player_id': '11364420', 'seat_id': 3, 'position': 'BB', 'action': 'F', 'cards': '', 'profit_chips': -2000.0, 'profit_bb': -1.0, 'prior_actions': 'A-A-F', 'stack_bb': 7.0}
+{'id': 159806, 'hand_id': 53382, 'player_id': '13268363', 'seat_id': 2, 'position': 'SB', 'action': 'F', 'cards': '', 'profit_chips': -1000.0, 'profit_bb': -0.5, 'prior_actions': 'A-A', 'stack_bb': 7.5}
+{'id': 159805, 'hand_id': 53382, 'player_id': '9163850', 'seat_id': 1, 'position': 'BTN', 'action': 'A', 'cards': '8d8s', 'profit_chips': 18300.0, 'profit_bb': 9.15, 'prior_actions': 'A', 'stack_bb': 0.0}
+{'id': 159804, 'hand_id': 53382, 'player_id': '13386305', 'seat_id': 0, 'position': 'CO', 'action': 'A', 'cards': '9cJc', 'profit_chips': -16000.0, 'profit_bb': -8.0, 'prior_actions': '', 'stack_bb': 0.0}
+{'id': 159803, 'hand_id': 53381, 'player_id': '13407577', 'seat_id': 3, 'position': 'SB', 'action': 'A', 'cards': 'Td9h', 'profit_chips': -16000.0, 'profit_bb': -8.0, 'prior_actions': '', 'stack_bb': 0.0}
+{'id': 159802, 'hand_id': 53381, 'player_id': '13268363', 'seat_id': 2, 'position': 'BB', 'action': 'A', 'cards': 'AcTc', 'profit_chips': 15360.0, 'profit_bb': 7.68, 'prior_actions': 'A', 'stack_bb': 0.0}
+{'id': 159801, 'hand_id': 53380, 'player_id': '11364420', 'seat_id': 3, 'position': 'CO', 'action': 'F', 'cards': '', 'profit_chips': 0.0, 'profit_bb': 0.0, 'prior_actions': '', 'stack_bb': 8.0}
+{'id': 159800, 'hand_id': 53380, 'player_id': '13268363', 'seat_id': 2, 'position': 'BB', 'action': 'F', 'cards': '', 'profit_chips': -2000.0, 'profit_bb': -1.0, 'prior_actions': 'F-A-F', 'stack_bb': 7.0}
+{'id': 159799, 'hand_id': 53380, 'player_id': '9163850', 'seat_id': 1, 'position': 'SB', 'action': 'F', 'cards': '', 'profit_chips': -1000.0, 'profit_bb': -0.5, 'prior_actions': 'F-A', 'stack_bb': 7.5}
+{'id': 159798, 'hand_id': 53380, 'player_id': '13386305', 'seat_id': 0, 'position': 'BTN', 'action': 'A', 'cards': '', 'profit_chips': 3000.0, 'profit_bb': 1.5, 'prior_actions': 'F', 'stack_bb': 0.0}
+
+
+Total hands: 38089
+Total hand_players: 114175

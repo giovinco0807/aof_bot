@@ -1,0 +1,346 @@
+=== ALL DISTINCT PACKET TYPES ===
+  ActionBRC                                       271283
+  ActionNotifyBRC                                 155963
+  RoundOverBRC                                    115179
+  RoundStartBRC                                   110607
+  ZoomFoldBRC                                     106755
+  WinnerRSP                                        56661
+  DealerInfoRSP                                    55569
+  SquidMarkInfoBRC                                 55568
+  WithdrawChipsBRC                                 53519
+  SpecifiedRGActivityInfoRSP                       52027
+  HandCardRSP                                      28635
+  ClubActivityInfoRSP                              26763
+  ClubRoomRSP                                      26120
+  PPCoinRSP                                        23487
+  ChipsBackBRC                                     22382
+  RoundHintMultipleTableRSP                        22283
+  FinishRoundHintRSP                               22041
+  ShowHandRSP                                      17663
+  TotalBuyinBRC                                    12885
+  ExchangeChipsRSP                                 12690
+  OtherLeaveRoomBRC                                 4928
+  ShowRabbitCardRSP                                 4848
+  OtherEnterRoomBRC                                 4785
+  PreActionRSP                                      4124
+  ClubListRSP                                       2818
+  ClubRoomTimeUpBRC                                 1642
+  ShowStraddleRSP                                   1600
+  PineActionBRC                                     1581
+  NoticeBRC                                         1378
+  WaitListInfoBRC                                   1303
+  CallGameBRC                                       1181
+  PineHandCardBRC                                   1149
+  StandUpBRC                                         910
+  SitDownBRC                                         887
+  JackPotRSP                                         863
+  LookerRSP                                          759
+  ProfitListRSP                                      759
+  FaceBRC                                            557
+  InteractBRC                                        419
+  ShowMyCardBRC                                      381
+  EmojiPackageRSP                                    280
+  EnterRoomRSP                                       278
+  UserPictureFrameListRSP                            273
+  GetUserNFTListRSP                                  253
+  TenthAnniMainInfoRSP                               252
+  TenthAnni2024PuzzleRSP                             240
+  TenthAnni2024RSP                                   240
+  PineResultBRC                                      235
+  FetchClubRakeRebateRSP                             234
+  NewMailNumRSP                                      220
+  PineGameStartBRC                                   215
+  TableGameOverRSP                                   215
+  UserTotalDataRSP                                   208
+  ClubStormInfoRSP                                   200
+  LeaveRoomRSP                                       189
+  AddActionTimeBRC                                   178
+  SitDownRSP                                         138
+  ClubItemListRSP                                    117
+  SelUserVipInfoRSP                                  117
+  CheckUserClubRoomRSP                               115
+  StandUpRSP                                         110
+  UserGetPictureFrameRedPointRSP                     110
+  UserTryToGetNewPictureFrameRSP                     110
+  HeadFrameGrantRSP                                  108
+  NewPPCoinFlowRSP                                   108
+  QueryRewardRSP                                     108
+  ClubInfoRSP                                        107
+  GetTaskListRSP                                     106
+  JackPotConfigRSP                                   105
+  ClubConfigRSP                                      104
+  GetRedPointDataRSP                                 104
+  HandMissionStopStatusRSP                           104
+  MailRSP                                            103
+  ClubRecommendOfficialRoomRSP                       100
+  PineLeaveRoomBRC                                    84
+  BookSeatBRC                                         70
+  PineStandUpBRC                                      63
+  AutoDelayRoomStatusBRC                              55
+  SeatStatusBRC                                       50
+  TableNoticeMsg                                      47
+  ClubRoomCountdownBRC                                46
+  CancelWaitBlindBRC                                  43
+  TimebankLeftTimesRSP                                42
+  OfficialMttPopupRSP                                 40
+  MustNotificationBRC                                 37
+  PineLeaveRoomRSP                                    37
+  BombPotStartBRC                                     36
+  RebuyNotifyRSP                                      36
+  PineReadyBRC                                        33
+  VerifyMailBindRSP                                   32
+  CallTimeBRC                                         30
+  JoinWaitListRSP                                     30
+  RingGameActivityInfoRSP                             28
+  HandMissionInfoRSP                                  27
+  PineSittingOutBRC                                   26
+  EvChopOperationBRC                                  24
+  LeaveWaitListRSP                                    24
+  UserShareInfoPush                                   21
+  HandsListV2RSP                                      20
+  GetUserAllMarksRSP                                  19
+  HandsInfoRSP                                        19
+  MemberGameDataRSP                                   17
+  MoneyRSP                                            16
+  RebateRSP                                           16
+  EvChopInfoBRC                                       15
+  EvChopOverBRC                                       14
+  ClubMemberRSP                                       13
+  MemberPPChipsRSP                                    13
+  DiamondRSP                                          12
+  HandReviewUrlRSP                                    12
+  PineLookerRSP                                       12
+  PineProfitListRSP                                   12
+  SelUserInfoRSP                                      12
+  SelUserShopInfoRSP                                  12
+  StoreReviewTimeRSP                                  12
+  TenthAnni2025RSP                                    12
+  UserCroupierInUsingRSP                              12
+  UserLocationRSP                                     12
+  UserLoginRSP                                        12
+  ClubRoomOverBRC                                     11
+  PineSitDownBRC                                      11
+  RiskNotifyBRC                                       11
+  RiskEndBRC                                          10
+  RunItMultiTimesAcceptRSP                            10
+  CheckCanTransferDiamondRSP                           9
+  MttInfoRSP                                           9
+  PineAddActionTimeBRC                                 9
+  UserLogoutRSP                                        9
+  AddCoinRSP                                           8
+  UserVipInfoChangeBRC                                 8
+  PineTableCountdownBRC                                7
+  ReserveSeatRSP                                       7
+  UserChangePictureFrameBRC                            7
+  UserDailySetInfoRSP                                  7
+  UserProfitDetailInfoRSP                              7
+  GetUserSettingRSP                                    6
+  ClubJoinListRSP                                      5
+  ItemChangeRSP                                        5
+  ListAgentPPCoinRequestRSP                            5
+  ItemListRSP                                          4
+  JackPotRecordRSP                                     4
+  UserLevelRewardsBRC                                  4
+  WaitListSeatInfoRSP                                  4
+  LoginDailyRewardRSP                                  3
+  MttRewardListRSP                                     3
+  NewMailRSP                                           3
+  PineRebuyNotifyRSP                                   3
+  PineRoomOverBRC                                      3
+  PurchaseGiftBagRSP                                   3
+  ReadMailRSP                                          3
+  RebuyBRC                                             3
+  StopSqueezeBRC                                       3
+  MultiCreateRoomRSP                                   2
+  ShowRiskRSP                                          2
+  UseItemRSP                                           2
+  CaptchaRSP                                           1
+  ClubLinkTemplateListRSP                              1
+  ClubRoomCountdownRSP                                 1
+  ClubVipFlowRSP                                       1
+  FetchLoginDailyRewardRSP                             1
+  FreeCalltimeRSP                                      1
+  GetRoomModuleRSP                                     1
+  HandMissionClaimRewardRSP                            1
+  PPCoinFlowRSP                                        1
+  PineExchangeChipsBRC                                 1
+  RefuseSitDownRSP                                     1
+  RenameCostRSP                                        1
+  RoomModuleOpRSP                                      1
+  RunItMultiTimesResultBRC                             1
+  ShowCaptchaRSP                                       1
+
+=== CAPTCHA/VERIFY KEYWORD SEARCH ===
+  MATCH [captcha]: CaptchaRSP (1 times)
+  MATCH [captcha]: ShowCaptchaRSP (1 times)
+  MATCH [verify]: VerifyMailBindRSP (32 times)
+  MATCH [puzzle]: TenthAnni2024PuzzleRSP (240 times)
+  MATCH [check]: CheckCanTransferDiamondRSP (9 times)
+  MATCH [check]: CheckUserClubRoomRSP (115 times)
+
+=== SEARCHING PACKET DATA CONTENT FOR CAPTCHA ===
+
+  [code] found in 27315 packets:
+    2026-03-28T08:51:52.278221 | ClubRoomRSP | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 41, "rooms": [{"roomId": 5452612, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": true, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5458791, "blind": 1000, "seatNum"
+    2026-03-28T08:51:31.294052 | ClubRoomRSP | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 41, "rooms": [{"roomId": 5452612, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": true, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5458791, "blind": 1000, "seatNum"
+    2026-03-28T08:51:10.360910 | ClubRoomRSP | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 41, "rooms": [{"roomId": 5452612, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": true, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5458791, "blind": 1000, "seatNum"
+
+
+=== NON-STANDARD PACKET TYPES (potential CAPTCHA) ===
+  ClubActivityInfoRSP                           cnt=26763  first=2026-03-09T12:19:37.632624  last=2026-03-28T08:51:37.443022
+  TotalBuyinBRC                                 cnt=12885  first=2026-03-09T15:30:29.957163  last=2026-03-28T08:47:11.716659
+  SitDownRSP                                    cnt=  138  first=2026-03-11T16:40:26.330711  last=2026-03-28T08:47:11.713776
+  PPCoinRSP                                     cnt=23487  first=2026-03-09T22:13:22.557504  last=2026-03-28T08:47:11.678297
+  EmojiPackageRSP                               cnt=  280  first=2026-03-09T14:17:02.431932  last=2026-03-28T08:47:10.111596
+  WaitListInfoBRC                               cnt= 1303  first=2026-03-09T14:17:02.320729  last=2026-03-28T08:47:10.023634
+  UserPictureFrameListRSP                       cnt=  273  first=2026-03-09T14:17:02.072984  last=2026-03-28T08:47:09.978716
+  CheckUserClubRoomRSP                          cnt=  115  first=2026-03-09T14:32:29.953184  last=2026-03-26T12:39:23.721161
+  OtherLeaveRoomBRC                             cnt= 4928  first=2026-03-09T14:17:46.624627  last=2026-03-26T12:39:23.671901
+  LeaveRoomRSP                                  cnt=  189  first=2026-03-09T14:57:30.977596  last=2026-03-26T12:39:23.621488
+  ChipsBackBRC                                  cnt=22382  first=2026-03-09T12:19:29.817864  last=2026-03-26T12:39:22.722491
+  ZoomFoldBRC                                   cnt=106755  first=2026-03-09T12:19:29.718043  last=2026-03-26T12:39:22.722431
+  SquidMarkInfoBRC                              cnt=55568  first=2026-03-09T12:19:24.047374  last=2026-03-26T12:39:20.226021
+  DealerInfoRSP                                 cnt=55569  first=2026-03-09T12:19:23.838210  last=2026-03-26T12:39:20.224737
+  StandUpRSP                                    cnt=  110  first=2026-03-09T22:13:22.153818  last=2026-03-26T12:39:20.221961
+  WithdrawChipsBRC                              cnt=53519  first=2026-03-09T12:19:23.137591  last=2026-03-26T12:39:20.221518
+  TableNoticeMsg                                cnt=   47  first=2026-03-11T16:46:44.898150  last=2026-03-26T12:39:18.429160
+  FinishRoundHintRSP                            cnt=22041  first=2026-03-11T16:16:49.791284  last=2026-03-26T12:39:11.238198
+  SpecifiedRGActivityInfoRSP                    cnt=52027  first=2026-03-09T12:19:17.569738  last=2026-03-26T12:39:09.054811
+  ExchangeChipsRSP                              cnt=12690  first=2026-03-11T16:16:54.701554  last=2026-03-26T12:39:04.308630
+  PreActionRSP                                  cnt= 4124  first=2026-03-11T16:18:32.707298  last=2026-03-26T12:39:01.271658
+  LookerRSP                                     cnt=  759  first=2026-03-09T12:20:04.957948  last=2026-03-26T12:37:04.455268
+  ProfitListRSP                                 cnt=  759  first=2026-03-09T12:20:04.847224  last=2026-03-26T12:37:04.438941
+  JackPotRSP                                    cnt=  863  first=2026-03-09T12:20:04.736248  last=2026-03-26T12:37:04.322160
+  RebuyNotifyRSP                                cnt=   36  first=2026-03-09T22:57:26.009435  last=2026-03-26T12:35:37.873524
+  ShowStraddleRSP                               cnt= 1600  first=2026-03-15T10:07:09.327790  last=2026-03-26T12:33:55.542535
+  ClubRoomTimeUpBRC                             cnt= 1642  first=2026-03-09T14:19:02.080846  last=2026-03-26T12:33:53.139569
+  ShowRabbitCardRSP                             cnt= 4848  first=2026-03-09T12:19:49.740849  last=2026-03-26T12:25:42.758444
+  NoticeBRC                                     cnt= 1378  first=2026-03-09T14:23:37.234640  last=2026-03-26T12:25:11.675117
+  ShowMyCardBRC                                 cnt=  381  first=2026-03-09T14:21:42.988850  last=2026-03-26T12:22:06.676119
+  SeatStatusBRC                                 cnt=   50  first=2026-03-09T22:33:37.891038  last=2026-03-26T12:19:57.893310
+  GetUserNFTListRSP                             cnt=  253  first=2026-03-09T14:16:31.658147  last=2026-03-26T12:18:06.313722
+  UserTotalDataRSP                              cnt=  208  first=2026-03-09T14:16:31.128315  last=2026-03-26T12:18:06.277253
+  CallGameBRC                                   cnt= 1181  first=2026-03-09T14:32:37.469032  last=2026-03-26T12:15:35.194387
+  AddActionTimeBRC                              cnt=  178  first=2026-03-09T14:45:27.548022  last=2026-03-26T12:14:50.094565
+  FaceBRC                                       cnt=  557  first=2026-03-09T23:58:17.123475  last=2026-03-26T11:58:49.166151
+  UserShareInfoPush                             cnt=   21  first=2026-03-11T16:41:22.687613  last=2026-03-26T11:58:47.749646
+  TimebankLeftTimesRSP                          cnt=   42  first=2026-03-11T16:17:53.247648  last=2026-03-26T11:58:47.032625
+  CaptchaRSP                                    cnt=    1  first=2026-03-26T11:53:10.367674  last=2026-03-26T11:53:10.367674
+  ShowCaptchaRSP                                cnt=    1  first=2026-03-26T11:53:05.387202  last=2026-03-26T11:53:05.387202
+  GetRedPointDataRSP                            cnt=  104  first=2026-03-09T14:32:33.357737  last=2026-03-26T11:48:49.119335
+  ClubItemListRSP                               cnt=  117  first=2026-03-09T14:32:32.849079  last=2026-03-26T11:48:49.098378
+  HandMissionStopStatusRSP                      cnt=  104  first=2026-03-09T14:32:31.821061  last=2026-03-26T11:48:49.098289
+  JackPotConfigRSP                              cnt=  105  first=2026-03-09T14:32:30.517855  last=2026-03-26T11:48:49.053422
+  ClubConfigRSP                                 cnt=  104  first=2026-03-09T14:32:30.307319  last=2026-03-26T11:48:49.052326
+  NewPPCoinFlowRSP                              cnt=  108  first=2026-03-09T14:32:30.197266  last=2026-03-26T11:48:49.002428
+  ClubInfoRSP                                   cnt=  107  first=2026-03-09T14:32:30.086365  last=2026-03-26T11:48:48.869004
+  ClubStormInfoRSP                              cnt=  200  first=2026-03-09T14:32:29.611250  last=2026-03-26T11:48:48.835967
+  ClubRecommendOfficialRoomRSP                  cnt=  100  first=2026-03-09T14:32:29.502004  last=2026-03-26T11:48:48.785551
+  MailRSP                                       cnt=  103  first=2026-03-09T14:32:29.710417  last=2026-03-26T11:48:48.752127
+  UseItemRSP                                    cnt=    2  first=2026-03-16T10:56:16.824101  last=2026-03-26T11:48:42.903047
+  PurchaseGiftBagRSP                            cnt=    3  first=2026-03-16T10:49:44.659500  last=2026-03-26T11:48:42.902744
+  ItemChangeRSP                                 cnt=    5  first=2026-03-16T10:49:44.676743  last=2026-03-26T11:48:42.869126
+  ItemListRSP                                   cnt=    4  first=2026-03-10T10:32:20.202167  last=2026-03-26T11:48:41.669338
+  GetTaskListRSP                                cnt=  106  first=2026-03-09T14:32:29.179948  last=2026-03-26T11:48:40.685738
+  NewMailNumRSP                                 cnt=  220  first=2026-03-09T14:32:28.483253  last=2026-03-26T11:48:40.569188
+  HeadFrameGrantRSP                             cnt=  108  first=2026-03-09T14:32:28.936620  last=2026-03-26T11:48:40.469098
+  QueryRewardRSP                                cnt=  108  first=2026-03-09T14:32:28.704326  last=2026-03-26T11:48:40.435683
+  ClubListRSP                                   cnt= 2818  first=2026-03-09T14:32:28.604842  last=2026-03-26T11:48:40.169604
+  UserGetPictureFrameRedPointRSP                cnt=  110  first=2026-03-09T14:32:28.372276  last=2026-03-26T11:48:40.152803
+  SelUserVipInfoRSP                             cnt=  117  first=2026-03-09T14:32:28.207179  last=2026-03-26T11:48:40.152617
+  UserTryToGetNewPictureFrameRSP                cnt=  110  first=2026-03-09T14:32:28.096205  last=2026-03-26T11:48:40.152463
+  VerifyMailBindRSP                             cnt=   32  first=2026-03-09T14:32:27.719036  last=2026-03-26T11:48:40.152286
+  GetUserAllMarksRSP                            cnt=   19  first=2026-03-10T02:43:01.908770  last=2026-03-26T11:45:53.595757
+  UserLogoutRSP                                 cnt=    9  first=2026-03-10T02:42:49.098275  last=2026-03-25T01:21:47.101953
+  MustNotificationBRC                           cnt=   37  first=2026-03-14T20:43:36.315889  last=2026-03-25T01:14:50.754023
+  AutoDelayRoomStatusBRC                        cnt=   55  first=2026-03-09T14:19:02.806150  last=2026-03-25T01:10:29.772584
+  RebateRSP                                     cnt=   16  first=2026-03-10T02:42:50.524051  last=2026-03-25T01:06:13.840023
+  UserLevelRewardsBRC                           cnt=    4  first=2026-03-16T04:44:35.790573  last=2026-03-25T01:06:13.790303
+  MoneyRSP                                      cnt=   16  first=2026-03-10T02:42:49.562578  last=2026-03-25T01:06:13.789861
+  CancelWaitBlindBRC                            cnt=   43  first=2026-03-15T10:06:25.669072  last=2026-03-25T00:21:17.354107
+  TenthAnniMainInfoRSP                          cnt=  252  first=2026-03-09T16:01:13.117020  last=2026-03-24T22:35:18.560396
+  TenthAnni2024RSP                              cnt=  240  first=2026-03-09T16:01:13.005654  last=2026-03-24T22:35:18.527255
+  TenthAnni2024PuzzleRSP                        cnt=  240  first=2026-03-09T16:01:12.884816  last=2026-03-24T22:35:18.427639
+  InteractBRC                                   cnt=  419  first=2026-03-09T16:01:12.785448  last=2026-03-24T22:35:18.310604
+  NewMailRSP                                    cnt=    3  first=2026-03-16T10:49:44.675882  last=2026-03-24T19:00:11.987185
+  TableGameOverRSP                              cnt=  215  first=2026-03-09T14:18:53.520963  last=2026-03-24T18:28:49.263644
+  FreeCalltimeRSP                               cnt=    1  first=2026-03-24T11:32:56.821361  last=2026-03-24T11:32:56.821361
+  JoinWaitListRSP                               cnt=   30  first=2026-03-15T09:59:37.977311  last=2026-03-24T11:00:22.678465
+  OfficialMttPopupRSP                           cnt=   40  first=2026-03-09T14:32:28.814275  last=2026-03-24T10:59:29.311776
+  SelUserShopInfoRSP                            cnt=   12  first=2026-03-10T02:42:50.800875  last=2026-03-24T10:59:28.929257
+  TenthAnni2025RSP                              cnt=   12  first=2026-03-10T02:42:51.076870  last=2026-03-24T10:59:28.928774
+  SelUserInfoRSP                                cnt=   12  first=2026-03-10T02:42:50.214122  last=2026-03-24T10:59:28.714323
+  StoreReviewTimeRSP                            cnt=   12  first=2026-03-10T02:42:50.059287  last=2026-03-24T10:59:28.714269
+  HandReviewUrlRSP                              cnt=   12  first=2026-03-10T02:42:49.927117  last=2026-03-24T10:59:28.713863
+  UserCroupierInUsingRSP                        cnt=   12  first=2026-03-10T02:42:49.817463  last=2026-03-24T10:59:28.713635
+  GetUserSettingRSP                             cnt=    6  first=2026-03-10T02:42:49.706527  last=2026-03-24T10:59:28.713391
+  DiamondRSP                                    cnt=   12  first=2026-03-10T02:42:50.369277  last=2026-03-24T10:59:28.713260
+  UserLocationRSP                               cnt=   12  first=2026-03-10T02:42:49.320375  last=2026-03-24T10:59:28.547094
+  UserLoginRSP                                  cnt=   12  first=2026-03-10T02:42:49.209011  last=2026-03-24T10:59:28.546433
+  ClubRoomCountdownBRC                          cnt=   46  first=2026-03-10T02:39:54.626268  last=2026-03-24T08:20:32.961865
+  FetchLoginDailyRewardRSP                      cnt=    1  first=2026-03-24T07:57:53.217862  last=2026-03-24T07:57:53.217862
+  LoginDailyRewardRSP                           cnt=    3  first=2026-03-11T08:44:06.665409  last=2026-03-24T07:37:15.326620
+  MemberGameDataRSP                             cnt=   17  first=2026-03-09T22:29:06.820680  last=2026-03-24T07:37:07.525313
+  UserChangePictureFrameBRC                     cnt=    7  first=2026-03-10T13:53:56.564726  last=2026-03-23T23:04:43.508618
+  UserVipInfoChangeBRC                          cnt=    8  first=2026-03-10T13:53:56.266022  last=2026-03-23T23:04:43.358496
+  HandMissionInfoRSP                            cnt=   27  first=2026-03-10T01:36:59.148166  last=2026-03-23T13:45:26.185666
+  HandsInfoRSP                                  cnt=   19  first=2026-03-09T14:19:26.714593  last=2026-03-23T08:52:42.662228
+  HandsListV2RSP                                cnt=   20  first=2026-03-09T14:19:26.590158  last=2026-03-23T08:52:42.561741
+  ReadMailRSP                                   cnt=    3  first=2026-03-16T10:56:19.858372  last=2026-03-23T05:59:44.993188
+  CheckCanTransferDiamondRSP                    cnt=    9  first=2026-03-10T02:43:44.432058  last=2026-03-23T05:59:40.259089
+  UserProfitDetailInfoRSP                       cnt=    7  first=2026-03-10T02:43:55.375271  last=2026-03-23T05:59:38.387713
+  UserDailySetInfoRSP                           cnt=    7  first=2026-03-10T02:43:55.231696  last=2026-03-23T05:59:38.361510
+  ClubRoomOverBRC                               cnt=   11  first=2026-03-10T03:25:21.447779  last=2026-03-21T16:34:19.930830
+  StopSqueezeBRC                                cnt=    3  first=2026-03-18T10:53:53.615999  last=2026-03-20T17:37:51.849370
+  WaitListSeatInfoRSP                           cnt=    4  first=2026-03-15T10:06:19.247035  last=2026-03-20T16:17:35.424724
+  ReserveSeatRSP                                cnt=    7  first=2026-03-17T02:08:03.516927  last=2026-03-20T15:38:07.184150
+  ClubLinkTemplateListRSP                       cnt=    1  first=2026-03-19T21:25:34.092758  last=2026-03-19T21:25:34.092758
+  LeaveWaitListRSP                              cnt=   24  first=2026-03-17T13:19:11.926327  last=2026-03-19T16:23:51.360511
+  MttRewardListRSP                              cnt=    3  first=2026-03-15T04:30:12.556023  last=2026-03-19T10:01:23.110116
+  MttInfoRSP                                    cnt=    9  first=2026-03-10T09:55:11.292805  last=2026-03-19T10:01:22.877411
+  RefuseSitDownRSP                              cnt=    1  first=2026-03-17T18:26:01.599670  last=2026-03-17T18:26:01.599670
+  RiskEndBRC                                    cnt=   10  first=2026-03-09T20:30:31.544992  last=2026-03-17T17:28:51.064504
+  RunItMultiTimesAcceptRSP                      cnt=   10  first=2026-03-09T20:30:30.838230  last=2026-03-17T17:28:51.062726
+  RiskNotifyBRC                                 cnt=   11  first=2026-03-09T20:30:24.604101  last=2026-03-17T17:28:48.248028
+  EvChopOverBRC                                 cnt=   14  first=2026-03-09T20:30:24.471634  last=2026-03-17T17:28:48.229239
+  EvChopInfoBRC                                 cnt=   15  first=2026-03-09T20:30:11.207063  last=2026-03-17T17:28:48.137044
+  BookSeatBRC                                   cnt=   70  first=2026-03-09T20:36:10.063693  last=2026-03-17T17:24:17.647404
+  PPCoinFlowRSP                                 cnt=    1  first=2026-03-16T18:14:09.518844  last=2026-03-16T18:14:09.518844
+  ClubVipFlowRSP                                cnt=    1  first=2026-03-16T18:14:09.504040  last=2026-03-16T18:14:09.504040
+  HandMissionClaimRewardRSP                     cnt=    1  first=2026-03-16T16:32:34.290408  last=2026-03-16T16:32:34.290408
+  ListAgentPPCoinRequestRSP                     cnt=    5  first=2026-03-11T16:42:00.916799  last=2026-03-15T02:36:34.044277
+  ClubJoinListRSP                               cnt=    5  first=2026-03-11T16:42:00.784025  last=2026-03-15T02:36:33.524178
+  JackPotRecordRSP                              cnt=    4  first=2026-03-10T10:26:53.777012  last=2026-03-14T20:44:36.192914
+  RingGameActivityInfoRSP                       cnt=   28  first=2026-03-10T09:50:54.009266  last=2026-03-14T20:44:32.035680
+  ClubMemberRSP                                 cnt=   13  first=2026-03-11T16:42:02.441858  last=2026-03-11T19:20:53.572792
+  MemberPPChipsRSP                              cnt=   13  first=2026-03-11T16:42:02.232133  last=2026-03-11T19:20:53.319735
+  AddCoinRSP                                    cnt=    8  first=2026-03-11T16:42:09.348870  last=2026-03-11T19:20:53.070366
+  ClubRoomCountdownRSP                          cnt=    1  first=2026-03-11T19:20:27.087142  last=2026-03-11T19:20:27.087142
+  MultiCreateRoomRSP                            cnt=    2  first=2026-03-11T19:20:09.120149  last=2026-03-11T19:20:11.304809
+  RoomModuleOpRSP                               cnt=    1  first=2026-03-11T19:20:03.521184  last=2026-03-11T19:20:03.521184
+  GetRoomModuleRSP                              cnt=    1  first=2026-03-11T19:19:50.505146  last=2026-03-11T19:19:50.505146
+  FetchClubRakeRebateRSP                        cnt=  234  first=2026-03-09T22:13:12.419831  last=2026-03-11T09:22:21.774787
+  PineAddActionTimeBRC                          cnt=    9  first=2026-03-09T22:34:46.445808  last=2026-03-11T09:20:22.479844
+  PineLeaveRoomBRC                              cnt=   84  first=2026-03-09T22:37:17.580771  last=2026-03-11T09:17:03.274585
+  PineSittingOutBRC                             cnt=   26  first=2026-03-09T22:58:04.431835  last=2026-03-11T09:14:15.458872
+  PineReadyBRC                                  cnt=   33  first=2026-03-10T09:53:03.017458  last=2026-03-11T09:14:13.005146
+  PineLeaveRoomRSP                              cnt=   37  first=2026-03-09T22:38:40.760467  last=2026-03-11T09:10:43.772004
+  PineLookerRSP                                 cnt=   12  first=2026-03-09T22:22:07.161309  last=2026-03-11T09:07:13.221802
+  PineProfitListRSP                             cnt=   12  first=2026-03-09T22:22:07.006503  last=2026-03-11T09:07:13.100182
+  CallTimeBRC                                   cnt=   30  first=2026-03-09T20:36:52.598823  last=2026-03-11T00:51:22.531111
+  PineRoomOverBRC                               cnt=    3  first=2026-03-10T10:03:24.477164  last=2026-03-11T00:49:20.906234
+  EvChopOperationBRC                            cnt=   24  first=2026-03-09T20:30:14.888687  last=2026-03-11T00:41:29.689705
+  PineRebuyNotifyRSP                            cnt=    3  first=2026-03-09T22:37:16.294548  last=2026-03-11T00:31:04.087896
+  BombPotStartBRC                               cnt=   36  first=2026-03-09T22:14:50.752715  last=2026-03-10T15:03:09.930192
+  PineTableCountdownBRC                         cnt=    7  first=2026-03-10T09:55:55.794468  last=2026-03-10T14:51:48.076940
+  RunItMultiTimesResultBRC                      cnt=    1  first=2026-03-10T11:06:25.222288  last=2026-03-10T11:06:25.222288
+  ShowRiskRSP                                   cnt=    2  first=2026-03-10T10:32:24.269943  last=2026-03-10T10:32:24.403393
+  PineExchangeChipsBRC                          cnt=    1  first=2026-03-10T10:07:08.695357  last=2026-03-10T10:07:08.695357
+  RebuyBRC                                      cnt=    3  first=2026-03-10T02:55:23.739820  last=2026-03-10T03:09:15.239348
+  RenameCostRSP                                 cnt=    1  first=2026-03-10T02:43:45.736633  last=2026-03-10T02:43:45.736633
+
+
+=== FRIDA HOOK SCRIPT SEARCH ===
+
+  Script: d:/aof_bot/hook\pppoker_hook.js
+    Referenced packet types: ActionBRC, ActionNotifyBRC, ClubRoomRSP, EnterRoomRSP, HandCardRSP, HeartbeatRSP, OtherEnterRoomBRC, PineActionBRC, PineGameStartBRC, PineHandCardBRC, PineResultBRC, PineRoomStatusBRC, PineSitDownBRC, PineStandUpBRC, RoundOverBRC, RoundStartBRC, ShowHandRSP, SitDownBRC, StandUpBRC, WinnerRSP

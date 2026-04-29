@@ -1,0 +1,111 @@
+===========================================================================
+  EV FORMULA VERIFICATION - Hand-by-Hand Check
+===========================================================================
+
+  Found 200 all-in hands for hero 13076903
+
+  --- Hand #1 (id=54255) 2026-04-01T01:38:20.151689 ---
+  Table: 2P | Pot: 31360.0 | Rake: 640.0 | Net: 30720.0 | BB: 2000.0
+  All-in players: 2 | Stack (from losers): 16000.0
+  Folders' dead money in pot: -640.0
+
+    P1 [As3s] eq= 41.6% | actual=+15360.0 | EV=  -3217 <<HERO
+    P2 [7dAh] eq= 58.4% | actual=-16000.0 | EV=+   1937
+
+    Sum(all-in actual) = -640.0
+    Sum(all-in EV)     = -1280
+    Folders' loss       = 0
+    -Rake              = -640.0
+    Sum(ALL actual)    = -640.0 (should = -640.0)
+
+    OLD hero EV = eq*net_pot - net_pot/N = 0.416*30720.0 - 30720.0/2 = -2577
+    NEW hero EV = eq*net_pot - stack     = 0.416*30720.0 - 16000.0 = -3217
+    Hero actual profit = 15360.0
+    OLD diff = -17937 | NEW diff = -18577
+
+  --- Hand #2 (id=54274) 2026-04-01T01:41:12.668068 ---
+  Table: 3P | Pot: 33320.0 | Rake: 680.0 | Net: 32640.0 | BB: 2000.0
+  All-in players: 2 | Stack (from losers): 16000.0
+  Folders' dead money in pot: 1320.0
+
+    P1 [3h3c] eq= 48.4% | actual=-16000.0 | EV=   -192 <<HERO
+    P2 [KdTd] eq= 51.6% | actual=+17320.0 | EV=+    832
+
+    Sum(all-in actual) = 1320.0
+    Sum(all-in EV)     = 640
+    Folders' loss       = -2000.0
+    -Rake              = -680.0
+    Sum(ALL actual)    = -680.0 (should = -680.0)
+
+    OLD hero EV = eq*net_pot - net_pot/N = 0.484*32640.0 - 32640.0/2 = -512
+    NEW hero EV = eq*net_pot - stack     = 0.484*32640.0 - 16000.0 = -192
+    Hero actual profit = -16000.0
+    OLD diff = +15488 | NEW diff = +15808
+
+  --- Hand #3 (id=54275) 2026-04-01T01:41:27.700580 ---
+  Table: 3P | Pot: 31360.0 | Rake: 640.0 | Net: 30720.0 | BB: 2000.0
+  All-in players: 2 | Stack (from losers): 16000.0
+  Folders' dead money in pot: -640.0
+
+    P1 [QsQc] eq= 69.5% | actual=+15360.0 | EV=+   5335 <<HERO
+    P2 [4dAs] eq= 30.6% | actual=-16000.0 | EV=  -6615
+
+    Sum(all-in actual) = -640.0
+    Sum(all-in EV)     = -1280
+    Folders' loss       = 0
+    -Rake              = -640.0
+    Sum(ALL actual)    = -640.0 (should = -640.0)
+
+    OLD hero EV = eq*net_pot - net_pot/N = 0.695*30720.0 - 30720.0/2 = 5975
+    NEW hero EV = eq*net_pot - stack     = 0.695*30720.0 - 16000.0 = 5335
+    Hero actual profit = 15360.0
+    OLD diff = -9385 | NEW diff = -10025
+
+  --- Hand #4 (id=54276) 2026-04-01T01:41:41.284881 ---
+  Table: 3P | Pot: 47040.0 | Rake: 960.0 | Net: 46080.0 | BB: 2000.0
+  All-in players: 3 | Stack (from losers): 16000.0
+  Folders' dead money in pot: -960.0
+
+    P1 [4c6h] eq= 13.0% | actual=-16000.0 | EV=  -9994 <<HERO
+    P2 [7h7s] eq= 55.6% | actual=+31040.0 | EV=+   9627
+    P3 [As3s] eq= 31.4% | actual=-16000.0 | EV=  -1552
+
+    Sum(all-in actual) = -960.0
+    Sum(all-in EV)     = -1920
+    Folders' loss       = 0
+    -Rake              = -960.0
+    Sum(ALL actual)    = -960.0 (should = -960.0)
+
+    OLD hero EV = eq*net_pot - net_pot/N = 0.130*46080.0 - 46080.0/3 = -9354
+    NEW hero EV = eq*net_pot - stack     = 0.130*46080.0 - 16000.0 = -9994
+    Hero actual profit = -16000.0
+    OLD diff = +6646 | NEW diff = +6006
+
+  --- Hand #5 (id=54283) 2026-04-01T01:42:57.317014 ---
+  Table: 3P | Pot: 33320.0 | Rake: 680.0 | Net: 32640.0 | BB: 2000.0
+  All-in players: 2 | Stack (from losers): 16000.0
+  Folders' dead money in pot: 1320.0
+
+    P1 [5cAh] eq= 38.4% | actual=-16000.0 | EV=  -3456 <<HERO
+    P2 [7cAd] eq= 61.6% | actual=+17320.0 | EV=+   4096
+
+    Sum(all-in actual) = 1320.0
+    Sum(all-in EV)     = 640
+    Folders' loss       = -2000.0
+    -Rake              = -680.0
+    Sum(ALL actual)    = -680.0 (should = -680.0)
+
+    OLD hero EV = eq*net_pot - net_pot/N = 0.384*32640.0 - 32640.0/2 = -3776
+    NEW hero EV = eq*net_pot - stack     = 0.384*32640.0 - 16000.0 = -3456
+    Hero actual profit = -16000.0
+    OLD diff = +12224 | NEW diff = +12544
+
+===========================================================================
+  AGGREGATE CHECK over 118 showdown hands
+===========================================================================
+  Total hero actual P/L:     +19080
+  Total hero OLD EV:         -25347  (diff:   -44427)
+  Total hero NEW EV:         -86427  (diff:  -105507)
+  OLD bias per hand:     +517.6 chips
+
+===========================================================================

@@ -221,6 +221,50 @@ class PcController:
                 print(f"  [PC] {btn_name} (table {table_index}): no candidates "
                       f"(contours={n_contours}, mask_px={mask_pixels})")
                 print(f"  [PC] Debug saved: {debug_path}")
+
+                # --- NEW FALLBACK FOR MISMATCHED TABLE INDEX ---
+                # If we falsely assumed table_index=0 but the UI is actually on table_index=1 
+                # (e.g. 2-table width but only 1 table active), we try scanning the OTHER half.
+                if num_tables == 2:
+                    print(f"  [PC] {btn_name}: Fallback to scanning the other table region...")
+                    fallback_index = 1 if table_index == 0 else 0
+                    fb_scan_x = lobby_w + (fallback_index * half_w)
+                    fb_region = (wx + fb_scan_x, wy + bottom_y, half_w, bottom_h)
+                    fb_screen_img = pyautogui.screenshot(region=fb_region)
+                    fb_screen = cv2.cvtColor(np.array(fb_screen_img), cv2.COLOR_RGB2BGR)
+                    fb_hsv = cv2.cvtColor(fb_screen, cv2.COLOR_BGR2HSV)
+                    
+                    if btn_name == "fold":
+                        fb_mask1 = cv2.inRange(fb_hsv, (0, 30, 40), (15, 255, 200))
+                        fb_mask2 = cv2.inRange(fb_hsv, (160, 30, 40), (180, 255, 200))
+                        fb_mask = fb_mask1 | fb_mask2
+                    else:
+                        fb_mask = cv2.inRange(fb_hsv, (15, 30, 40), (40, 255, 220))
+                        
+                    fb_mask = cv2.morphologyEx(fb_mask, cv2.MORPH_CLOSE, kernel)
+                    fb_mask = cv2.morphologyEx(fb_mask, cv2.MORPH_OPEN, kernel)
+                    fb_contours, _ = cv2.findContours(fb_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    
+                    fb_cands = []
+                    for c in fb_contours:
+                        area = cv2.contourArea(c)
+                        if area < 800: continue
+                        fx, fy, fbw, fbh = cv2.boundingRect(c)
+                        aspect = fbw / max(fbh, 1)
+                        if aspect < 1.2 or aspect > 8: continue
+                        if fy < sh * 0.3: continue
+                        fill = area / (fbw * fbh)
+                        if fill < 0.4: continue
+                        fb_cands.append((area, fx, fy, fbw, fbh))
+                        
+                    if fb_cands:
+                        fb_cands.sort(key=lambda c: c[0], reverse=True)
+                        f_area, bx, by, bw, bh = fb_cands[0]
+                        cx = wx + fb_scan_x + bx + bw // 2
+                        cy = wy + bottom_y + by + bh // 2
+                        print(f"  [PC] {btn_name} (table {table_index}): fallback success at ({cx},{cy})")
+                        return (cx, cy)
+
                 # Fall back to template matching
                 return self._find_button_by_template(btn_name)
 

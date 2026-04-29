@@ -1,0 +1,329 @@
+=== ALL CAPTCHA PACKETS ===
+
+--- 2026-03-26T11:53:05.387202 | ShowCaptchaRSP ---
+  Fields: {}
+
+--- 2026-03-26T11:53:10.367674 | CaptchaRSP ---
+  Fields: {}
+
+--- 2026-03-28T10:26:34.320793 | ShowCaptchaRSP ---
+  Fields: {
+  "field_0x1C": 2,
+  "field_0x20": 0,
+  "field_0x24": 0,
+  "field_0x28": 1468440195744,
+  "field_0x28_str": ""
+}
+  Raw hex length: 256 bytes
+  Key offsets:
+    0x10: 0 (0x00000000)
+    0x14: 0 (0x00000000)
+    0x18: 5 (0x00000005)
+    0x1C: 2 (0x00000002)
+    0x20: 0 (0x00000000)
+    0x24: 0 (0x00000000)
+    0x28: -438619488 (0xE5DB32A0)
+    0x2C: 341 (0x00000155)
+    0x30: -438619728 (0xE5DB31B0)
+    0x34: 341 (0x00000155)
+    0x38: 30 (0x0000001E)
+    0x3C: 0 (0x00000000)
+    0x40: 0 (0x00000000)
+
+--- 2026-03-28T10:26:40.596353 | CaptchaRSP ---
+  Fields: {
+  "field_0x1C": 0,
+  "field_0x20": 0,
+  "field_0x24": 0,
+  "field_0x28": 0
+}
+  Raw hex length: 256 bytes
+  Key offsets:
+    0x10: 0 (0x00000000)
+    0x14: 0 (0x00000000)
+    0x18: 1 (0x00000001)
+    0x1C: 0 (0x00000000)
+    0x20: 0 (0x00000000)
+    0x24: 0 (0x00000000)
+    0x28: 0 (0x00000000)
+    0x2C: 0 (0x00000000)
+    0x30: 861257552 (0x3355BF50)
+    0x34: 340 (0x00000154)
+    0x38: 0 (0x00000000)
+    0x3C: 0 (0x00000000)
+    0x40: 1910873616 (0x71E59E10)
+
+--- 2026-03-28T10:55:43.353709 | ShowCaptchaRSP ---
+  Fields: {
+  "operand1": 7,
+  "operand2": 0,
+  "operator": 6,
+  "timeout": 30,
+  "choices": [],
+  "choices2": []
+}
+  Raw hex length: 128 bytes
+  Key offsets:
+    0x10: 0 (0x00000000)
+    0x14: 0 (0x00000000)
+    0x18: 7 (0x00000007)
+    0x1C: 0 (0x00000000)
+    0x20: 6 (0x00000006)
+    0x24: 0 (0x00000000)
+    0x28: -678820544 (0xD78A0540)
+    0x2C: 341 (0x00000155)
+    0x30: -678820592 (0xD78A0510)
+    0x34: 341 (0x00000155)
+    0x38: 30 (0x0000001E)
+    0x3C: 0 (0x00000000)
+    0x40: 0 (0x00000000)
+
+--- 2026-03-28T10:55:50.336779 | CaptchaRSP ---
+  Fields: {
+  "code": 1,
+  "result": 0
+}
+  Raw hex length: 128 bytes
+  Key offsets:
+    0x10: 0 (0x00000000)
+    0x14: 0 (0x00000000)
+    0x18: 1 (0x00000001)
+    0x1C: 0 (0x00000000)
+    0x20: 0 (0x00000000)
+    0x24: 0 (0x00000000)
+    0x28: 0 (0x00000000)
+    0x2C: 0 (0x00000000)
+    0x30: 937432592 (0x37E01610)
+    0x34: 340 (0x00000154)
+    0x38: 0 (0x00000000)
+    0x3C: 0 (0x00000000)
+    0x40: 0 (0x00000000)
+
+
+=== CAPTCHA CONTEXT: Packets around 10:55 (screenshot time) ===
+  2026-03-28T10:54:01.121034 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:54:17.203163 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:54:18.769808 | WaitListInfoBRC                | {}
+  2026-03-28T10:54:22.270890 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:54:37.219784 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:54:43.137635 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:54:57.219858 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:55:04.120684 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:55:17.236185 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:55:25.154052 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:55:31.936086 | SitDownBRC                     | {"seatId": 3, "chips": 16000, "player": {"uid": 13386305, "name": "pp13386305", "clubId": 0}}
+  2026-03-28T10:55:33.436324 | DealerInfoRSP                  | {}
+  2026-03-28T10:55:33.437851 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:55:33.438233 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:55:33.438464 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:55:33.438709 | HandCardRSP                    | {"card1": 520, "card2": 270, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:55:33.438850 | ActionBRC                      | {"seatId": 3, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:55:33.438965 | ActionBRC                      | {"seatId": 1, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:55:33.439067 | ActionNotifyBRC                | {"seatId": 3, "timeout": 1000}
+  2026-03-28T10:55:35.219303 | ActionBRC                      | {"seatId": 3, "actionType": 4, "chips": 15000, "handChips": 0}
+  2026-03-28T10:55:35.220072 | ActionNotifyBRC                | {"seatId": 1, "timeout": 14000}
+  2026-03-28T10:55:35.222696 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:55:36.752769 | FinishRoundHintRSP             | {}
+  2026-03-28T10:55:36.752936 | ActionBRC                      | {"seatId": 1, "actionType": 3, "chips": 14000, "handChips": 0}
+  2026-03-28T10:55:36.753813 | ZoomFoldBRC                    | {}
+  2026-03-28T10:55:36.753952 | RoundOverBRC                   | {"pool": [32000]}
+  2026-03-28T10:55:36.754846 | ShowHandRSP                    | {"info": [{"seatId": 1, "card1": 520, "card2": 270, "card3": 0, "card4": 0, "card5": 0, "card6": 0}, {"seatId": 3, "card1": 779, "card2": 269, "card3": 0, "card4": 0, "card5": 0, "card6": 0}], "winnerSeatIds": []}
+  2026-03-28T10:55:37.202795 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:55:38.452798 | RoundStartBRC                  | {"stage": 2, "curBlind": 1000, "board": [1033, 781, 1036], "handCard": {"card1": 520, "card2": 270, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": true}}
+  2026-03-28T10:55:38.460541 | ZoomFoldBRC                    | {}
+  2026-03-28T10:55:40.152939 | RoundStartBRC                  | {"stage": 3, "curBlind": 1000, "board": [524], "handCard": {"card1": 520, "card2": 270, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": true}}
+  2026-03-28T10:55:40.156121 | ZoomFoldBRC                    | {}
+  2026-03-28T10:55:41.852952 | RoundStartBRC                  | {"stage": 4, "curBlind": 1000, "board": [1035], "handCard": {"card1": 520, "card2": 270, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": true}}
+  2026-03-28T10:55:41.886033 | ZoomFoldBRC                    | {}
+  2026-03-28T10:55:43.353007 | WinnerRSP                      | {"winners": [{"seatId": 3, "poolId": 0, "chips": 31360, "handType": 3, "uid": 13386305}], "profits": [{"seatId": 1, "chips": -16000}, {"seatId": 3, "chips": 15360}]}
+  2026-03-28T10:55:43.353544 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:55:43.353709 | ShowCaptchaRSP                 | {"operand1": 7, "operand2": 0, "operator": 6, "timeout": 30, "choices": [], "choices2": [], "_rawHex": "e0 f7 e3 36 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 07 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 40 05 8a d7 55 01 00 00 10 05 8a d7 55 01 00 00 1e 00 00 00 00 00 00 00 00 0
+  2026-03-28T10:55:45.916433 | PPCoinRSP                      | {}
+  2026-03-28T10:55:45.916487 | ExchangeChipsRSP               | {}
+  2026-03-28T10:55:45.916639 | JackPotRSP                     | {}
+  2026-03-28T10:55:45.916677 | ProfitListRSP                  | {}
+  2026-03-28T10:55:45.916707 | LookerRSP                      | {}
+  2026-03-28T10:55:46.137675 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:55:48.352875 | TotalBuyinBRC                  | {}
+  2026-03-28T10:55:48.353031 | WithdrawChipsBRC               | {}
+  2026-03-28T10:55:48.353119 | DealerInfoRSP                  | {}
+  2026-03-28T10:55:48.354900 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:55:48.355187 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:55:48.355459 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:55:48.355592 | HandCardRSP                    | {"card1": 266, "card2": 1038, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:55:48.355746 | ActionBRC                      | {"seatId": 1, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:55:48.355969 | ActionBRC                      | {"seatId": 3, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:55:48.356158 | ActionNotifyBRC                | {"seatId": 1, "timeout": 1000}
+  2026-03-28T10:55:48.356346 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:55:50.286555 | FinishRoundHintRSP             | {}
+  2026-03-28T10:55:50.336779 | CaptchaRSP                     | {"code": 1, "result": 0, "_rawHex": "30 40 e4 36 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 16 e0 37 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 dc 56 53 00 50 11 fb 54 56 01 00 00 80 68 c5 55 56 01 00 00
+  2026-03-28T10:55:51.202846 | ActionBRC                      | {"seatId": 1, "actionType": 4, "chips": 15000, "handChips": 0}
+  2026-03-28T10:55:51.236152 | ActionNotifyBRC                | {"seatId": 3, "timeout": 14000}
+  2026-03-28T10:55:51.236727 | ActionBRC                      | {"seatId": 3, "actionType": 1, "chips": 0, "handChips": 14000}
+  2026-03-28T10:55:51.237554 | ZoomFoldBRC                    | {}
+  2026-03-28T10:55:51.240785 | ChipsBackBRC                   | {}
+  2026-03-28T10:55:51.241085 | RoundOverBRC                   | {"pool": [4000]}
+  2026-03-28T10:55:51.242193 | WinnerRSP                      | {"winners": [{"seatId": 1, "poolId": 0, "chips": 4000, "handType": 1, "uid": 13076903}], "profits": [{"seatId": 1, "chips": 2000}, {"seatId": 3, "chips": -2000}]}
+  2026-03-28T10:55:56.202719 | WithdrawChipsBRC               | {}
+  2026-03-28T10:55:56.202880 | DealerInfoRSP                  | {}
+  2026-03-28T10:55:56.204461 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:55:56.204762 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:55:56.204875 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:55:56.205184 | HandCardRSP                    | {"card1": 261, "card2": 781, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:55:56.205347 | PPCoinRSP                      | {}
+  2026-03-28T10:55:56.205462 | ActionBRC                      | {"seatId": 3, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:55:56.205600 | ActionBRC                      | {"seatId": 1, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:55:56.205843 | ActionNotifyBRC                | {"seatId": 3, "timeout": 1000}
+  2026-03-28T10:55:57.186342 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:55:58.036166 | ActionBRC                      | {"seatId": 3, "actionType": 4, "chips": 15000, "handChips": 0}
+  2026-03-28T10:55:58.037033 | ActionNotifyBRC                | {"seatId": 1, "timeout": 14000}
+  2026-03-28T10:55:58.038120 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:56:00.536112 | FinishRoundHintRSP             | {}
+  2026-03-28T10:56:00.569742 | ActionBRC                      | {"seatId": 1, "actionType": 3, "chips": 14000, "handChips": 0}
+  2026-03-28T10:56:00.570900 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:00.570981 | RoundOverBRC                   | {"pool": [32000]}
+  2026-03-28T10:56:00.572350 | ShowHandRSP                    | {"info": [{"seatId": 1, "card1": 261, "card2": 781, "card3": 0, "card4": 0, "card5": 0, "card6": 0}, {"seatId": 3, "card1": 521, "card2": 267, "card3": 0, "card4": 0, "card5": 0, "card6": 0}], "winnerSeatIds": []}
+  2026-03-28T10:56:02.236032 | RoundStartBRC                  | {"stage": 2, "curBlind": 1000, "board": [778, 260, 514], "handCard": {"card1": 261, "card2": 781, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": true}}
+  2026-03-28T10:56:02.245275 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:03.936090 | RoundStartBRC                  | {"stage": 3, "curBlind": 1000, "board": [515], "handCard": {"card1": 261, "card2": 781, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": true}}
+  2026-03-28T10:56:03.939439 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:05.652778 | RoundStartBRC                  | {"stage": 4, "curBlind": 1000, "board": [522], "handCard": {"card1": 261, "card2": 781, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": true}}
+  2026-03-28T10:56:05.654917 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:07.135963 | WinnerRSP                      | {"winners": [{"seatId": 1, "poolId": 0, "chips": 31360, "handType": 2, "uid": 13076903}], "profits": [{"seatId": 1, "chips": 15360}, {"seatId": 3, "chips": -16000}]}
+  2026-03-28T10:56:07.187038 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:56:12.152507 | WithdrawChipsBRC               | {}
+  2026-03-28T10:56:12.152684 | DealerInfoRSP                  | {}
+  2026-03-28T10:56:12.154617 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:56:12.154870 | PPCoinRSP                      | {}
+  2026-03-28T10:56:12.155033 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:56:12.155182 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:56:12.155377 | HandCardRSP                    | {"card1": 1032, "card2": 258, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:56:12.155503 | ActionBRC                      | {"seatId": 1, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:56:12.155609 | ActionBRC                      | {"seatId": 3, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:56:12.155701 | ActionNotifyBRC                | {"seatId": 1, "timeout": 1000}
+  2026-03-28T10:56:12.156209 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:56:12.269311 | OtherEnterRoomBRC              | {"user": {"uid": 13084591, "name": "オッス轟", "clubId": 4679583}, "frameId": "head_frame_def"}
+  2026-03-28T10:56:13.702948 | PPCoinRSP                      | {}
+  2026-03-28T10:56:13.719630 | FinishRoundHintRSP             | {}
+  2026-03-28T10:56:13.719877 | ActionBRC                      | {"seatId": 1, "actionType": 1, "chips": 0, "handChips": 15000}
+  2026-03-28T10:56:13.720752 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:13.720927 | RoundOverBRC                   | {"pool": [3000]}
+  2026-03-28T10:56:13.721586 | WinnerRSP                      | {"winners": [{"seatId": 3, "poolId": 0, "chips": 3000, "handType": 1, "uid": 13386305}], "profits": [{"seatId": 1, "chips": -1000}, {"seatId": 3, "chips": 1000}]}
+  2026-03-28T10:56:13.722148 | ExchangeChipsRSP               | {}
+  2026-03-28T10:56:17.186032 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:56:18.152634 | ClubRoomTimeUpBRC              | {}
+  2026-03-28T10:56:18.702333 | TotalBuyinBRC                  | {}
+  2026-03-28T10:56:18.702434 | WithdrawChipsBRC               | {}
+  2026-03-28T10:56:18.702681 | DealerInfoRSP                  | {}
+  2026-03-28T10:56:18.704490 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:56:18.704717 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:56:18.704781 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:56:18.704992 | HandCardRSP                    | {"card1": 1032, "card2": 260, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:56:18.705082 | ActionBRC                      | {"seatId": 3, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:56:18.705197 | ActionBRC                      | {"seatId": 1, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:56:18.705311 | ActionNotifyBRC                | {"seatId": 3, "timeout": 1000}
+  2026-03-28T10:56:19.769215 | OtherLeaveRoomBRC              | {}
+  2026-03-28T10:56:20.769115 | ActionBRC                      | {"seatId": 3, "actionType": 4, "chips": 15000, "handChips": 0}
+  2026-03-28T10:56:20.769994 | ActionNotifyBRC                | {"seatId": 1, "timeout": 14000}
+  2026-03-28T10:56:20.770890 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:56:22.769337 | FinishRoundHintRSP             | {}
+  2026-03-28T10:56:22.769543 | ActionBRC                      | {"seatId": 1, "actionType": 1, "chips": 0, "handChips": 14000}
+  2026-03-28T10:56:22.770506 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:22.770711 | ChipsBackBRC                   | {}
+  2026-03-28T10:56:22.770886 | RoundOverBRC                   | {"pool": [4000]}
+  2026-03-28T10:56:22.771547 | WinnerRSP                      | {"winners": [{"seatId": 3, "poolId": 0, "chips": 4000, "handType": 1, "uid": 13386305}], "profits": [{"seatId": 1, "chips": -2000}, {"seatId": 3, "chips": 2000}]}
+  2026-03-28T10:56:22.772056 | PPCoinRSP                      | {}
+  2026-03-28T10:56:22.772125 | ExchangeChipsRSP               | {}
+  2026-03-28T10:56:27.769395 | TotalBuyinBRC                  | {}
+  2026-03-28T10:56:27.769577 | WithdrawChipsBRC               | {}
+  2026-03-28T10:56:27.769832 | DealerInfoRSP                  | {}
+  2026-03-28T10:56:27.771104 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:56:27.771340 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:56:27.771604 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:56:27.771820 | HandCardRSP                    | {"card1": 1029, "card2": 772, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:56:27.771999 | ActionBRC                      | {"seatId": 1, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:56:27.772189 | ActionBRC                      | {"seatId": 3, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:56:27.772353 | ActionNotifyBRC                | {"seatId": 1, "timeout": 1000}
+  2026-03-28T10:56:27.772821 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:56:28.354237 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:56:29.402527 | FinishRoundHintRSP             | {}
+  2026-03-28T10:56:29.402711 | ActionBRC                      | {"seatId": 1, "actionType": 1, "chips": 0, "handChips": 15000}
+  2026-03-28T10:56:29.403664 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:29.403854 | RoundOverBRC                   | {"pool": [3000]}
+  2026-03-28T10:56:29.404550 | WinnerRSP                      | {"winners": [{"seatId": 3, "poolId": 0, "chips": 3000, "handType": 1, "uid": 13386305}], "profits": [{"seatId": 1, "chips": -1000}, {"seatId": 3, "chips": 1000}]}
+  2026-03-28T10:56:29.405084 | PPCoinRSP                      | {}
+  2026-03-28T10:56:29.405131 | ExchangeChipsRSP               | {}
+  2026-03-28T10:56:34.403187 | TotalBuyinBRC                  | {}
+  2026-03-28T10:56:34.403297 | WithdrawChipsBRC               | {}
+  2026-03-28T10:56:34.403524 | DealerInfoRSP                  | {}
+  2026-03-28T10:56:34.405503 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:56:34.405769 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:56:34.405993 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:56:34.406130 | HandCardRSP                    | {"card1": 778, "card2": 775, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:56:34.406338 | ActionBRC                      | {"seatId": 3, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:56:34.406558 | ActionBRC                      | {"seatId": 1, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:56:34.406652 | ActionNotifyBRC                | {"seatId": 3, "timeout": 1000}
+  2026-03-28T10:56:36.169518 | ActionBRC                      | {"seatId": 3, "actionType": 1, "chips": 0, "handChips": 15000}
+  2026-03-28T10:56:36.170383 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:36.170535 | RoundOverBRC                   | {"pool": [3000]}
+  2026-03-28T10:56:36.171481 | WinnerRSP                      | {"winners": [{"seatId": 1, "poolId": 0, "chips": 3000, "handType": 1, "uid": 13076903}], "profits": [{"seatId": 1, "chips": 1000}, {"seatId": 3, "chips": -1000}]}
+  2026-03-28T10:56:37.236086 | ClubActivityInfoRSP            | {}
+  2026-03-28T10:56:41.136046 | WithdrawChipsBRC               | {}
+  2026-03-28T10:56:41.136267 | DealerInfoRSP                  | {}
+  2026-03-28T10:56:41.137911 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:56:41.138060 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:56:41.138329 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:56:41.138445 | HandCardRSP                    | {"card1": 1032, "card2": 778, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:56:41.138597 | ActionBRC                      | {"seatId": 1, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:56:41.138833 | ActionBRC                      | {"seatId": 3, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:56:41.138978 | ActionNotifyBRC                | {"seatId": 1, "timeout": 1000}
+  2026-03-28T10:56:41.139608 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:56:41.139657 | PPCoinRSP                      | {}
+  2026-03-28T10:56:43.435844 | FinishRoundHintRSP             | {}
+  2026-03-28T10:56:43.435967 | ActionBRC                      | {"seatId": 1, "actionType": 4, "chips": 15000, "handChips": 0}
+  2026-03-28T10:56:43.436976 | ActionNotifyBRC                | {"seatId": 3, "timeout": 14000}
+  2026-03-28T10:56:43.437292 | ActionBRC                      | {"seatId": 3, "actionType": 1, "chips": 0, "handChips": 14000}
+  2026-03-28T10:56:43.438071 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:43.438187 | ChipsBackBRC                   | {}
+  2026-03-28T10:56:43.438434 | RoundOverBRC                   | {"pool": [4000]}
+  2026-03-28T10:56:43.439183 | WinnerRSP                      | {"winners": [{"seatId": 1, "poolId": 0, "chips": 4000, "handType": 1, "uid": 13076903}], "profits": [{"seatId": 1, "chips": 2000}, {"seatId": 3, "chips": -2000}]}
+  2026-03-28T10:56:48.436118 | WithdrawChipsBRC               | {}
+  2026-03-28T10:56:48.436301 | DealerInfoRSP                  | {}
+  2026-03-28T10:56:48.438501 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:56:48.438969 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:56:48.439180 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:56:48.439364 | HandCardRSP                    | {"card1": 521, "card2": 262, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:56:48.439488 | ActionBRC                      | {"seatId": 3, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:56:48.439698 | ActionBRC                      | {"seatId": 1, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:56:48.439830 | ActionNotifyBRC                | {"seatId": 3, "timeout": 1000}
+  2026-03-28T10:56:48.439919 | PPCoinRSP                      | {}
+  2026-03-28T10:56:49.337142 | ClubRoomRSP                    | {"leagueId": 3798, "clubId": 4679583, "code": 0, "roomNum": 42, "rooms": [{"roomId": 5460371, "blind": 1000, "seatNum": 4, "players": 0, "isStarted": false, "roomType": 5, "buyin": 0, "currentPlayerNum": 0, "roomName": "10-20 AOF クレーム禁止", "ownerName": ""}, {"roomId": 5461724, "blind": 1000, "seatNum
+  2026-03-28T10:56:50.402531 | ActionBRC                      | {"seatId": 3, "actionType": 1, "chips": 0, "handChips": 15000}
+  2026-03-28T10:56:50.403404 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:50.403684 | RoundOverBRC                   | {"pool": [3000]}
+  2026-03-28T10:56:50.404501 | WinnerRSP                      | {"winners": [{"seatId": 1, "poolId": 0, "chips": 3000, "handType": 1, "uid": 13076903}], "profits": [{"seatId": 1, "chips": 1000}, {"seatId": 3, "chips": -1000}]}
+  2026-03-28T10:56:55.352533 | WithdrawChipsBRC               | {}
+  2026-03-28T10:56:55.352651 | DealerInfoRSP                  | {}
+  2026-03-28T10:56:55.354425 | RoundOverBRC                   | {"pool": []}
+  2026-03-28T10:56:55.354778 | SquidMarkInfoBRC               | {}
+  2026-03-28T10:56:55.354864 | RoundStartBRC                  | {"stage": 1, "curBlind": 1000, "board": []}
+  2026-03-28T10:56:55.355115 | HandCardRSP                    | {"card1": 258, "card2": 259, "card3": 0, "card4": 0, "card5": 0, "card6": 0, "canViewHand": true, "isAllin": false}
+  2026-03-28T10:56:55.355298 | ActionBRC                      | {"seatId": 1, "actionType": 8, "chips": 1000, "handChips": 15000}
+  2026-03-28T10:56:55.355413 | ActionBRC                      | {"seatId": 3, "actionType": 9, "chips": 2000, "handChips": 14000}
+  2026-03-28T10:56:55.355789 | ActionNotifyBRC                | {"seatId": 1, "timeout": 1000}
+  2026-03-28T10:56:55.356285 | PPCoinRSP                      | {}
+  2026-03-28T10:56:55.356327 | RoundHintMultipleTableRSP      | {}
+  2026-03-28T10:56:56.869415 | FinishRoundHintRSP             | {}
+  2026-03-28T10:56:56.869570 | PPCoinRSP                      | {}
+  2026-03-28T10:56:56.919241 | ActionBRC                      | {"seatId": 1, "actionType": 1, "chips": 0, "handChips": 15000}
+  2026-03-28T10:56:56.920565 | ZoomFoldBRC                    | {}
+  2026-03-28T10:56:56.920653 | RoundOverBRC                   | {"pool": [3000]}
+  2026-03-28T10:56:56.921687 | WinnerRSP                      | {"winners": [{"seatId": 3, "poolId": 0, "chips": 3000, "handType": 1, "uid": 13386305}], "profits": [{"seatId": 1, "chips": -1000}, {"seatId": 3, "chips": 1000}]}
+  2026-03-28T10:56:56.922212 | ExchangeChipsRSP               | {}
+  2026-03-28T10:56:57.252607 | ClubActivityInfoRSP            | {}
+
+=== CAPTCHA CONTEXT: Packets around 13:00-13:26 (current session) ===
+  2026-03-28T10:26:34.320793 | ShowCaptchaRSP                 | {"_rawHex": "e0 f7 e3 36 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 05 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 a0 32 db e5 55 01 00 00 b0 31 db e5 55 01 00 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a0 19 b2 33 54 01 00 00 00 00 00 00 00 00 00 00
+  2026-03-28T10:26:40.596353 | CaptchaRSP                     | {"_rawHex": "30 40 e4 36 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 50 bf 55 33 54 01 00 00 00 00 00 00 00 00 00 00 10 9e e5 71 55 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  2026-03-28T10:55:43.353709 | ShowCaptchaRSP                 | {"operand1": 7, "operand2": 0, "operator": 6, "timeout": 30, "choices": [], "choices2": [], "_rawHex": "e0 f7 e3 36 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 07 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 40 05 8a d7 55 01 00 00 10 05 8a d7 55 01 00 00 1e 00 00 00 00 00 00 00 00 0
+  2026-03-28T10:55:50.336779 | CaptchaRSP                     | {"code": 1, "result": 0, "_rawHex": "30 40 e4 36 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 16 e0 37 54 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 dc 56 53 00 50 11 fb 54 56 01 00 00 80 68 c5 55 56 01 00 00

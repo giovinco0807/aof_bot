@@ -1,0 +1,41 @@
+﻿======================================================================
+  THIS WEEK VARIANCE ANALYSIS (3/31 ~ 4/4 incl today)
+======================================================================
+
+  DOWNSWING FREQUENCY
+----------------------------------------------------------------------
+  13076903 thisweek (~7652h):
+    P/L: -687.8BB  EV: -158.9BB
+    Downswing: -528.9BB
+    Expected SD: 326BB
+    z-score: -1.62
+    P(this bad or worse): 5.3%
+    -> approx 1 in 19
+    RB incl P/L: -521.8BB  RB incl EV: +7.1BB
+
+  13268363 thisweek (~4495h):
+    P/L: -175.0BB  EV: -121.6BB
+    Downswing: -53.4BB
+    Expected SD: 250BB
+    z-score: -0.21
+    P(this bad or worse): 41.5%
+    -> approx 1 in 2
+    RB incl P/L: -77.5BB  RB incl EV: -24.1BB
+
+  Combined thisweek (~12147h):
+    P/L: -862.8BB  EV: -280.5BB
+    Downswing: -582.3BB
+    Expected SD: 411BB
+    z-score: -1.42
+    P(this bad or worse): 7.8%
+    -> approx 1 in 13
+    RB incl P/L: -599.2BB  RB incl EV: -16.9BB
+
+======================================================================
+  NORMAL VARIANCE RANGES
+----------------------------------------------------------------------
+   5,000h: 68%=+/-264BB  95%=+/-528BB  99%=+/-680BB
+   7,500h: 68%=+/-323BB  95%=+/-646BB  99%=+/-833BB
+  10,000h: 68%=+/-373BB  95%=+/-746BB  99%=+/-962BB
+  12,000h: 68%=+/-409BB  95%=+/-817BB  99%=+/-1054BB
+======================================================================

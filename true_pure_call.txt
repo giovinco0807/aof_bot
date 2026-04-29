@@ -1,0 +1,3 @@
+Combos: 578
+Percent: 43.59%
+AA,KK,QQ,JJ,TT,AKs,AQs,AJs,AKo,99,ATs,AQo,KQs,88,AJo,KJs,KTs,ATo,QJs,77,KQo,QTs,A9s,KJo,JTs,66,A8s,KTo,A9o,QTo,A7s,J9s,Q9s,K9s,55,A5s,A8o,A6s,JTo,A4s,K9o,44,A7o,A3s,T9s,Q9o,Q8s,K8s,A5o,J9o,A2s,A6o,K7s,A4o,33,J8s,K8o,98s,T8s,K6s,Q8o,A3o,K5s,A2o,K7o,Q7s,K4s,22,T9o,K3s,K6o,Q6s,K2s,K5o,J7s,Q5s,K4o,Q4s,K3o,K2o

@@ -1,0 +1,8 @@
+﻿13076903 | 10:10~11:24 | 500h SD:126(MW:12)
+  P/L: -216.6BB  EV: -32.9BB  Diff: +183.7BB UNLUCKY
+  Rake: 19.7BB  RB(70%): +13.8BB  RB込みP/L: -202.8BB
+
+13268363 | 10:08~10:10 | 8h SD:1(MW:0)
+  P/L: -10.0BB  EV: -5.7BB  Diff: +4.3BB UNLUCKY
+  Rake: 0.2BB  RB(70%): +0.2BB  RB込みP/L: -9.8BB
+

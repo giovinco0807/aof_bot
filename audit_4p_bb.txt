@@ -1,0 +1,572 @@
+=== ALL 4P BB HERO ACTIONS (recent 500 hands) ===
+  #53380 2026-03-25T01:21:29 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53372 2026-03-25T01:20:41 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53365 2026-03-25T01:20:05 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #53356 2026-03-25T01:19:13 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #53347 2026-03-25T01:18:28 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53338 2026-03-25T01:17:27 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #53331 2026-03-25T01:16:52 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53324 2026-03-25T01:16:14 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53315 2026-03-25T01:15:31 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53305 2026-03-25T01:14:21 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53297 2026-03-25T01:13:25 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #53288 2026-03-25T01:12:22 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #53281 2026-03-25T01:11:47 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53271 2026-03-25T01:10:56 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53124 2026-03-25T00:55:48 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53123 2026-03-25T00:55:46 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53116 2026-03-25T00:54:53 | 4P BB prior=  F-F-A | cards=  QcJh | Hero=PUSH | P/L=  -8.0BB
+  #53115 2026-03-25T00:54:47 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53108 2026-03-25T00:54:08 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53106 2026-03-25T00:53:48 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53102 2026-03-25T00:53:23 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53096 2026-03-25T00:52:47 | 4P BB prior=  F-F-A | cards=  ThKd | Hero=PUSH | P/L=  -8.0BB
+  #53095 2026-03-25T00:52:40 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #53088 2026-03-25T00:51:55 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53087 2026-03-25T00:51:52 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53080 2026-03-25T00:51:11 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53078 2026-03-25T00:50:58 | 4P BB prior=  F-F-A | cards=  Ah8h | Hero=PUSH | P/L=  -8.0BB
+  #53066 2026-03-25T00:49:40 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53054 2026-03-25T00:48:16 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53049 2026-03-25T00:47:38 | 4P BB prior=  F-F-A | cards=  8dKc | Hero=PUSH | P/L=  +7.7BB
+  #53046 2026-03-25T00:47:11 | 4P BB prior=  F-F-A | cards=  Ad6h | Hero=PUSH | P/L=  +7.7BB
+  #53042 2026-03-25T00:46:39 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53036 2026-03-25T00:46:05 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53035 2026-03-25T00:46:03 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53028 2026-03-25T00:45:12 | 4P BB prior=  A-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53027 2026-03-25T00:45:05 | 4P BB prior=  A-F-F | cards=  KsKd | Hero=PUSH | P/L=  -8.0BB
+  #53020 2026-03-25T00:44:06 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53018 2026-03-25T00:43:56 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53013 2026-03-25T00:43:26 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #53005 2026-03-25T00:42:40 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52767 2026-03-25T00:21:36 | 4P BB prior=  F-F-A | cards=  ThKh | Hero=PUSH | P/L=  +7.7BB
+  #52766 2026-03-25T00:21:27 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52765 2026-03-25T00:21:12 | 4P BB prior=  F-A-A | cards=  ???? | Hero=   ? | P/L=  +0.0BB
+  #52764 2026-03-25T00:21:04 | 4P BB prior=  F-A-A | cards=  ???? | Hero=   ? | P/L=  +0.0BB
+  #52762 2026-03-25T00:20:46 | 4P BB prior=  A-F-F | cards=  ???? | Hero=   ? | P/L=  +0.0BB
+  #52590 2026-03-24T23:01:45 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52581 2026-03-24T23:00:41 | 4P BB prior=  F-A-F | cards=  KcJd | Hero=PUSH | P/L=  -8.0BB
+  #52571 2026-03-24T22:59:48 | 4P BB prior=  F-A-F | cards=  9h9c | Hero=PUSH | P/L=  -8.0BB
+  #52560 2026-03-24T22:58:22 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52553 2026-03-24T22:57:25 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52545 2026-03-24T22:56:37 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52536 2026-03-24T22:55:49 | 4P BB prior=  F-F-A | cards=  QdTc | Hero=PUSH | P/L=  +7.7BB
+  #52527 2026-03-24T22:54:38 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52516 2026-03-24T22:53:33 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52507 2026-03-24T22:52:30 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52499 2026-03-24T22:51:35 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52488 2026-03-24T22:50:30 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52481 2026-03-24T22:49:37 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52470 2026-03-24T22:48:25 | 4P BB prior=  F-F-A | cards=  Ad6d | Hero=PUSH | P/L=  +7.7BB
+  #52460 2026-03-24T22:47:06 | 4P BB prior=  F-F-A | cards=  Ad4h | Hero=PUSH | P/L=  -8.0BB
+  #52451 2026-03-24T22:46:01 | 4P BB prior=  F-A-F | cards=  As9h | Hero=PUSH | P/L=  +0.2BB
+  #52443 2026-03-24T22:44:47 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52420 2026-03-24T22:42:18 | 4P BB prior=  F-F-A | cards=  8dAh | Hero=PUSH | P/L=  +7.7BB
+  #52417 2026-03-24T22:41:52 | 4P BB prior=  F-A-F | cards=  KdJd | Hero=PUSH | P/L=  -8.0BB
+  #52413 2026-03-24T22:41:24 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52407 2026-03-24T22:40:43 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52406 2026-03-24T22:40:41 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52400 2026-03-24T22:39:54 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52397 2026-03-24T22:39:36 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52393 2026-03-24T22:39:04 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52388 2026-03-24T22:38:32 | 4P BB prior=  A-F-F | cards=  KsTh | Hero=PUSH | P/L=  -8.0BB
+  #52385 2026-03-24T22:38:00 | 4P BB prior=  A-A-F | cards=  TdTc | Hero=PUSH | P/L=  -8.0BB
+  #52381 2026-03-24T22:37:24 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52377 2026-03-24T22:36:50 | 4P BB prior=  F-A-F | cards=  As8c | Hero=PUSH | P/L=  +8.2BB
+  #52372 2026-03-24T22:36:01 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52369 2026-03-24T22:35:36 | 4P BB prior=  F-F-A | cards=  9h9d | Hero=PUSH | P/L=  +7.7BB
+  #52364 2026-03-24T22:34:53 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52361 2026-03-24T22:34:34 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52355 2026-03-24T22:33:47 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52354 2026-03-24T22:33:41 | 4P BB prior=  A-A-F | cards=  8d8c | Hero=PUSH | P/L= +16.0BB
+  #52348 2026-03-24T22:32:50 | 4P BB prior=  F-A-F | cards=  As7s | Hero=PUSH | P/L=  +8.2BB
+  #52346 2026-03-24T22:32:28 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52339 2026-03-24T22:31:34 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52338 2026-03-24T22:31:29 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52331 2026-03-24T22:30:28 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52330 2026-03-24T22:30:26 | 4P BB prior=  F-F-A | cards=  2dKd | Hero=PUSH | P/L=  +7.7BB
+  #52325 2026-03-24T22:29:46 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52321 2026-03-24T22:29:17 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52317 2026-03-24T22:28:38 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52311 2026-03-24T22:27:50 | 4P BB prior=  A-F-F | cards=  Ah8c | Hero=PUSH | P/L=  +8.2BB
+  #52310 2026-03-24T22:27:39 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52303 2026-03-24T22:26:46 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52301 2026-03-24T22:26:25 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52296 2026-03-24T22:25:46 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52292 2026-03-24T22:25:11 | 4P BB prior=  F-F-A | cards=  7cKh | Hero=PUSH | P/L=  +7.7BB
+  #52290 2026-03-24T22:24:57 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52284 2026-03-24T22:23:56 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52281 2026-03-24T22:23:43 | 4P BB prior=  F-F-A | cards=  2sKs | Hero=PUSH | P/L=  -8.0BB
+  #52277 2026-03-24T22:23:04 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52272 2026-03-24T22:22:23 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52270 2026-03-24T22:22:14 | 4P BB prior=  F-F-A | cards=  JdAc | Hero=PUSH | P/L=  +7.7BB
+  #52263 2026-03-24T22:20:58 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52262 2026-03-24T22:20:56 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52256 2026-03-24T22:20:08 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52253 2026-03-24T22:19:43 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52249 2026-03-24T22:19:07 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52243 2026-03-24T22:18:18 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52242 2026-03-24T22:18:17 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52236 2026-03-24T22:17:26 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52232 2026-03-24T22:16:58 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52229 2026-03-24T22:16:25 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52224 2026-03-24T22:15:48 | 4P BB prior=  F-F-A | cards=  Ks5d | Hero=PUSH | P/L=  -8.0BB
+  #52222 2026-03-24T22:15:24 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52215 2026-03-24T22:14:28 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52214 2026-03-24T22:14:24 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52208 2026-03-24T22:13:39 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52205 2026-03-24T22:13:12 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52201 2026-03-24T22:12:52 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52195 2026-03-24T22:12:12 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52194 2026-03-24T22:12:11 | 4P BB prior=  F-A-F | cards=  TcAc | Hero=PUSH | P/L=  +8.2BB
+  #52185 2026-03-24T22:10:50 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52178 2026-03-24T22:09:53 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52169 2026-03-24T22:08:47 | 4P BB prior=  F-F-A | cards=  9dKs | Hero=PUSH | P/L=  -8.0BB
+  #52160 2026-03-24T22:07:32 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52151 2026-03-24T22:06:26 | 4P BB prior=  F-F-A | cards=  Ad4s | Hero=PUSH | P/L=  +7.7BB
+  #52138 2026-03-24T22:04:49 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52128 2026-03-24T22:03:40 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52126 2026-03-24T22:03:30 | 4P BB prior=  F-F-A | cards=  6cAh | Hero=PUSH | P/L=  -8.0BB
+  #52119 2026-03-24T22:02:37 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52118 2026-03-24T22:02:36 | 4P BB prior=  F-F-A | cards=  9hJd | Hero=PUSH | P/L=  -8.0BB
+  #52111 2026-03-24T22:01:42 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52110 2026-03-24T22:01:37 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52103 2026-03-24T22:00:47 | 4P BB prior=  F-F-A | cards=  TdQh | Hero=PUSH | P/L=  -8.0BB
+  #52102 2026-03-24T22:00:41 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52095 2026-03-24T21:59:46 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52094 2026-03-24T21:59:36 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52088 2026-03-24T21:58:49 | 4P BB prior=  A-F-F | cards=  Ac7s | Hero=PUSH | P/L=  -8.0BB
+  #52086 2026-03-24T21:58:36 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52080 2026-03-24T21:57:42 | 4P BB prior=  F-F-A | cards=  As9d | Hero=PUSH | P/L=  -8.0BB
+  #52077 2026-03-24T21:57:19 | 4P BB prior=  F-F-A | cards=  KcJc | Hero=PUSH | P/L=  +7.7BB
+  #52072 2026-03-24T21:56:42 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52068 2026-03-24T21:56:09 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52066 2026-03-24T21:55:54 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52059 2026-03-24T21:55:15 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52058 2026-03-24T21:55:12 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52052 2026-03-24T21:54:29 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52048 2026-03-24T21:53:54 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52045 2026-03-24T21:53:32 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52039 2026-03-24T21:52:43 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52032 2026-03-24T21:51:59 | 4P BB prior=  F-F-A | cards=  ThJs | Hero=PUSH | P/L=  -8.0BB
+  #52023 2026-03-24T21:50:48 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #52016 2026-03-24T21:50:10 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52009 2026-03-24T21:49:19 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #52002 2026-03-24T21:48:14 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51995 2026-03-24T21:47:22 | 4P BB prior=  A-F-F | cards=  JdAc | Hero=PUSH | P/L=  +0.2BB
+  #51986 2026-03-24T21:46:25 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51979 2026-03-24T21:45:37 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51971 2026-03-24T21:44:37 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51964 2026-03-24T21:43:50 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51957 2026-03-24T21:43:01 | 4P BB prior=  F-F-A | cards=  Kc8s | Hero=PUSH | P/L=  +7.7BB
+  #51948 2026-03-24T21:42:01 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51939 2026-03-24T21:40:51 | 4P BB prior=  F-A-F | cards=  7sAs | Hero=PUSH | P/L=  -8.0BB
+  #51709 2026-03-24T21:15:34 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51473 2026-03-24T20:49:33 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51471 2026-03-24T20:49:15 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51464 2026-03-24T20:48:25 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51463 2026-03-24T20:48:21 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51456 2026-03-24T20:47:35 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51455 2026-03-24T20:47:27 | 4P BB prior=  F-A-F | cards=  QdJd | Hero=PUSH | P/L=  -8.0BB
+  #51449 2026-03-24T20:46:35 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51446 2026-03-24T20:46:20 | 4P BB prior=  F-F-A | cards=  Kc9d | Hero=PUSH | P/L=  +7.7BB
+  #51442 2026-03-24T20:45:40 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51438 2026-03-24T20:44:59 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51434 2026-03-24T20:44:27 | 4P BB prior=  A-F-F | cards=  8sAs | Hero=PUSH | P/L=  +8.2BB
+  #51428 2026-03-24T20:43:26 | 4P BB prior=  F-F-A | cards=  KhQh | Hero=PUSH | P/L=  +7.7BB
+  #51427 2026-03-24T20:43:20 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51421 2026-03-24T20:42:24 | 4P BB prior=  A-F-F | cards=  Ac8s | Hero=PUSH | P/L=  +8.2BB
+  #51418 2026-03-24T20:42:05 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51413 2026-03-24T20:41:11 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51409 2026-03-24T20:40:43 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51406 2026-03-24T20:40:24 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51400 2026-03-24T20:39:44 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51399 2026-03-24T20:39:40 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51392 2026-03-24T20:38:50 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51391 2026-03-24T20:38:40 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51384 2026-03-24T20:37:53 | 4P BB prior=  F-A-F | cards=  TdTc | Hero=PUSH | P/L=  +8.2BB
+  #51376 2026-03-24T20:37:05 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51369 2026-03-24T20:36:27 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51339 2026-03-24T20:32:57 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51330 2026-03-24T20:31:53 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51323 2026-03-24T20:31:09 | 4P BB prior=  F-A-F | cards=  As4c | Hero=PUSH | P/L=  -8.0BB
+  #51318 2026-03-24T20:30:25 | 4P BB prior=  F-F-A | cards=  Qd9d | Hero=PUSH | P/L=  -8.0BB
+  #51316 2026-03-24T20:30:09 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51309 2026-03-24T20:29:23 | 4P BB prior=  A-F-F | cards=  JdJc | Hero=PUSH | P/L=  +8.2BB
+  #51308 2026-03-24T20:29:14 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51301 2026-03-24T20:28:19 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51299 2026-03-24T20:28:04 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51291 2026-03-24T20:27:18 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51281 2026-03-24T20:26:15 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51278 2026-03-24T20:26:00 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51272 2026-03-24T20:25:24 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51271 2026-03-24T20:25:16 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51264 2026-03-24T20:24:37 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51262 2026-03-24T20:24:20 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51256 2026-03-24T20:23:42 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51255 2026-03-24T20:23:32 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51248 2026-03-24T20:22:24 | 4P BB prior=  F-A-F | cards=  JcQd | Hero=PUSH | P/L=  +8.2BB
+  #51247 2026-03-24T20:22:24 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51240 2026-03-24T20:21:36 | 4P BB prior=  F-A-F | cards=  JdAh | Hero=PUSH | P/L=  -8.0BB
+  #51239 2026-03-24T20:21:30 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51232 2026-03-24T20:20:43 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51231 2026-03-24T20:20:43 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51224 2026-03-24T20:20:08 | 4P BB prior=  F-A-F | cards=  QdQh | Hero=PUSH | P/L=  -8.0BB
+  #51223 2026-03-24T20:20:01 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51216 2026-03-24T20:19:07 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51215 2026-03-24T20:18:58 | 4P BB prior=  A-F-F | cards=  AcKd | Hero=PUSH | P/L=  +8.2BB
+  #51208 2026-03-24T20:18:11 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51206 2026-03-24T20:18:02 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51200 2026-03-24T20:17:24 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51199 2026-03-24T20:17:20 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51192 2026-03-24T20:16:36 | 4P BB prior=  F-A-F | cards=  JdQd | Hero=PUSH | P/L=  +8.2BB
+  #51191 2026-03-24T20:16:32 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51184 2026-03-24T20:15:40 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51183 2026-03-24T20:15:34 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51177 2026-03-24T20:14:55 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51173 2026-03-24T20:14:30 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51165 2026-03-24T20:13:43 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51158 2026-03-24T20:12:58 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51157 2026-03-24T20:12:57 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51151 2026-03-24T20:12:18 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51149 2026-03-24T20:12:05 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51136 2026-03-24T20:10:49 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51135 2026-03-24T20:10:39 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51128 2026-03-24T20:09:46 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51127 2026-03-24T20:09:43 | 4P BB prior=  A-F-F | cards=  As6d | Hero=PUSH | P/L=  +8.2BB
+  #51121 2026-03-24T20:08:55 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51119 2026-03-24T20:08:41 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51112 2026-03-24T20:07:55 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51111 2026-03-24T20:07:49 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51104 2026-03-24T20:06:59 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51102 2026-03-24T20:06:46 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51097 2026-03-24T20:06:12 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51094 2026-03-24T20:05:51 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51090 2026-03-24T20:05:14 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51085 2026-03-24T20:04:41 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51082 2026-03-24T20:04:09 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51077 2026-03-24T20:03:34 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51075 2026-03-24T20:03:17 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51068 2026-03-24T20:02:22 | 4P BB prior=  F-F-A | cards=  Qc8d | Hero=PUSH | P/L=  +7.7BB
+  #51067 2026-03-24T20:02:20 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51061 2026-03-24T20:01:40 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51058 2026-03-24T20:01:14 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51053 2026-03-24T20:00:39 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51050 2026-03-24T20:00:14 | 4P BB prior=  F-F-A | cards=  QhKd | Hero=PUSH | P/L=  +0.0BB
+  #51046 2026-03-24T19:59:45 | 4P BB prior=  A-F-F | cards=  7c7d | Hero=PUSH | P/L=  +8.2BB
+  #51041 2026-03-24T19:59:04 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51037 2026-03-24T19:58:31 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51033 2026-03-24T19:57:51 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51030 2026-03-24T19:57:31 | 4P BB prior=  A-F-F | cards=  AhJd | Hero=PUSH | P/L=  +8.2BB
+  #51026 2026-03-24T19:56:57 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51021 2026-03-24T19:56:28 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51017 2026-03-24T19:55:59 | 4P BB prior=  F-F-A | cards=  Ad5s | Hero=PUSH | P/L=  +7.7BB
+  #51015 2026-03-24T19:55:41 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #51009 2026-03-24T19:54:57 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51005 2026-03-24T19:54:31 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #51000 2026-03-24T19:53:49 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50999 2026-03-24T19:53:46 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50992 2026-03-24T19:52:55 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50991 2026-03-24T19:52:54 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50984 2026-03-24T19:52:01 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50983 2026-03-24T19:51:58 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50977 2026-03-24T19:51:16 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50974 2026-03-24T19:51:03 | 4P BB prior=  F-F-A | cards=  AdAs | Hero=PUSH | P/L=  +7.7BB
+  #50969 2026-03-24T19:50:23 | 4P BB prior=  F-F-A | cards=  Kd4h | Hero=PUSH | P/L=  -8.0BB
+  #50967 2026-03-24T19:50:04 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50960 2026-03-24T19:49:12 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50959 2026-03-24T19:49:08 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50952 2026-03-24T19:48:18 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50951 2026-03-24T19:48:14 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50944 2026-03-24T19:47:26 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50943 2026-03-24T19:47:12 | 4P BB prior=  F-F-A | cards=  KsTs | Hero=PUSH | P/L=  +7.7BB
+  #50937 2026-03-24T19:46:26 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50935 2026-03-24T19:46:11 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50928 2026-03-24T19:45:14 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50927 2026-03-24T19:45:06 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50921 2026-03-24T19:44:31 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50917 2026-03-24T19:43:57 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50913 2026-03-24T19:43:29 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50910 2026-03-24T19:43:05 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50905 2026-03-24T19:42:29 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50901 2026-03-24T19:42:00 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50898 2026-03-24T19:41:39 | 4P BB prior=  F-F-A | cards=  KdQc | Hero=PUSH | P/L=  -8.0BB
+  #50893 2026-03-24T19:41:02 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50889 2026-03-24T19:40:38 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50886 2026-03-24T19:40:11 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50882 2026-03-24T19:39:44 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50876 2026-03-24T19:39:03 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50874 2026-03-24T19:38:45 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50868 2026-03-24T19:37:51 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50867 2026-03-24T19:37:37 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50860 2026-03-24T19:36:46 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50859 2026-03-24T19:36:44 | 4P BB prior=  A-F-F | cards=  8s8c | Hero=PUSH | P/L=  +0.2BB
+  #50852 2026-03-24T19:35:53 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50851 2026-03-24T19:35:47 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50844 2026-03-24T19:34:58 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50842 2026-03-24T19:34:40 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50837 2026-03-24T19:33:57 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50833 2026-03-24T19:33:15 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50830 2026-03-24T19:33:01 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50824 2026-03-24T19:32:20 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50823 2026-03-24T19:32:16 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50817 2026-03-24T19:31:38 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50814 2026-03-24T19:31:18 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50809 2026-03-24T19:30:34 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50805 2026-03-24T19:30:03 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50802 2026-03-24T19:29:34 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50796 2026-03-24T19:28:51 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50794 2026-03-24T19:28:33 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50788 2026-03-24T19:27:40 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50787 2026-03-24T19:27:35 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50780 2026-03-24T19:26:53 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50779 2026-03-24T19:26:52 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50772 2026-03-24T19:25:54 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50771 2026-03-24T19:25:51 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50765 2026-03-24T19:25:04 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50762 2026-03-24T19:24:43 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50756 2026-03-24T19:23:48 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50755 2026-03-24T19:23:46 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50748 2026-03-24T19:22:57 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50747 2026-03-24T19:22:48 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50741 2026-03-24T19:22:03 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50738 2026-03-24T19:21:35 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50732 2026-03-24T19:21:00 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50731 2026-03-24T19:20:49 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50725 2026-03-24T19:20:04 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50723 2026-03-24T19:19:46 | 4P BB prior=  F-A-F | cards=  QsJd | Hero=PUSH | P/L=  -8.0BB
+  #50718 2026-03-24T19:19:12 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50712 2026-03-24T19:18:40 | 4P BB prior=  F-A-F | cards=  KcJd | Hero=PUSH | P/L=  +8.2BB
+  #50711 2026-03-24T19:18:31 | 4P BB prior=  F-A-F | cards=  ThKs | Hero=PUSH | P/L=  +8.2BB
+  #50705 2026-03-24T19:17:51 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50702 2026-03-24T19:17:30 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50696 2026-03-24T19:16:41 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50694 2026-03-24T19:16:26 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50689 2026-03-24T19:15:50 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50686 2026-03-24T19:15:34 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50680 2026-03-24T19:14:57 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50679 2026-03-24T19:14:53 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50672 2026-03-24T19:13:58 | 4P BB prior=  A-F-F | cards=  7s7h | Hero=PUSH | P/L=  -8.0BB
+  #50671 2026-03-24T19:13:46 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50663 2026-03-24T19:12:57 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50655 2026-03-24T19:12:17 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50648 2026-03-24T19:11:30 | 4P BB prior=  F-F-A | cards=  5c5h | Hero=PUSH | P/L=  +7.7BB
+  #50640 2026-03-24T19:10:38 | 4P BB prior=  A-F-F | cards=  Ac2c | Hero=PUSH | P/L=  -8.0BB
+  #50631 2026-03-24T19:09:23 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50621 2026-03-24T19:08:23 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50611 2026-03-24T19:07:27 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50602 2026-03-24T19:06:24 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50593 2026-03-24T19:05:31 | 4P BB prior=  A-F-A | cards=  QdTd | Hero=PUSH | P/L= +15.5BB
+  #50583 2026-03-24T19:04:35 | 4P BB prior=  A-F-F | cards=  Kh9h | Hero=PUSH | P/L=  -8.0BB
+  #50573 2026-03-24T19:03:42 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50562 2026-03-24T19:02:37 | 4P BB prior=  F-F-A | cards=  Ah5h | Hero=PUSH | P/L=  +0.0BB
+  #50553 2026-03-24T19:01:37 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50543 2026-03-24T19:00:34 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50533 2026-03-24T18:59:21 | 4P BB prior=  F-F-A | cards=  AcAh | Hero=PUSH | P/L=  +7.7BB
+  #50524 2026-03-24T18:58:03 | 4P BB prior=  A-F-F | cards=  8dAs | Hero=PUSH | P/L=  -8.0BB
+  #50515 2026-03-24T18:56:54 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50507 2026-03-24T18:55:59 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50500 2026-03-24T18:55:03 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50491 2026-03-24T18:53:59 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50481 2026-03-24T18:52:41 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50472 2026-03-24T18:51:43 | 4P BB prior=  F-F-A | cards=  Ad3c | Hero=PUSH | P/L=  -8.0BB
+  #50464 2026-03-24T18:50:45 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50457 2026-03-24T18:50:04 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50447 2026-03-24T18:48:57 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50438 2026-03-24T18:48:01 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50430 2026-03-24T18:47:03 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50421 2026-03-24T18:46:07 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50342 2026-03-24T11:32:44 | 4P BB prior=  F-A-A | cards=  JhKd | Hero=PUSH | P/L=  -8.0BB
+  #50331 2026-03-24T11:31:34 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50321 2026-03-24T11:30:33 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50313 2026-03-24T11:29:41 | 4P BB prior=  F-F-A | cards=  Qc7c | Hero=PUSH | P/L=  -8.0BB
+  #50304 2026-03-24T11:28:47 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50293 2026-03-24T11:27:44 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50286 2026-03-24T11:27:03 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50277 2026-03-24T11:26:14 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #50268 2026-03-24T11:25:27 | 4P BB prior=  A-F-F | cards=  Ah5c | Hero=PUSH | P/L=  -8.0BB
+  #50258 2026-03-24T11:24:12 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50249 2026-03-24T11:23:15 | 4P BB prior=  A-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #50240 2026-03-24T11:22:25 | 4P BB prior=  F-A-F | cards=  QsKs | Hero=PUSH | P/L=  +8.2BB
+  #46993 2026-03-24T04:30:41 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46985 2026-03-24T04:29:33 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46977 2026-03-24T04:28:11 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46968 2026-03-24T04:26:48 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46960 2026-03-24T04:25:40 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46950 2026-03-24T04:24:29 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46942 2026-03-24T04:23:21 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46934 2026-03-24T04:22:19 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46925 2026-03-24T04:21:17 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46918 2026-03-24T04:20:27 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46909 2026-03-24T04:19:07 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46901 2026-03-24T04:17:52 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46891 2026-03-24T04:16:32 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46884 2026-03-24T04:15:35 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46874 2026-03-24T04:14:15 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46865 2026-03-24T04:13:00 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46859 2026-03-24T04:12:05 | 4P BB prior=  A-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46849 2026-03-24T04:10:45 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46841 2026-03-24T04:09:38 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46839 2026-03-24T04:09:29 | 4P BB prior=  F-A-A | cards=  ???? | Hero=   ? | P/L=  +0.0BB
+  #46770 2026-03-23T23:29:48 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46761 2026-03-23T23:28:34 | 4P BB prior=  F-F-A | cards=  5cAd | Hero=PUSH | P/L=  +7.7BB
+  #46753 2026-03-23T23:27:05 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46743 2026-03-23T23:26:04 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46736 2026-03-23T23:24:54 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46735 2026-03-23T23:24:53 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46729 2026-03-23T23:24:04 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46726 2026-03-23T23:23:40 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46721 2026-03-23T23:22:56 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46718 2026-03-23T23:22:28 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46713 2026-03-23T23:21:50 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46710 2026-03-23T23:21:26 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46705 2026-03-23T23:20:44 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46703 2026-03-23T23:20:15 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46697 2026-03-23T23:19:13 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46695 2026-03-23T23:18:51 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46688 2026-03-23T23:17:36 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46687 2026-03-23T23:17:29 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46681 2026-03-23T23:16:31 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46677 2026-03-23T23:15:54 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46674 2026-03-23T23:15:25 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46669 2026-03-23T23:14:29 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46665 2026-03-23T23:13:47 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46662 2026-03-23T23:13:23 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46657 2026-03-23T23:12:42 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46655 2026-03-23T23:12:18 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46650 2026-03-23T23:11:39 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46645 2026-03-23T23:11:11 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46642 2026-03-23T23:10:57 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46636 2026-03-23T23:10:13 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46635 2026-03-23T23:10:05 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46628 2026-03-23T23:09:10 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46627 2026-03-23T23:09:05 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46620 2026-03-23T23:08:04 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46619 2026-03-23T23:07:58 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46613 2026-03-23T23:06:58 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46605 2026-03-23T23:05:55 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46596 2026-03-23T23:04:33 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46588 2026-03-23T23:03:14 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46579 2026-03-23T23:02:03 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46567 2026-03-23T23:00:32 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46558 2026-03-23T22:58:56 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46548 2026-03-23T22:57:31 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46539 2026-03-23T22:56:18 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46530 2026-03-23T22:55:24 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46521 2026-03-23T22:54:03 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46512 2026-03-23T22:52:49 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46502 2026-03-23T22:51:25 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46490 2026-03-23T22:50:07 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46480 2026-03-23T22:48:47 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46471 2026-03-23T22:47:17 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46461 2026-03-23T22:45:51 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46450 2026-03-23T22:44:22 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46441 2026-03-23T22:43:12 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46432 2026-03-23T22:42:00 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46421 2026-03-23T22:40:41 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46409 2026-03-23T22:39:26 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46401 2026-03-23T22:38:26 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46389 2026-03-23T22:37:09 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46378 2026-03-23T22:35:58 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46368 2026-03-23T22:34:37 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46358 2026-03-23T22:33:09 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46346 2026-03-23T22:31:42 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46336 2026-03-23T22:30:13 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46325 2026-03-23T22:29:02 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46316 2026-03-23T22:28:00 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46307 2026-03-23T22:26:47 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46297 2026-03-23T22:25:45 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46287 2026-03-23T22:24:35 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46278 2026-03-23T22:23:32 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46268 2026-03-23T22:22:16 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46256 2026-03-23T22:20:59 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46246 2026-03-23T22:19:45 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46238 2026-03-23T22:18:59 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46227 2026-03-23T22:17:36 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46217 2026-03-23T22:16:21 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46207 2026-03-23T22:15:07 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46199 2026-03-23T22:13:55 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46190 2026-03-23T22:12:39 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46179 2026-03-23T22:11:12 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46169 2026-03-23T22:09:50 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46159 2026-03-23T22:08:39 | 4P BB prior=  F-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46147 2026-03-23T22:07:27 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+  #46138 2026-03-23T22:06:21 | 4P BB prior=  F-A-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46126 2026-03-23T22:05:02 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46117 2026-03-23T22:04:00 | 4P BB prior=  A-F-A | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46106 2026-03-23T22:02:51 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46096 2026-03-23T22:01:46 | 4P BB prior=  A-F-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #46087 2026-03-23T22:00:40 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #45468 2026-03-23T17:24:29 | 4P BB prior=  F-A-F | cards=  ???? | Hero=FOLD | P/L=  -1.0BB
+  #45464 2026-03-23T17:23:20 | 4P BB prior=  F-F-F | cards=  ???? | Hero=   ? | P/L=  +0.5BB
+
+SUMMARY (last 500 hands as 4P BB):
+  PUSH: 82
+  FOLD: 315
+  OTHER: 103
+  Push%: 20.7%
+
+
+=== 2P BB HERO ACTIONS (last 200) ===
+  PUSH: 42, FOLD: 67, OTHER: 91
+  Push%: 38.5%
+
+4P CO: {'?': 6, 'A': 676, 'F': 1759}
+
+4P BTN: {'?': 9, 'A': 664, 'F': 1783}
+
+4P SB: {'?': 7, 'A': 834, 'F': 1605}
+
+
+=== 4P BB PUSHES with cards (all time) ===
+  #53116 2026-03-25T00:54:53 | cards=QcJh | prior=F-F-A | P/L=-8.0BB
+  #53096 2026-03-25T00:52:47 | cards=ThKd | prior=F-F-A | P/L=-8.0BB
+  #53078 2026-03-25T00:50:58 | cards=Ah8h | prior=F-F-A | P/L=-8.0BB
+  #53049 2026-03-25T00:47:38 | cards=8dKc | prior=F-F-A | P/L=+7.7BB
+  #53046 2026-03-25T00:47:11 | cards=Ad6h | prior=F-F-A | P/L=+7.7BB
+  #53027 2026-03-25T00:45:05 | cards=KsKd | prior=A-F-F | P/L=-8.0BB
+  #52767 2026-03-25T00:21:36 | cards=ThKh | prior=F-F-A | P/L=+7.7BB
+  #52581 2026-03-24T23:00:41 | cards=KcJd | prior=F-A-F | P/L=-8.0BB
+  #52571 2026-03-24T22:59:48 | cards=9h9c | prior=F-A-F | P/L=-8.0BB
+  #52536 2026-03-24T22:55:49 | cards=QdTc | prior=F-F-A | P/L=+7.7BB
+  #52470 2026-03-24T22:48:25 | cards=Ad6d | prior=F-F-A | P/L=+7.7BB
+  #52460 2026-03-24T22:47:06 | cards=Ad4h | prior=F-F-A | P/L=-8.0BB
+  #52451 2026-03-24T22:46:01 | cards=As9h | prior=F-A-F | P/L=+0.2BB
+  #52420 2026-03-24T22:42:18 | cards=8dAh | prior=F-F-A | P/L=+7.7BB
+  #52417 2026-03-24T22:41:52 | cards=KdJd | prior=F-A-F | P/L=-8.0BB
+  #52388 2026-03-24T22:38:32 | cards=KsTh | prior=A-F-F | P/L=-8.0BB
+  #52385 2026-03-24T22:38:00 | cards=TdTc | prior=A-A-F | P/L=-8.0BB
+  #52377 2026-03-24T22:36:50 | cards=As8c | prior=F-A-F | P/L=+8.2BB
+  #52369 2026-03-24T22:35:36 | cards=9h9d | prior=F-F-A | P/L=+7.7BB
+  #52354 2026-03-24T22:33:41 | cards=8d8c | prior=A-A-F | P/L=+16.0BB
+  #52348 2026-03-24T22:32:50 | cards=As7s | prior=F-A-F | P/L=+8.2BB
+  #52330 2026-03-24T22:30:26 | cards=2dKd | prior=F-F-A | P/L=+7.7BB
+  #52311 2026-03-24T22:27:50 | cards=Ah8c | prior=A-F-F | P/L=+8.2BB
+  #52292 2026-03-24T22:25:11 | cards=7cKh | prior=F-F-A | P/L=+7.7BB
+  #52281 2026-03-24T22:23:43 | cards=2sKs | prior=F-F-A | P/L=-8.0BB
+  #52270 2026-03-24T22:22:14 | cards=JdAc | prior=F-F-A | P/L=+7.7BB
+  #52224 2026-03-24T22:15:48 | cards=Ks5d | prior=F-F-A | P/L=-8.0BB
+  #52194 2026-03-24T22:12:11 | cards=TcAc | prior=F-A-F | P/L=+8.2BB
+  #52169 2026-03-24T22:08:47 | cards=9dKs | prior=F-F-A | P/L=-8.0BB
+  #52151 2026-03-24T22:06:26 | cards=Ad4s | prior=F-F-A | P/L=+7.7BB
+  #52126 2026-03-24T22:03:30 | cards=6cAh | prior=F-F-A | P/L=-8.0BB
+  #52118 2026-03-24T22:02:36 | cards=9hJd | prior=F-F-A | P/L=-8.0BB
+  #52103 2026-03-24T22:00:47 | cards=TdQh | prior=F-F-A | P/L=-8.0BB
+  #52088 2026-03-24T21:58:49 | cards=Ac7s | prior=A-F-F | P/L=-8.0BB
+  #52080 2026-03-24T21:57:42 | cards=As9d | prior=F-F-A | P/L=-8.0BB
+  #52077 2026-03-24T21:57:19 | cards=KcJc | prior=F-F-A | P/L=+7.7BB
+  #52032 2026-03-24T21:51:59 | cards=ThJs | prior=F-F-A | P/L=-8.0BB
+  #51995 2026-03-24T21:47:22 | cards=JdAc | prior=A-F-F | P/L=+0.2BB
+  #51957 2026-03-24T21:43:01 | cards=Kc8s | prior=F-F-A | P/L=+7.7BB
+  #51939 2026-03-24T21:40:51 | cards=7sAs | prior=F-A-F | P/L=-8.0BB
+  #51455 2026-03-24T20:47:27 | cards=QdJd | prior=F-A-F | P/L=-8.0BB
+  #51446 2026-03-24T20:46:20 | cards=Kc9d | prior=F-F-A | P/L=+7.7BB
+  #51434 2026-03-24T20:44:27 | cards=8sAs | prior=A-F-F | P/L=+8.2BB
+  #51428 2026-03-24T20:43:26 | cards=KhQh | prior=F-F-A | P/L=+7.7BB
+  #51421 2026-03-24T20:42:24 | cards=Ac8s | prior=A-F-F | P/L=+8.2BB
+  #51384 2026-03-24T20:37:53 | cards=TdTc | prior=F-A-F | P/L=+8.2BB
+  #51323 2026-03-24T20:31:09 | cards=As4c | prior=F-A-F | P/L=-8.0BB
+  #51318 2026-03-24T20:30:25 | cards=Qd9d | prior=F-F-A | P/L=-8.0BB
+  #51309 2026-03-24T20:29:23 | cards=JdJc | prior=A-F-F | P/L=+8.2BB
+  #51248 2026-03-24T20:22:24 | cards=JcQd | prior=F-A-F | P/L=+8.2BB
+  Total 4P BB pushes found: 50

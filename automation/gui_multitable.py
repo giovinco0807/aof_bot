@@ -1,9 +1,9 @@
-"""2-Table AoF Bot GUI — Dual GTO Advisor Display.
+"""Multi-Table AoF Bot GUI — Up to 4 GTO Advisors.
 
-Shows GTO advisor for two tables side-by-side.
+Shows GTO advisor for up to four tables in a grid.
 Each panel shows: Hero cards, position, push/fold decision, and seat table.
 
-Launch: python gui_2table.py
+Launch: python gui_multitable.py
 """
 
 import ctypes
@@ -199,11 +199,11 @@ class TablePanel:
         self.seats_tree.tag_configure("hero", background="#e3f2fd")
 
 
-class TwoTableGUI:
+class MultiTableGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("AoF Bot — 2 Table Mode")
-        self.root.geometry("900x700")
+        self.root.title("AoF Bot — Multi-Table Mode (Up to 4)")
+        self.root.geometry("1000x850")
         self.root.resizable(True, True)
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
 
@@ -307,17 +307,21 @@ class TwoTableGUI:
                  resolution=0.5, orient="horizontal", length=100,
                  command=lambda v: self._update_delay_config()).pack(side="left")
 
-        # --- Dual GTO Panels (side by side) ---
+        # --- Multi-Table Panels (2x2 Grid) ---
         panels_frame = ttk.Frame(self.root)
         panels_frame.pack(fill="both", expand=True, padx=5, pady=3)
 
-        self.panel_left = TablePanel(panels_frame, "Table 1 (Left)")
-        self.panel_left.frame.pack(side="left", fill="both", expand=True, padx=(0, 2))
-
-        self.panel_right = TablePanel(panels_frame, "Table 2 (Right)")
-        self.panel_right.frame.pack(side="right", fill="both", expand=True, padx=(2, 0))
-
-        self.panels = [self.panel_left, self.panel_right]
+        self.panels = []
+        for i in range(4):
+            p = TablePanel(panels_frame, f"Table {i+1} (Waiting...)")
+            row, col = divmod(i, 2)
+            p.frame.grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
+            self.panels.append(p)
+            
+        panels_frame.columnconfigure(0, weight=1)
+        panels_frame.columnconfigure(1, weight=1)
+        panels_frame.rowconfigure(0, weight=1)
+        panels_frame.rowconfigure(1, weight=1)
 
         # --- Log ---
         log_frame = ttk.LabelFrame(self.root, text="Log", padding=3)
@@ -356,18 +360,17 @@ class TwoTableGUI:
                 if evt.get("type") == "hand_update":
                     table_id = evt.get("table_id", 0)
 
-                    # Map table_id to panel index (first 2 unique tables)
+                    # Map table_id to panel index (first 4 unique tables)
                     if table_id not in self.table_map:
-                        if len(self.table_map) < 2:
+                        if len(self.table_map) < 4:
                             idx = len(self.table_map)
                             self.table_map[table_id] = idx
-                            panel_name = "Left" if idx == 0 else "Right"
-                            self.panels[idx].frame.config(text=f"Table {idx+1} ({panel_name}) — ID: {table_id}")
+                            self.panels[idx].frame.config(text=f"Table {idx+1} — ID: {table_id}")
                         else:
-                            continue  # Ignore 3rd+ tables
+                            continue  # Ignore 5th+ tables
 
                     panel_idx = self.table_map.get(table_id)
-                    if panel_idx is not None and panel_idx < 2:
+                    if panel_idx is not None and panel_idx < 4:
                         if player_stats is None:
                             player_stats = self._get_player_stats_cache()
                         self.panels[panel_idx].update(evt, player_stats)
@@ -495,5 +498,5 @@ class TwoTableGUI:
 
 if __name__ == "__main__":
     ensure_admin()
-    app = TwoTableGUI()
+    app = MultiTableGUI()
     app.run()

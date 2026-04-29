@@ -42,6 +42,7 @@ DEFAULT_GUI_CONFIG = {
     "max_hands": 0,
     "stop_time": "",
     "leave_if_disadvantaged": False,
+    "enable_exploit": True,
 }
 
 
@@ -98,6 +99,7 @@ class AofBotGUI:
             "max_hands": self.var_max_hands.get(),
             "stop_time": self.var_stop_time.get(),
             "leave_if_disadvantaged": self.var_leave_disadvantaged.get(),
+            "enable_exploit": self.var_enable_exploit.get(),
         }
         with open(CONFIG_PATH, "w") as f:
             json.dump(cfg, f, indent=2)
@@ -125,6 +127,9 @@ class AofBotGUI:
 
         self.var_auto_play = tk.BooleanVar(value=self.config["auto_play"])
         ttk.Checkbutton(row2, text="Auto-Play (ADB)", variable=self.var_auto_play).pack(side="left")
+
+        self.var_enable_exploit = tk.BooleanVar(value=self.config.get("enable_exploit", True))
+        ttk.Checkbutton(row2, text="Node-Lock Exploit", variable=self.var_enable_exploit).pack(side="left", padx=10)
 
         ttk.Button(row2, text="Resize Window", command=self._on_resize_window).pack(side="left", padx=(15, 5))
         ttk.Button(row2, text="Calibrate (1 Table)", command=self._on_calibrate).pack(side="left", padx=5)
@@ -373,9 +378,15 @@ class AofBotGUI:
         if self.capture:
             ofc = getattr(self.capture, 'ofc_hands_saved', 0)
             ofc_str = f" | OFC: {ofc}" if ofc else ""
+            prof = getattr(self.capture, 'session_profit', 0)
+            sign = "+" if prof >= 0 else ""
+            ev = getattr(self.capture, 'session_ev', 0)
+            ev_sign = "+" if ev >= 0 else ""
+            ev_str = f" | EV:{ev_sign}{ev:.0f}" if ev != 0 else ""
             self.var_stats.set(f"Hands: {self.capture.hand_count} | "
                               f"Saved: {self.capture.hands_saved}{ofc_str} | "
-                              f"Hero played: {self.capture.hero_hands_played}")
+                              f"Hero: {self.capture.hero_hands_played} | "
+                              f"P/L: {sign}{prof}{ev_str}")
 
             # Auto-refresh player stats every 30 seconds
             if not hasattr(self, '_stats_counter'):
@@ -534,6 +545,7 @@ class AofBotGUI:
                 stop_time=self.var_stop_time.get(),
                 leave_if_disadvantaged=self.var_leave_disadvantaged.get(),
                 gui_queue=self.gui_data_queue,
+                enable_exploit=self.var_enable_exploit.get(),
             )
             self.running = True
             self.root.after(0, lambda: self.var_status.set("Running"))

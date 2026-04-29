@@ -1,0 +1,40 @@
+===========================================================================
+  FINAL EV VERIFICATION
+  pot_chips = net (winner receives this)
+  gross_pot = pot_chips + rake_chips
+  hero_ev = equity * pot_chips - stack
+===========================================================================
+
+  Hand 54255: pot_chips=31360 rake=640 gross=32000 N_allin=2
+    gross_pot / N = 16000 (should = stack 16000)
+    P1[As3s] eq=0.403 actual=  +15360 | ev_correct=   -3372 <<HERO
+    P2[7dAh] eq=0.597 actual=  -16000 | ev_correct=   +2732
+    Sum(allin EV)=-640 Sum(allin actual)=-640 dead=0
+    Check: pot - N*stack = -640 = dead_money - rake? (dead=0 rake=640 diff=640)
+
+  Hand 54274: pot_chips=33320 rake=680 gross=34000 N_allin=2
+    gross_pot / N = 17000 (should = stack 16000)
+    P1[3h3c] eq=0.477 actual=  -16000 | ev_correct=    -117 <<HERO
+    P2[KdTd] eq=0.523 actual=  +17320 | ev_correct=   +1437
+    Sum(allin EV)=+1320 Sum(allin actual)=+1320 dead=-2000
+    Check: pot - N*stack = 1320 = dead_money - rake? (dead=-2000 rake=680 diff=-1320)
+
+  Hand 54275: pot_chips=31360 rake=640 gross=32000 N_allin=2
+    gross_pot / N = 16000 (should = stack 16000)
+    P1[QsQc] eq=0.691 actual=  +15360 | ev_correct=   +5665 <<HERO
+    P2[4dAs] eq=0.309 actual=  -16000 | ev_correct=   -6305
+    Sum(allin EV)=-640 Sum(allin actual)=-640 dead=0
+    Check: pot - N*stack = -640 = dead_money - rake? (dead=0 rake=640 diff=640)
+
+===========================================================================
+  AGGREGATE over 118 showdown hands (hero=13076903)
+===========================================================================
+  Actual P/L:         +9.5 BB
+  OLD (net/N):       -13.8 BB  diff=  -23.3
+  FIX1 (net-stk):    -44.3 BB  diff=  -53.9
+  FIX2 (pot-stk):    -26.1 BB  diff=  -35.6
+
+  The formula with smallest systematic bias is the correct one.
+  Random MC noise is ~sqrt(N)*8BB = ~87 BB
+
+===========================================================================

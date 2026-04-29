@@ -1,0 +1,127 @@
+=== Hero Action Distribution ===
+  F: 14576 (52.6%)
+  A: 9626 (34.7%)
+  ?: 3513 (12.7%)
+  TOTAL: 27715
+
+
+====================================================================================================
+AUDIT: Hero FOLDS where GTO says PUSH (freq >= 50%)
+====================================================================================================
+
+Total hero folds with known cards: 0
+
+====================================================================================================
+TOTAL ERRORS: 0 / 0 folds were incorrect
+Total BB lost from incorrect folds: 0.0 BB
+====================================================================================================
+
+
+Errors by Position:
+
+Errors by Num Players:
+
+
+====================================================================================================
+LAST 100 HERO HANDS (all actions)
+====================================================================================================
+  #53382 2026-03-25T01:21:45 | 4P  SB prior=    A-A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53381 2026-03-25T01:21:38 | 2P  BB prior=      A |  ATs | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  +7.7BB
+  #53380 2026-03-25T01:21:29 | 4P  BB prior=  F-A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53379 2026-03-25T01:21:20 | 2P  SB prior=        |  J8o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53378 2026-03-25T01:21:19 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53377 2026-03-25T01:21:03 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53376 2026-03-25T01:21:02 | 4P BTN prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53375 2026-03-25T01:20:54 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53374 2026-03-25T01:20:51 | 4P  SB prior=    F-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53373 2026-03-25T01:20:47 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53372 2026-03-25T01:20:41 | 4P  BB prior=  F-A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53371 2026-03-25T01:20:37 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53370 2026-03-25T01:20:31 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53369 2026-03-25T01:20:29 | 2P  BB prior=      F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53368 2026-03-25T01:20:22 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.5BB
+  #53367 2026-03-25T01:20:20 | 2P  SB prior=        |  97o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53366 2026-03-25T01:20:13 | 4P  SB prior=    F-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53365 2026-03-25T01:20:05 | 4P  BB prior=  F-F-F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53364 2026-03-25T01:20:03 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53363 2026-03-25T01:19:57 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53362 2026-03-25T01:19:52 | 2P  SB prior=        |  A9o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  +0.0BB
+  #53361 2026-03-25T01:19:49 | 4P BTN prior=      A |  A8s | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53360 2026-03-25T01:19:35 | 2P  BB prior=      F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53359 2026-03-25T01:19:31 | 4P  SB prior=    F-A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53358 2026-03-25T01:19:27 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53357 2026-03-25T01:19:17 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53356 2026-03-25T01:19:13 | 4P  BB prior=  F-F-F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53355 2026-03-25T01:19:06 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53354 2026-03-25T01:19:04 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53353 2026-03-25T01:18:59 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53352 2026-03-25T01:18:54 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53351 2026-03-25T01:18:49 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53350 2026-03-25T01:18:44 | 4P  SB prior=    F-A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53349 2026-03-25T01:18:41 | 2P  BB prior=      F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53348 2026-03-25T01:18:33 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53347 2026-03-25T01:18:28 | 4P  BB prior=  F-A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53346 2026-03-25T01:18:23 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53345 2026-03-25T01:18:15 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.5BB
+  #53344 2026-03-25T01:18:13 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53343 2026-03-25T01:18:05 | 2P  BB prior=      A |  Q9o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  +7.7BB
+  #53342 2026-03-25T01:18:04 | 4P BTN prior=      F |  AKo | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53341 2026-03-25T01:17:47 | 2P  SB prior=        |  T9o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53340 2026-03-25T01:17:44 | 4P  SB prior=    F-A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53339 2026-03-25T01:17:30 | 2P  BB prior=      F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53338 2026-03-25T01:17:27 | 4P  BB prior=  F-F-F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53337 2026-03-25T01:17:21 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53336 2026-03-25T01:17:19 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53335 2026-03-25T01:17:14 | 2P  BB prior=      A |  K9s | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  +7.7BB
+  #53334 2026-03-25T01:17:11 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53333 2026-03-25T01:17:02 | 4P  SB prior=    F-F | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53332 2026-03-25T01:16:55 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53331 2026-03-25T01:16:52 | 4P  BB prior=  F-A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53330 2026-03-25T01:16:45 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53329 2026-03-25T01:16:40 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53328 2026-03-25T01:16:37 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53327 2026-03-25T01:16:32 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53326 2026-03-25T01:16:29 | 2P  BB prior=      A |   88 | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53325 2026-03-25T01:16:23 | 4P  SB prior=    A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53324 2026-03-25T01:16:14 | 4P  BB prior=  F-A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53323 2026-03-25T01:16:11 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53322 2026-03-25T01:16:04 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53321 2026-03-25T01:16:01 | 2P  BB prior=      F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53320 2026-03-25T01:15:55 | 4P BTN prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53319 2026-03-25T01:15:52 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53318 2026-03-25T01:15:44 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53317 2026-03-25T01:15:40 | 4P  SB prior=    F-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53316 2026-03-25T01:15:34 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53315 2026-03-25T01:15:31 | 4P  BB prior=  A-F-A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53314 2026-03-25T01:15:25 | 2P  BB prior=      A |   AA | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  +7.7BB
+  #53313 2026-03-25T01:15:12 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53312 2026-03-25T01:15:07 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53311 2026-03-25T01:14:59 | 2P  BB prior=      A |  A5o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53310 2026-03-25T01:14:55 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53309 2026-03-25T01:14:46 | 4P  SB prior=    F-A |  AKs | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53308 2026-03-25T01:14:42 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53307 2026-03-25T01:14:33 | 2P  BB prior=      F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53306 2026-03-25T01:14:24 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53305 2026-03-25T01:14:21 | 4P  BB prior=  F-A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53304 2026-03-25T01:14:16 | 2P  BB prior=      A |  A3o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  +7.7BB
+  #53303 2026-03-25T01:14:09 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53302 2026-03-25T01:14:01 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53301 2026-03-25T01:13:57 | 2P  SB prior=        |  K4s | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  +7.7BB
+  #53300 2026-03-25T01:13:43 | 4P  SB prior=    F-F |  T9s | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53299 2026-03-25T01:13:40 | 2P  BB prior=      F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53298 2026-03-25T01:13:32 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=PUSH |   ?    | P/L=  +1.0BB
+  #53297 2026-03-25T01:13:25 | 4P  BB prior=  F-F-F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53296 2026-03-25T01:13:21 | 2P  BB prior=      A |  KJo | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53295 2026-03-25T01:13:15 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53294 2026-03-25T01:13:03 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53293 2026-03-25T01:12:57 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53292 2026-03-25T01:12:55 | 2P  BB prior=      A |  KJo | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53291 2026-03-25T01:12:41 | 4P  SB prior=    A-F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53290 2026-03-25T01:12:37 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53289 2026-03-25T01:12:30 | 2P  BB prior=      A |  A5o | GTO=  100% PUSH | Hero=PUSH |   OK   | P/L=  -8.0BB
+  #53288 2026-03-25T01:12:22 | 4P  BB prior=  F-F-F | ???? | GTO= -100%  ??? | Hero=   ? |   ?    | P/L=  +0.5BB
+  #53287 2026-03-25T01:12:14 | 4P  CO prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53286 2026-03-25T01:12:11 | 2P  SB prior=        | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
+  #53285 2026-03-25T01:12:06 | 4P BTN prior=      F | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  +0.0BB
+  #53284 2026-03-25T01:12:04 | 2P  BB prior=      A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -1.0BB
+  #53283 2026-03-25T01:11:57 | 4P  SB prior=    F-A | ???? | GTO= -100%  ??? | Hero=FOLD |   ?    | P/L=  -0.5BB
