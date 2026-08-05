@@ -28,7 +28,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from ofc import solver as solver_api                      # noqa: E402
 from ofc.advisor import Advisor                            # noqa: E402
 from ofc.board import BOTTOM, Board, MIDDLE, ROWS, TOP     # noqa: E402
-from ofc.cards import code_to_text, is_red, pretty, text_to_code  # noqa: E402
+from ofc.cards import (                                          # noqa: E402
+    RANKS, SUITS, code_to_text, is_red, pretty, text_to_code,
+)
 from ofc.solver import OpponentView, SolveRequest, describe, solve, validate  # noqa: E402
 from ofc.state import Table                                # noqa: E402
 
@@ -47,6 +49,8 @@ BLACK = "#1a1a1a"
 
 ROW_LABEL = {TOP: "TOP  (3)", MIDDLE: "MID  (5)", BOTTOM: "BOT  (5)"}
 
+_SUIT_SYMBOL = {"s": "♠", "h": "♥", "d": "♦", "c": "♣"}
+
 
 class BoardCanvas(tk.Canvas):
     """Draws a board, plus the placement the solver wants to make.
@@ -61,17 +65,43 @@ class BoardCanvas(tk.Canvas):
     LABEL_W = 78
     NOTE_W = 118
 
-    def __init__(self, master, title: str = "", **kw):
+    def __init__(self, master, title: str = "", on_card_click=None,
+                 on_slot_click=None, **kw):
         width = self.LABEL_W + 5 * (CARD_W + CARD_GAP) + self.NOTE_W
         height = 26 + 3 * (CARD_H + ROW_GAP)
         super().__init__(master, width=width, height=height, bg=BG,
                          highlightthickness=0, **kw)
         self.title = title
+        self.on_card_click = on_card_click
+        self.on_slot_click = on_slot_click
+        #: (x1, y1, x2, y2, row, card) for every placed card currently drawn.
+        #: Only solid cards go in here — a proposed card is the solver's
+        #: answer, not something the user put there to take back.
+        self._card_boxes: List[tuple] = []
+        #: (x1, y1, x2, y2, row) for every empty slot drawn.
+        self._slot_boxes: List[tuple] = []
+        if on_card_click or on_slot_click:
+            self.bind("<Button-1>", self._clicked)
+            self.configure(cursor="hand2")
+
+    def _clicked(self, event) -> None:
+        for x1, y1, x2, y2, row, card in self._card_boxes:
+            if x1 <= event.x <= x2 and y1 <= event.y <= y2:
+                if self.on_card_click:
+                    self.on_card_click(row, card)
+                return
+        for x1, y1, x2, y2, row in self._slot_boxes:
+            if x1 <= event.x <= x2 and y1 <= event.y <= y2:
+                if self.on_slot_click:
+                    self.on_slot_click(row)
+                return
 
     def render(self, board: Board, proposal: Optional[dict] = None,
                labels: Optional[dict] = None) -> None:
         """``proposal`` maps a row name to the cards being added to it."""
         self.delete("all")
+        self._card_boxes = []
+        self._slot_boxes = []
         proposal = proposal or {}
         labels = labels or {}
 
@@ -91,12 +121,15 @@ class BoardCanvas(tk.Canvas):
             x = self.LABEL_W
             for slot in range(capacity):
                 if slot < len(placed):
-                    self._card(x, y, code_to_text(placed[slot]), ghost=False)
+                    card = placed[slot]
+                    self._card(x, y, code_to_text(card), ghost=False)
+                    self._card_boxes.append((x, y, x + CARD_W, y + CARD_H, row, card))
                 elif slot - len(placed) < len(incoming):
                     self._card(x, y, code_to_text(incoming[slot - len(placed)]), ghost=True)
                 else:
                     self.create_rectangle(x, y, x + CARD_W, y + CARD_H,
                                           fill=SLOT, outline=SLOT_EDGE, dash=(3, 3))
+                    self._slot_boxes.append((x, y, x + CARD_W, y + CARD_H, row))
                 x += CARD_W + CARD_GAP
 
             note = labels.get(row, "")
@@ -118,11 +151,93 @@ class BoardCanvas(tk.Canvas):
                          fill=colour, font=("Segoe UI", 14, "bold"))
 
 
+class CardPicker(tk.Canvas):
+    """All fifty-two cards, laid out to be clicked.
+
+    Typing ``As Kd 7c`` works and is quick once you are used to it, but it is
+    also the easiest place in the whole window to make a mistake that looks
+    like a solver bug. Picking cards off a grid cannot produce a card that
+    does not exist, and cards already in play are drawn struck out, so a
+    duplicate is visible before it is entered rather than after.
+
+    Clicking an unused card adds it to the current destination; clicking one
+    already in play takes it back.
+    """
+
+    CELL_W, CELL_H = 36, 40
+    PAD_X, PAD_Y = 22, 18
+
+    def __init__(self, master, on_pick=None, **kw):
+        width = self.PAD_X + 13 * self.CELL_W + 6
+        height = self.PAD_Y + 4 * self.CELL_H + 6
+        super().__init__(master, width=width, height=height, bg="#f4f6f4",
+                         highlightthickness=0, **kw)
+        self.on_pick = on_pick
+        self._boxes: List[tuple] = []
+        self._used: set = set()
+        self.bind("<Button-1>", self._clicked)
+        self.configure(cursor="hand2")
+        self.render(set())
+
+    def _clicked(self, event) -> None:
+        for x1, y1, x2, y2, code in self._boxes:
+            if x1 <= event.x <= x2 and y1 <= event.y <= y2:
+                if self.on_pick:
+                    self.on_pick(code, code in self._used)
+                return
+
+    def render(self, used: set) -> None:
+        self.delete("all")
+        self._boxes = []
+        self._used = set(used)
+
+        for column, rank in enumerate(RANKS):
+            self.create_text(self.PAD_X + column * self.CELL_W + self.CELL_W // 2,
+                             self.PAD_Y // 2, text=rank, fill="#6b736c",
+                             font=("Consolas", 8))
+
+        for row, suit in enumerate(SUITS):
+            y = self.PAD_Y + row * self.CELL_H
+            self.create_text(self.PAD_X // 2, y + self.CELL_H // 2,
+                             text=_SUIT_SYMBOL[suit],
+                             fill=RED if suit in "hd" else BLACK,
+                             font=("Segoe UI", 11))
+            for column, rank in enumerate(RANKS):
+                x = self.PAD_X + column * self.CELL_W
+                code = text_to_code(rank + suit)
+                spent = code in self._used
+                self.create_rectangle(x + 1, y + 1, x + self.CELL_W - 2,
+                                      y + self.CELL_H - 2,
+                                      fill="#e2e6e2" if spent else CARD_BG,
+                                      outline=CARD_EDGE)
+                colour = "#a9b0aa" if spent else (RED if suit in "hd" else BLACK)
+                self.create_text(x + self.CELL_W // 2, y + self.CELL_H // 2,
+                                 text=rank + _SUIT_SYMBOL[suit], fill=colour,
+                                 font=("Segoe UI", 10, "bold"))
+                if spent:
+                    self.create_line(x + 4, y + self.CELL_H - 5,
+                                     x + self.CELL_W - 5, y + 4, fill="#8e968f")
+                self._boxes.append((x, y, x + self.CELL_W, y + self.CELL_H, code))
+
+
 class OfcGui:
+    #: The piles a picked card can go into, in the order the buttons appear.
+    #: The board rows are capped; the deal and the opponent field are not,
+    #: because a Fantasyland deal is up to seventeen cards and an opponent
+    #: board is entered as one flat list.
+    DESTINATIONS = (
+        ("dealt", "Dealt", None),
+        ("top", "Top", 3),
+        ("middle", "Mid", 5),
+        ("bottom", "Bot", 5),
+        ("opponent", "Opp", 13),
+    )
+
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("OFC Bot — board & recommended placement")
-        self.root.geometry("1180x760")
+        self.root.geometry("1240x900")
+        self.root.minsize(1100, 780)
 
         self.events: "queue.Queue" = queue.Queue()
         self.advisor: Optional[Advisor] = None
@@ -141,6 +256,9 @@ class OfcGui:
         self.var_bot = tk.StringVar()
         self.var_dealt = tk.StringVar(value="As Ad Kh 7c 2d")
         self.var_opp = tk.StringVar()
+        self.var_destination = tk.StringVar(value="dealt")
+        #: The order cards were picked in, so Undo can walk back.
+        self._pick_history: List[tuple] = []
 
         self._build()
         self.root.after(100, self._drain)
@@ -178,9 +296,11 @@ class OfcGui:
         left = ttk.Frame(body)
         left.pack(side="left", fill="y")
 
-        hero_box = ttk.LabelFrame(left, text="Hero board — outlined cards are the recommendation")
+        hero_box = ttk.LabelFrame(
+            left, text="Hero board — outlined cards are the recommendation, click a card to take it back")
         hero_box.pack(fill="x", pady=4)
-        self.hero_canvas = BoardCanvas(hero_box)
+        self.hero_canvas = BoardCanvas(hero_box, on_card_click=self._board_card_clicked,
+                                       on_slot_click=self._board_slot_clicked)
         self.hero_canvas.pack(padx=6, pady=6)
 
         self.opp_box = ttk.LabelFrame(left, text="Opponents (their cards are dead cards)")
@@ -190,19 +310,44 @@ class OfcGui:
         right = ttk.Frame(body)
         right.pack(side="left", fill="both", expand=True, padx=(10, 0))
 
-        manual = ttk.LabelFrame(right, text="Manual spot — type cards as 'As Kd 7c'")
+        manual = ttk.LabelFrame(right, text="Manual spot")
         manual.pack(fill="x")
+
+        where = ttk.Frame(manual)
+        where.pack(fill="x", pady=(4, 2))
+        ttk.Label(where, text="Picked cards go to:").grid(row=0, column=0,
+                                                          padx=(4, 6), sticky="w")
+        self.dest_buttons = {}
+        for index, (key, label, _cap) in enumerate(self.DESTINATIONS):
+            button = ttk.Radiobutton(where, text=label, value=key,
+                                     variable=self.var_destination,
+                                     command=self._refresh_destinations)
+            # A grid rather than a packed row: the labels carry counts and
+            # grow, and a packed row pushes the last destination off the edge.
+            button.grid(row=0, column=index + 1, padx=3, sticky="w")
+            self.dest_buttons[key] = button
+
+        self.picker = CardPicker(manual, on_pick=self._picked)
+        self.picker.pack(padx=6, pady=4)
+
+        ttk.Label(manual, text="or type them — 'As Kd 7c'",
+                  foreground="#666").pack(anchor="w", padx=6)
         for label, var in (("Top", self.var_top), ("Middle", self.var_mid),
                            ("Bottom", self.var_bot), ("Opponent", self.var_opp),
                            ("Dealt", self.var_dealt)):
             row = ttk.Frame(manual)
-            row.pack(fill="x", pady=2)
-            ttk.Label(row, text=f"{label}:", width=10).pack(side="left")
-            ttk.Entry(row, textvariable=var).pack(side="left", fill="x", expand=True, padx=4)
+            row.pack(fill="x", pady=1)
+            ttk.Label(row, text=f"{label}:", width=9).pack(side="left")
+            entry = ttk.Entry(row, textvariable=var)
+            entry.pack(side="left", fill="x", expand=True, padx=4)
+            # Typing stays supported, and the picker has to notice: both write
+            # to the same variables, so the grey-out is refreshed on edit.
+            entry.bind("<KeyRelease>", lambda _e: self._sync_manual())
         actions = ttk.Frame(manual)
         actions.pack(fill="x", pady=4)
         ttk.Button(actions, text="SOLVE", command=self._solve_manual).pack(side="left", padx=4)
-        ttk.Button(actions, text="Clear", command=self._clear_manual).pack(side="left")
+        ttk.Button(actions, text="Undo", command=self._undo_pick).pack(side="left")
+        ttk.Button(actions, text="Clear", command=self._clear_manual).pack(side="left", padx=4)
         ttk.Label(actions, textvariable=self.var_deck,
                   foreground="#555").pack(side="left", padx=12)
 
@@ -217,15 +362,17 @@ class OfcGui:
         self.tree.pack(fill="both", expand=True, padx=4, pady=4)
         self.tree.bind("<<TreeviewSelect>>", self._preview_selected)
 
+        # Fixed height, no expand: the candidates table is what grows when the
+        # window does, and an expanding log squeezes it to nothing.
         log_box = ttk.LabelFrame(right, text="Log")
-        log_box.pack(fill="both", expand=True)
-        self.log = tk.Text(log_box, height=8, bg="#101410", fg="#cfe8d8",
+        log_box.pack(fill="x", pady=(0, 4))
+        self.log = tk.Text(log_box, height=7, bg="#101410", fg="#cfe8d8",
                            font=("Consolas", 9), wrap="word")
         self.log.pack(fill="both", expand=True, padx=4, pady=4)
 
         self._last_request: Optional[SolveRequest] = None
         self._last_advice = None
-        self._render_manual()
+        self._sync_manual()
 
     # -------------------------------------------------------------- helpers
     def _say(self, text: str) -> None:
@@ -246,11 +393,114 @@ class OfcGui:
             out.append(text_to_code(token))
         return out
 
+    # ------------------------------------------------------------- picking
+    #: Destination key -> the variable holding that pile.
+    def _pile_var(self, key: str) -> tk.StringVar:
+        return {"dealt": self.var_dealt, "top": self.var_top,
+                "middle": self.var_mid, "bottom": self.var_bot,
+                "opponent": self.var_opp}[key]
+
+    def _pile(self, key: str) -> List[int]:
+        """The cards in one pile, skipping anything that will not parse."""
+        out = []
+        for token in (self._pile_var(key).get() or "").replace(",", " ").split():
+            try:
+                out.append(text_to_code(token))
+            except ValueError:
+                continue
+        return out
+
+    def _set_pile(self, key: str, codes: List[int]) -> None:
+        self._pile_var(key).set(" ".join(code_to_text(c) for c in codes))
+
+    def _used_cards(self) -> set:
+        used = set()
+        for key, _label, _cap in self.DESTINATIONS:
+            used.update(self._pile(key))
+        return used
+
+    def _capacity(self, key: str) -> Optional[int]:
+        for name, _label, cap in self.DESTINATIONS:
+            if name == key:
+                return cap
+        return None
+
+    def _picked(self, code: int, already_used: bool) -> None:
+        """A click on the picker: take a card back, or add it."""
+        if already_used:
+            self._drop_card(code)
+            return
+
+        key = self.var_destination.get()
+        cards = self._pile(key)
+        capacity = self._capacity(key)
+        if capacity is not None and len(cards) >= capacity:
+            self._say(f"{key} is full ({capacity} cards) — pick another destination")
+            return
+        cards.append(code)
+        self._set_pile(key, cards)
+        self._pick_history.append((key, code))
+        self._sync_manual()
+
+    def _drop_card(self, code: int) -> None:
+        """Remove a card from whichever pile holds it."""
+        for key, _label, _cap in self.DESTINATIONS:
+            cards = self._pile(key)
+            if code in cards:
+                cards.remove(code)
+                self._set_pile(key, cards)
+                self._pick_history = [(k, c) for k, c in self._pick_history
+                                      if not (k == key and c == code)]
+                self._sync_manual()
+                return
+
+    def _undo_pick(self) -> None:
+        if not self._pick_history:
+            return
+        key, code = self._pick_history.pop()
+        cards = self._pile(key)
+        if code in cards:
+            cards.remove(code)
+            self._set_pile(key, cards)
+        self._sync_manual()
+
+    def _board_card_clicked(self, row: str, card: int) -> None:
+        """A click on a card sitting on hero's board takes it back."""
+        self._drop_card(card)
+
+    def _board_slot_clicked(self, row: str) -> None:
+        """A click on an empty slot aims the picker at that row."""
+        self.var_destination.set(row)
+        self._refresh_destinations()
+
+    def _refresh_destinations(self) -> None:
+        """Show how full each pile is on its button."""
+        for key, label, capacity in self.DESTINATIONS:
+            count = len(self._pile(key))
+            text = f"{label} ({count}/{capacity})" if capacity else f"{label} ({count})"
+            self.dest_buttons[key].config(text=text)
+
+    def _sync_manual(self) -> None:
+        """Repaint everything that depends on the manual piles."""
+        used = self._used_cards()
+        self.picker.render(used)
+        self._refresh_destinations()
+        self.var_deck.set(f"deck {52 - len(used)} · dead {len(used)}")
+        self._render_manual()
+        self._render_manual_opponents()
+
+    def _render_manual_opponents(self) -> None:
+        cards = self._pile("opponent")
+        board = Board(bottom=cards[:5], middle=cards[5:10], top=cards[10:13])
+        self._render_opponents([OpponentView(seat_id=1, name="villain", board=board)]
+                               if cards else [])
+
     def _clear_manual(self) -> None:
         for var in (self.var_top, self.var_mid, self.var_bot, self.var_opp, self.var_dealt):
             var.set("")
+        self._pick_history = []
         self.tree.delete(*self.tree.get_children())
-        self._render_manual()
+        self._sync_manual()
 
     def _render_manual(self, proposal: Optional[dict] = None) -> None:
         try:
@@ -274,7 +524,6 @@ class OfcGui:
                           self._parse(self.var_mid.get()),
                           self._parse(self.var_bot.get()))
             dealt = self._parse(self.var_dealt.get())
-            opponent = Board(bottom=[])
             opponent_cards = self._parse(self.var_opp.get())
         except ValueError as exc:
             self._say(f"bad card: {exc}")
@@ -284,15 +533,20 @@ class OfcGui:
             self._say(f"deal 5 cards (opening), 3 (street), or 13+ (fantasyland); got {len(dealt)}")
             return
 
+        everything = board.all_cards() + dealt + opponent_cards
+        if len(everything) != len(set(everything)):
+            self._say("the same card appears twice — no such position exists")
+            return
+
         opponents = []
         if opponent_cards:
             # Opponent cards are entered as one flat list; they only matter as
             # dead cards and as something to be scored against, so they are
             # laid out bottom-first.
-            opponent.bottom = opponent_cards[:5]
-            opponent.middle = opponent_cards[5:10]
-            opponent.top = opponent_cards[10:13]
-            opponents = [OpponentView(seat_id=1, name="villain", board=opponent)]
+            opponents = [OpponentView(seat_id=1, name="villain",
+                                      board=Board(bottom=opponent_cards[:5],
+                                                  middle=opponent_cards[5:10],
+                                                  top=opponent_cards[10:13]))]
 
         request = SolveRequest(
             board=board, dealt=dealt, opponents=opponents,

@@ -776,6 +776,109 @@ def test_advisor():
         rough.stop()
 
 
+def test_gui_picker():
+    """The click-to-pick path, when a display is available.
+
+    Skipped where Tk cannot open a window, which is most CI and this
+    container; it runs on the machine the bot is actually used from, which
+    is the one that matters for a GUI.
+    """
+    print("\ngui card picker (skipped without a display)")
+    try:
+        import tkinter
+        tkinter.Tk().destroy()
+    except Exception as exc:                       # noqa: BLE001
+        print(f"  -- no usable Tk ({type(exc).__name__}), skipped")
+        return
+
+    from ofc.gui import OfcGui
+
+    gui = OfcGui()
+    try:
+        gui._clear_manual()
+
+        gui.var_destination.set("dealt")
+        for card in ("As", "Ad", "Kh", "7c", "2d"):
+            gui._picked(text_to_code(card), False)
+        check("picking fills the chosen pile",
+              gui.var_dealt.get().split() == ["As", "Ad", "Kh", "7c", "2d"])
+        check("the deck count follows what has been picked",
+              "deck 47" in gui.var_deck.get(), gui.var_deck.get())
+
+        gui._picked(text_to_code("Kh"), True)
+        check("clicking a card already in play takes it back",
+              "Kh" not in gui.var_dealt.get() and "deck 48" in gui.var_deck.get())
+
+        gui.var_destination.set("top")
+        for card in ("2h", "3h", "4h", "5h"):
+            gui._picked(text_to_code(card), False)
+        check("a row cannot be filled past its capacity",
+              len(gui.var_top.get().split()) == 3, gui.var_top.get())
+
+        gui._board_slot_clicked(BOTTOM)
+        check("clicking an empty slot aims the picker at that row",
+              gui.var_destination.get() == BOTTOM)
+        gui._picked(text_to_code("9s"), False)
+        gui._board_card_clicked(BOTTOM, text_to_code("9s"))
+        check("clicking a card on the board removes it",
+              "9s" not in gui.var_bot.get())
+
+        gui._undo_pick()
+        check("undo walks back the last pick",
+              len(gui.var_top.get().split()) == 2, gui.var_top.get())
+
+        gui._refresh_destinations()
+        check("the destination buttons show how full each pile is",
+              "(2/3)" in gui.dest_buttons["top"].cget("text"),
+              gui.dest_buttons["top"].cget("text"))
+
+        # A duplicate cannot be produced by picking, but can be typed.
+        gui._clear_manual()
+        gui.var_top.set("As")
+        gui.var_dealt.set("As Kd Qc")
+        gui._solve_manual()
+        check("a typed duplicate is refused",
+              "twice" in gui.log.get("end-2l", "end"))
+
+        gui._clear_manual()
+        gui.var_destination.set("dealt")
+        for card in ("Ac", "5s", "3h"):
+            gui._picked(text_to_code(card), False)
+        gui.var_destination.set("middle")
+        for card in ("Kh", "7c"):
+            gui._picked(text_to_code(card), False)
+        gui.var_destination.set("bottom")
+        for card in ("As", "Ad"):
+            gui._picked(text_to_code(card), False)
+        gui.var_destination.set("top")
+        gui._picked(text_to_code("2d"), False)
+        gui._solve_manual()
+        check("a spot built by picking solves", bool(gui.tree.get_children()))
+
+        # A live advice event must still paint after all of that.
+        gui.events.put({
+            "type": "ofc_advice", "table_id": 7,
+            "request": {"street": 1,
+                        "board": {"top": ["2d"], "middle": ["Kh", "7c"],
+                                  "bottom": ["As", "Ad"]},
+                        "dealt": ["Ac", "5s", "3h"], "deck_size": 39},
+            "advice": {"best": {"placements": [{"card": "Ac", "row": "bottom"},
+                                               {"card": "5s", "row": "middle"}],
+                                "discard": "3h", "ev": 2.5},
+                       "candidates": [{"placements": [{"card": "Ac", "row": "bottom"}],
+                                       "discard": "3h", "ev": 2.5}]},
+            "errors": [], "warnings": []})
+        gui._drain()
+        check("a live advice event renders", bool(gui.tree.get_children()))
+
+        # A malformed event must not stop the pump.
+        gui.events.put({"type": "ofc_advice"})
+        gui._drain()
+        check("a malformed event does not stop the event pump", True)
+    finally:
+        gui.root.destroy()
+
+
 def main() -> None:
     print("OFC package tests")
     test_cards()
@@ -790,6 +893,7 @@ def main() -> None:
     test_board_rules()
     test_placer_safety()
     test_advisor()
+    test_gui_picker()
     test_pipeline()
 
     print(f"\n{len(PASSED)} passed, {len(FAILED)} failed")
