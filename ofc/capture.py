@@ -153,8 +153,15 @@ class OfcCapture:
             return
 
         self.packets += 1
-        if self.advisor is not None:
+        if self.advisor is None:
+            return
+        try:
             self.advisor.feed(name, payload.get("tableId", 0), payload.get("data") or {})
+        except Exception as exc:                   # noqa: BLE001
+            # This runs on Frida's callback thread. Letting an exception out
+            # of it risks the whole hook, which is a much larger loss than
+            # one packet's worth of state.
+            print(f"  [OFC] dropped {name}: {type(exc).__name__}: {exc}")
 
 
 def attach_to_capture(capture, advisor) -> None:
@@ -174,22 +181,35 @@ def attach_to_capture(capture, advisor) -> None:
         attach_to_capture(capture, advisor)
         capture.run()
     """
-    original = capture._handle_packet
-    if getattr(original, "_ofc_wrapped", False):
-        return
+    installed = capture._handle_packet
+    # Re-attaching points the existing wrapper at the new advisor rather than
+    # stacking another one; silently keeping the old advisor would leave the
+    # caller holding one that never receives a packet.
+    original = getattr(installed, "_ofc_original", installed)
 
     def wrapped(payload):
+        target = wrapped._ofc_advisor
         name = payload.get("name")
-        if name in OFC_PACKETS:
+        if target is not None and name in OFC_PACKETS:
             try:
-                advisor.feed(name, payload.get("tableId", 0), payload.get("data") or {})
+                target.feed(name, payload.get("tableId", 0), payload.get("data") or {})
             except Exception as exc:               # noqa: BLE001
                 print(f"  [OFC] advisor failed on {name}: {type(exc).__name__}: {exc}")
         return original(payload)
 
-    wrapped._ofc_wrapped = True
+    wrapped._ofc_original = original
+    wrapped._ofc_advisor = advisor
     capture._handle_packet = wrapped
     advisor.start()
 
 
-__all__ = ["OfcCapture", "attach_to_capture", "find_pid", "OFC_PACKETS", "HOOK_SCRIPT"]
+def detach_from_capture(capture) -> None:
+    """Undo :func:`attach_to_capture`, restoring the original dispatch."""
+    installed = getattr(capture, "_handle_packet", None)
+    original = getattr(installed, "_ofc_original", None)
+    if original is not None:
+        capture._handle_packet = original
+
+
+__all__ = ["OfcCapture", "attach_to_capture", "detach_from_capture", "find_pid",
+           "OFC_PACKETS", "HOOK_SCRIPT"]

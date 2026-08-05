@@ -83,7 +83,7 @@ def replay_packets(db_path: Path, hero_uid: int, solver: str,
             table = tables[table_id] = Table(table_id=table_id, hero_uid=hero_uid)
         apply_packet(table, name, payload)
 
-        if not table.hero_to_act():
+        if not table.hero_has_decision():
             continue
         request = table.build_request(time_budget=budget)
         if request is None:

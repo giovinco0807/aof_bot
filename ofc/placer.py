@@ -87,14 +87,19 @@ class Layout:
         return cls.from_dict(json.loads(path.read_text(encoding="utf-8")))
 
     def missing(self) -> List[str]:
-        """Slots that have not been measured."""
+        """Slots that have not been measured.
+
+        The hand strip needs all five positions, not three: the opening
+        street places five cards at once, and a layout that only covers a
+        pineapple street would fail on the very first decision of a hand.
+        """
         gaps = []
         for row in ROWS:
             points = self.rows.get(row) or []
             if len(points) != CAPACITY[row]:
                 gaps.append(f"{row} row has {len(points)} of {CAPACITY[row]} slots")
-        if len(self.hand) < 3:
-            gaps.append(f"hand strip has {len(self.hand)} of at least 3 positions")
+        if len(self.hand) < HAND_SLOTS:
+            gaps.append(f"hand strip has {len(self.hand)} of {HAND_SLOTS} positions")
         return gaps
 
 
@@ -184,51 +189,65 @@ class Placer:
                 int(point[1] + random.gauss(0, sigma)))
 
     # ------------------------------------------------------------- placement
-    def plan(self, advice: Advice, hand_order: Optional[List[int]] = None) -> List[dict]:
+    def plan(self, advice: Advice, hand_order: List[int],
+             board: Optional["object"] = None) -> List[dict]:
         """Turn an advice into a list of drags, without performing any.
 
-        ``hand_order`` is the left-to-right order the dealt cards appear in on
-        screen. The packet gives the cards but not where the client chose to
-        draw them, so a caller that has read the strip can pass the order in;
-        without it the packet order is assumed, which is what the client has
-        used every time it has been observed — check it before trusting it.
+        ``hand_order`` is the left-to-right order the dealt cards sit in on
+        screen, and is required rather than guessed. Deriving it from the
+        solver's output would order the cards by where they are going rather
+        than by where they are, and every drag would pick up the wrong card —
+        the failure looks like the bot playing a different hand entirely.
+        Pass ``request.dealt``, which is packet order, or the order read off
+        the strip if you have it.
+
+        ``board`` is hero's rows before this street, so slots are counted
+        from the first free one. Rows fill left to right, so without it every
+        drag after the opening street aims at an occupied slot.
         """
         if advice.best is None:
             return []
 
         action = advice.best.action
-        order = list(hand_order) if hand_order else [c for c, _ in action.placements]
-        if action.discard is not None and action.discard not in order:
-            order.append(action.discard)
+        order = list(hand_order)
+        for card in action.mucked:
+            if card not in order:
+                order.append(card)
 
-        # Slots fill left to right, so a row that already holds cards starts
-        # at the next free position.
-        used: Dict[str, int] = {}
+        filled = {row: len(board.row(row)) if board is not None else 0
+                  for row in ROWS}
+
         moves: List[dict] = []
         for card, row in action.placements:
             points = self.layout.rows.get(row) or []
-            index = used.get(row, 0)
-            used[row] = index + 1
-            try:
-                source_index = order.index(card)
-            except ValueError:
-                source_index = len(moves)
-            source = self.layout.hand[source_index] if source_index < len(self.layout.hand) else None
+            index = filled.get(row, 0)
+            filled[row] = index + 1
+
+            source_index = order.index(card) if card in order else None
+            source = (self.layout.hand[source_index]
+                      if source_index is not None and source_index < len(self.layout.hand)
+                      else None)
             target = points[index] if index < len(points) else None
             moves.append({
                 "card": code_to_text(card), "row": row, "slot": index,
                 "from": source, "to": target,
+                "unknown_source": source_index is None,
             })
         return moves
 
     def execute(self, advice: Advice, hand_order: Optional[List[int]] = None,
-                board_offset: Optional[Dict[str, int]] = None) -> bool:
-        """Perform the placement. Returns False if it was refused.
+                board: Optional["object"] = None) -> bool:
+        """Perform the placement. Returns False if nothing was placed.
 
-        ``board_offset`` says how many cards each row already holds, so slots
-        are counted from the right place; without it the plan assumes the
-        rows in the advice's request were empty.
+        Refuses rather than improvises: an uncalibrated slot, a card whose
+        position on the strip is unknown, or the safety still off all stop
+        the placement before anything moves.
         """
+        if not self.enabled:
+            if self.verbose:
+                print("  [OFC place] refused: not enabled")
+            return False
+
         problems = self.readiness()
         if problems:
             if self.verbose:
@@ -236,23 +255,26 @@ class Placer:
                     print(f"  [OFC place] refused: {problem}")
             return False
 
-        moves = self.plan(advice, hand_order)
+        if hand_order is None:
+            if self.verbose:
+                print("  [OFC place] refused: hand_order is required — without it "
+                      "the drags would pick up the wrong cards")
+            return False
+
+        moves = self.plan(advice, hand_order, board)
         if not moves:
             return False
 
-        if board_offset:
-            for move in moves:
-                shift = board_offset.get(move["row"], 0)
-                index = move["slot"] + shift
-                points = self.layout.rows.get(move["row"]) or []
-                move["slot"] = index
-                move["to"] = points[index] if index < len(points) else None
-
         for move in moves:
+            if move["unknown_source"]:
+                if self.verbose:
+                    print(f"  [OFC place] refused: {move['card']} is not in the "
+                          f"hand order given; nothing placed")
+                return False
             if move["from"] is None or move["to"] is None:
                 if self.verbose:
-                    print(f"  [OFC place] no coordinates for {move['card']} -> "
-                          f"{move['row']}[{move['slot']}]; stopping")
+                    print(f"  [OFC place] refused: no coordinates for {move['card']} -> "
+                          f"{move['row']}[{move['slot']}]; nothing placed")
                 return False
 
         self._pc()

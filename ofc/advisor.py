@@ -73,14 +73,31 @@ class Advisor:
         self._worker = threading.Thread(target=self._run, name="ofc-advisor", daemon=True)
         self._worker.start()
 
-    def stop(self, timeout: float = 2.0) -> None:
+    def stop(self, timeout: float = 5.0) -> None:
+        """Stop accepting work and wait for the worker to finish.
+
+        The wait matters: a solve already running may be about to call
+        ``on_advice``, and in auto-place mode that is a drag on a live table.
+        ``_running`` going false makes the worker drop any advice it is
+        holding, so a solve that outlasts the timeout still cannot act.
+        """
         if not self._running:
             return
         self._running = False
         self._work.put(None)
         if self._worker:
             self._worker.join(timeout=timeout)
+            if self._worker.is_alive():
+                print("  [OFC] advisor worker still finishing a solve; "
+                      "its result will be discarded")
             self._worker = None
+        # Drop anything queued so a later start() does not replay stale spots.
+        while True:
+            try:
+                self._work.get_nowait()
+            except queue.Empty:
+                break
+        self._solved.clear()
 
     # ---------------------------------------------------------------- input
     def feed(self, name: str, table_id: int, pkt: dict) -> bool:
@@ -91,16 +108,20 @@ class Advisor:
         """
         if name not in HANDLERS:
             return False
+        if not self._running:
+            # Stopped: do not keep queueing work nobody will drain.
+            return False
 
         with self._lock:
             table = self.tables.get(table_id)
             apply_packet(table, name, pkt)
             snapshot = table.snapshot()
+            if name == "PineResultBRC":
+                self._solved.pop(table_id, None)
 
         self._emit("ofc_state", snapshot)
 
         if name == "PineResultBRC":
-            self._solved.pop(table_id, None)
             self._emit("ofc_result", snapshot)
             return True
 
@@ -111,14 +132,16 @@ class Advisor:
     def _maybe_solve(self, table_id: int) -> None:
         with self._lock:
             table = self.tables.get(table_id)
-            if not table.hero_to_act():
+            if not table.hero_has_decision():
                 return
             request = table.build_request(time_budget=self.time_budget)
             if request is None:
                 return
-            # One solve per spot: the deal packet and a placement packet can
-            # both describe the same decision.
-            fingerprint = (table.game_id, request.street, tuple(request.dealt),
+            # One solve per spot: the deal packet and every opponent's
+            # placement can all describe the same decision. Keyed on the
+            # position rather than on time, so an opponent acting does not
+            # re-solve a spot hero has already been advised on.
+            fingerprint = (table.game_id, request.street, tuple(sorted(request.dealt)),
                            request.board.card_count())
             if self._solved.get(table_id) == fingerprint:
                 return
@@ -137,6 +160,10 @@ class Advisor:
                 self._solve(table_id, request)
             except Exception as exc:               # noqa: BLE001 - reported, keeps the worker alive
                 self.errors += 1
+                # Forget the spot so a later packet can retry it, rather than
+                # leaving hero with no advice for the rest of the street.
+                with self._lock:
+                    self._solved.pop(table_id, None)
                 if self.verbose:
                     print(f"  [OFC] advisor error: {type(exc).__name__}: {exc}")
 
@@ -166,9 +193,17 @@ class Advisor:
         }
         self._emit("ofc_advice", payload)
 
+        if advice.best is None:
+            # Nothing to act on, and the spot may be worth another try when
+            # the next packet arrives.
+            with self._lock:
+                self._solved.pop(table_id, None)
+            return
+
         # A fouling line still gets played — sometimes every line fouls. An
-        # action that failed validation outright never does.
-        if self.on_advice is not None and advice.best is not None and check.ok:
+        # action that failed validation outright never does. Neither does one
+        # that finished after the advisor was stopped.
+        if self.on_advice is not None and check.ok and self._running:
             try:
                 self.on_advice(advice)
             except Exception as exc:               # noqa: BLE001

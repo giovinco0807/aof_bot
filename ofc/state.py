@@ -13,20 +13,35 @@ without transcription errors.
 The packet field names and shapes mirror ``hook/packet_capture.py``'s handlers
 so both readers of the same wire format stay in step:
 
-    PineSitDownBRC     {player: {uid, seatId, name, chips}}
+    PineSitDownBRC     {player: PinePlayingStatus}
     PineStandUpBRC     {seatId}
-    PineRoomStatusBRC  {players: [{uid, seatId, name, chips}]}
+    PineRoomStatusBRC  {players: [PinePlayingStatus]}
     PineGameStartBRC   {gameId, dealerSeatId, startInfo: [{seatId, chips}]}
-    PineHandCardBRC    {handCards: [{uid, seatId, cards: [int], round, fantasy}],
-                        actionSeatId}
-    PineActionBRC      {uid, seatId, headCard: [int], middleCard: [int],
-                        tailCard: [int]}
+    PineHandCardBRC    {handCards: [{uid, seatId, cards: [int], round, fantasy,
+                        actionLeftTime}], actionSeatId}
+    PineActionBRC      {uid, seatId, card: PineCard,
+                        headCard: [int], middleCard: [int], tailCard: [int]}
     PineResultBRC      {playerResults: [{uid, seatId, name, chips, fantasy,
-                        card: {headCard, middleCard, tailCard, bust}, scores}]}
+                        card: PineCard, scores}]}
+
+where the shared shapes are
+
+    PinePlayingStatus  {uid, seatId, name, chips, fantasy, sittingOut,
+                        actionLeftTime, ready, card: PineCard}
+    PineCard           {headCard: [int], middleCard: [int], tailCard: [int],
+                        abandonCard: [int], handCard: [int], bust, round, ...}
+
+``PineCard`` is the important one. It carries a player's **whole** board, and
+it rides along on the sit-down, room-status, action and result packets alike.
+Preferring it over the loose ``headCard``/``middleCard``/``tailCard`` arrays
+means the board is read from the client's own cumulative view rather than
+assembled from updates, so a missed packet corrects itself on the next one.
+It also carries ``abandonCard``, which is the discard stated outright instead
+of inferred.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from .board import Board
 from .cards import code_to_text, is_playable, text_to_code, wire_list_to_text
@@ -35,6 +50,40 @@ from .solver import OpponentView, SolveRequest, STREET_INITIAL
 # Rows are called head/middle/tail on the wire and top/middle/bottom everywhere
 # else in this package.
 _WIRE_ROWS = (("headCard", "top"), ("middleCard", "middle"), ("tailCard", "bottom"))
+
+
+def _as_int(value, default: int = 0) -> int:
+    """Coerce a wire field to int, falling back rather than raising.
+
+    Everything here comes out of memory reads in the hook, so a field can
+    arrive as ``None`` or as a string when a struct offset drifts. Comparing
+    one of those against an int raises, and an exception on the Frida thread
+    is far more disruptive than a wrong seat number.
+    """
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _merge_row(existing: Sequence[int], incoming: Sequence[int]) -> List[int]:
+    """Combine a row we already know with one the wire just sent.
+
+    If the incoming list contains everything already recorded, it is the full
+    row and replaces it. Otherwise it is treated as an addition, and only the
+    genuinely new cards are appended. That way the same code is right whether
+    the client sends whole rows or only what changed.
+    """
+    incoming = list(incoming)
+    if not existing:
+        return incoming
+    if set(existing).issubset(incoming):
+        return incoming
+    return list(existing) + [c for c in incoming if c not in existing]
 
 
 @dataclass
@@ -91,15 +140,38 @@ class Table:
         hero_seat = self.hero_seat
         return [p for sid, p in sorted(self.players.items()) if sid != hero_seat]
 
-    def hero_to_act(self) -> bool:
-        """True when the table is waiting on hero specifically.
+    def hero_has_decision(self) -> bool:
+        """True when hero is holding cards that are not on the board yet.
 
-        Cards arriving is not the same as hero being on turn — the deal packet
-        fires for every seat — so this insists on both an identified hero and
-        the table naming that seat.
+        This, not :meth:`hero_to_act`, is what advice keys off. Knowing the
+        cards is enough to work out the answer, and having it ready before
+        the turn arrives is strictly better than having it after.
         """
         hero = self.hero
-        return bool(hero and hero.holding and self.action_seat == hero.seat_id)
+        return bool(hero and hero.holding)
+
+    def hero_to_act(self) -> bool:
+        """True when the table is, as far as can be told, waiting on hero.
+
+        A seat that has not been named is treated as possibly hero's: the
+        turn signal is not sent on every packet, and refusing to act on an
+        unknown turn would mean never acting at all in a hand where the
+        signal was missed.
+        """
+        hero = self.hero
+        if not (hero and hero.holding):
+            return False
+        return self.action_seat in (hero.seat_id, -1)
+
+    def _next_seat(self, seat_id: int) -> int:
+        """The seat that acts after ``seat_id``, or -1 if there is nobody."""
+        seats = sorted(self.players)
+        if not seats:
+            return -1
+        for candidate in seats:
+            if candidate > seat_id:
+                return candidate
+        return seats[0]
 
     def _player(self, seat_id: int) -> Player:
         if seat_id not in self.players:
@@ -107,28 +179,80 @@ class Table:
         return self.players[seat_id]
 
     # ------------------------------------------------------- packet intake
-    def on_sit_down(self, pkt: dict) -> None:
-        info = pkt.get("player") or {}
-        seat_id = info.get("seatId", -1)
+    def _absorb_status(self, info: dict) -> None:
+        """Take in one ``PinePlayingStatus``, board and all.
+
+        Reading the board here is what makes attaching mid-hand work: the
+        status packets restate every seat's placed cards, so a session that
+        starts in the middle of a hand reconstructs the table instead of
+        believing every board is empty.
+        """
+        seat_id = _as_int(info.get("seatId"), -1)
         if seat_id < 0:
             return
-        player = self._player(seat_id)
-        player.uid = info.get("uid", 0)
-        player.name = info.get("name", "")
-        player.chips = info.get("chips", 0)
+        uid = _as_int(info.get("uid"), 0)
+
+        player = self.players.get(seat_id)
+        if player is None or (uid and player.uid and player.uid != uid):
+            # A different player in the seat: start their state clean rather
+            # than leaving the previous occupant's cards sitting there.
+            player = Player(seat_id=seat_id)
+            self.players[seat_id] = player
+
+        player.uid = uid or player.uid
+        player.name = info.get("name") or player.name
+        player.chips = _as_int(info.get("chips"), player.chips)
+        if "fantasy" in info:
+            player.in_fantasyland = bool(_as_int(info.get("fantasy"), 0))
+
+        layout = info.get("card") or {}
+        if layout:
+            self._absorb_pine_card(player, layout)
+            if _as_int(layout.get("actionLeftTime"), 0) > 0:
+                self.action_seat = seat_id
+        if _as_int(info.get("actionLeftTime"), 0) > 0:
+            self.action_seat = seat_id
+
+    def _absorb_pine_card(self, player: "Player", layout: dict) -> None:
+        """Read a ``PineCard`` onto a player: rows, discards and hand."""
+        board = Board()
+        saw_row = False
+        for wire_row, row_name in _WIRE_ROWS:
+            texts = wire_list_to_text(layout.get(wire_row) or ())
+            if not texts:
+                continue
+            saw_row = True
+            if not is_playable(texts):
+                player.unknown_cards = True
+                continue
+            setattr(board, row_name, [text_to_code(t) for t in texts])
+        if saw_row:
+            player.board = board
+
+        # abandonCard is the muck, stated rather than inferred.
+        abandoned = wire_list_to_text(layout.get("abandonCard") or ())
+        if abandoned and is_playable(abandoned):
+            player.discards = [text_to_code(t) for t in abandoned]
+
+        held = wire_list_to_text(layout.get("handCard") or ())
+        if held and is_playable(held):
+            placed = set(player.board.all_cards())
+            outstanding = [text_to_code(t) for t in held
+                           if text_to_code(t) not in placed]
+            player.holding = outstanding
+
+    def on_sit_down(self, pkt: dict) -> None:
+        self._absorb_status(pkt.get("player") or {})
 
     def on_stand_up(self, pkt: dict) -> None:
-        self.players.pop(pkt.get("seatId", -1), None)
+        seat_id = _as_int(pkt.get("seatId"), -1)
+        self.players.pop(seat_id, None)
+        if self.action_seat == seat_id:
+            self.action_seat = -1
 
     def on_room_status(self, pkt: dict) -> None:
         for info in pkt.get("players") or ():
-            seat_id = info.get("seatId", -1)
-            if seat_id < 0:
-                continue
-            player = self._player(seat_id)
-            player.uid = info.get("uid", 0)
-            player.name = info.get("name", "")
-            player.chips = info.get("chips", 0)
+            self._absorb_status(info or {})
 
     def on_game_start(self, pkt: dict) -> None:
         self.game_id = pkt.get("gameId", "")
@@ -149,16 +273,21 @@ class Table:
         Only hero's own entry carries real cards; the others arrive empty
         because the client is not told what anybody else is holding.
         """
-        self.action_seat = pkt.get("actionSeatId", -1)
+        if "actionSeatId" in pkt:
+            self.action_seat = _as_int(pkt.get("actionSeatId"), -1)
+
         for entry in pkt.get("handCards") or ():
-            seat_id = entry.get("seatId", -1)
+            entry = entry or {}
+            seat_id = _as_int(entry.get("seatId"), -1)
             if seat_id < 0:
                 continue
             player = self._player(seat_id)
-            if entry.get("uid"):
-                player.uid = entry["uid"]
-            player.in_fantasyland = bool(entry.get("fantasy", 0))
-            self.street = entry.get("round", self.street)
+            uid = _as_int(entry.get("uid"), 0)
+            if uid:
+                player.uid = uid
+            player.in_fantasyland = bool(_as_int(entry.get("fantasy"), 0))
+            if _as_int(entry.get("actionLeftTime"), 0) > 0:
+                self.action_seat = seat_id
 
             texts = wire_list_to_text(entry.get("cards") or ())
             if not texts:
@@ -168,85 +297,136 @@ class Table:
                 # Flag it so the advisor refuses to solve rather than guessing.
                 player.unknown_cards = True
                 continue
-            player.holding = [text_to_code(t) for t in texts]
+
+            # The street belongs to whoever was actually dealt to. Taking it
+            # from the last entry in the packet would let a seat sitting out,
+            # or one in Fantasyland with its own round counter, rewrite it.
+            self.street = _as_int(entry.get("round"), self.street)
+
+            dealt = [text_to_code(t) for t in texts]
+            placed = set(player.board.all_cards())
+            outstanding = [c for c in dealt if c not in placed]
+            if len(dealt) == 5 and player.board.card_count() >= 13:
+                # An opening deal onto a finished board means the start of a
+                # new hand was missed. Clear rather than stack the two.
+                player.reset_hand()
+                outstanding = dealt
+            player.holding = outstanding
 
     def on_action(self, pkt: dict) -> None:
         """Record a placement.
 
-        Each of these packets carries a row's full contents rather than the
-        change, so rows are replaced, not appended to. For hero, whatever was
-        held and did not land on the board is the discard — the wire never
-        says so directly, but it follows.
+        The packet's ``card`` field is the acting player's whole board as the
+        client sees it, so it is preferred; the loose row arrays are a
+        fallback for a build that does not send it, and are merged rather
+        than assigned because whether they carry the full row or only the
+        change is not something the wire makes explicit.
         """
-        seat_id = pkt.get("seatId", -1)
+        seat_id = _as_int(pkt.get("seatId"), -1)
         if seat_id < 0:
             return
         player = self._player(seat_id)
-        if pkt.get("uid"):
-            player.uid = pkt["uid"]
+        uid = _as_int(pkt.get("uid"), 0)
+        if uid:
+            player.uid = uid
 
-        board = Board()
-        board.top = list(player.board.top)
-        board.middle = list(player.board.middle)
-        board.bottom = list(player.board.bottom)
+        before = set(player.board.all_cards())
+        layout = pkt.get("card") or {}
 
-        for wire_row, row_name in _WIRE_ROWS:
-            texts = wire_list_to_text(pkt.get(wire_row) or ())
-            if not texts:
-                continue
-            if not is_playable(texts):
-                player.unknown_cards = True
-                continue
-            setattr(board, row_name, [text_to_code(t) for t in texts])
-        player.board = board
+        if any(layout.get(wire_row) for wire_row, _ in _WIRE_ROWS):
+            self._absorb_pine_card(player, layout)
+        else:
+            board = Board(list(player.board.top), list(player.board.middle),
+                          list(player.board.bottom))
+            for wire_row, row_name in _WIRE_ROWS:
+                texts = wire_list_to_text(pkt.get(wire_row) or ())
+                if not texts:
+                    continue
+                if not is_playable(texts):
+                    player.unknown_cards = True
+                    continue
+                incoming = [text_to_code(t) for t in texts]
+                setattr(board, row_name,
+                        _merge_row(getattr(board, row_name), incoming))
+            player.board = board
 
         if player.holding:
-            placed = set(board.all_cards())
+            placed = set(player.board.all_cards())
             leftover = [c for c in player.holding if c not in placed]
-            # One card per pineapple street goes in the muck; the opening
-            # street places all five and leaves nothing behind.
-            if len(player.holding) == 3 and len(leftover) == 1:
-                player.discards.extend(leftover)
-            player.holding = []
+            landed = [c for c in player.holding if c in placed and c not in before]
+            if landed or not leftover:
+                # Cards from this hand actually reached the board, so the
+                # rest of what was held went in the muck. Recorded only when
+                # the wire did not already state it via abandonCard.
+                for card in leftover:
+                    if card not in player.discards:
+                        player.discards.append(card)
+                player.holding = []
+
+        # The turn moves on. Left pointing at the seat that just acted, it
+        # would never come round to hero in a multi-way hand.
+        if self.action_seat == seat_id:
+            self.action_seat = self._next_seat(seat_id)
 
     def on_result(self, pkt: dict) -> None:
         """Record the showdown, where every hand becomes visible."""
         self.hand_complete = True
         self.action_seat = -1
         for entry in pkt.get("playerResults") or ():
-            seat_id = entry.get("seatId", -1)
+            entry = entry or {}
+            seat_id = _as_int(entry.get("seatId"), -1)
             if seat_id < 0:
                 continue
             player = self._player(seat_id)
-            if entry.get("uid"):
-                player.uid = entry["uid"]
+            uid = _as_int(entry.get("uid"), 0)
+            if uid:
+                player.uid = uid
             if entry.get("name"):
                 player.name = entry["name"]
-            player.chips = entry.get("chips", player.chips)
-            player.in_fantasyland = bool(entry.get("fantasy", 0))
+            player.chips = _as_int(entry.get("chips"), player.chips)
+            player.in_fantasyland = bool(_as_int(entry.get("fantasy"), 0))
 
             layout = entry.get("card") or {}
-            board = Board()
-            for wire_row, row_name in _WIRE_ROWS:
-                texts = wire_list_to_text(layout.get(wire_row) or ())
-                if texts and is_playable(texts):
-                    setattr(board, row_name, [text_to_code(t) for t in texts])
-            if board.card_count():
-                player.board = board
+            if layout:
+                self._absorb_pine_card(player, layout)
             player.holding = []
 
     # ------------------------------------------------------------- request
     def build_request(self, time_budget: float = 4.0, seed: int = 0) -> Optional[SolveRequest]:
         """The decision hero currently faces, or ``None`` if there isn't one.
 
-        Returns nothing when hero is unknown, is not on turn, holds nothing,
-        or when any card in play failed to decode — advice from a misread
-        board is worse than no advice.
+        Returns nothing when hero is unknown or holds nothing, when hero's own
+        cards failed to decode, or when the position does not add up — advice
+        from a misread board is worse than no advice. An opponent's unreadable
+        card does not block hero: it costs some dead-card accuracy, which is
+        much cheaper than silence for the rest of the hand.
         """
         hero = self.hero
-        if hero is None or not hero.holding:
+        if hero is None or not hero.holding or hero.unknown_cards:
             return None
-        if hero.unknown_cards or any(p.unknown_cards for p in self.players.values()):
+
+        held = len(hero.holding)
+        placed = hero.board.card_count()
+        if hero.in_fantasyland:
+            if held < 13:
+                return None
+        elif held == 5:
+            if placed:
+                return None                    # an opening deal onto a live board
+        elif held == 3:
+            if placed + 2 > 13:
+                return None
+        else:
+            # A short or oversized deal means a packet was misread; the hook
+            # cannot tell a dropped element from a genuinely short array.
+            return None
+
+        # Every card in view must be distinct, or the position is not real.
+        visible = list(hero.board.all_cards()) + list(hero.holding) + list(hero.discards)
+        for other in self.players.values():
+            if other is not hero:
+                visible += other.board.all_cards()
+        if len(visible) != len(set(visible)):
             return None
 
         opponents = [
@@ -278,6 +458,7 @@ class Table:
             "action_seat": self.action_seat,
             "hero_seat": hero_seat,
             "hero_to_act": self.hero_to_act(),
+            "hero_has_decision": self.hero_has_decision(),
             "hand_complete": self.hand_complete,
             "players": [
                 {

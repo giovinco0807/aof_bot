@@ -85,14 +85,23 @@ class SolveRequest:
         """Every card hero can account for, and so cannot draw.
 
         Hero's own rows and discards, the cards in hand right now, and every
-        card showing on an opponent's board.
+        card showing on an opponent's board. Deduplicated, so its length is
+        always ``52 - len(deck)``; a card seen in two places is still one
+        card gone from the pack.
         """
         dead: List[int] = list(self.board.all_cards())
         dead += list(self.dealt)
         dead += list(self.discards)
         for opponent in self.opponents:
             dead += opponent.board.all_cards()
-        return dead
+
+        seen = set()
+        unique = []
+        for card in dead:
+            if card not in seen:
+                seen.add(card)
+                unique.append(card)
+        return unique
 
     @property
     def deck(self) -> List[int]:
@@ -100,7 +109,13 @@ class SolveRequest:
         return remaining_deck(self.dead_cards)
 
     def legal_actions(self) -> List[Action]:
-        """Every legal way to play this street, fouled lines already dropped.
+        """Every legal way to play this street.
+
+        Lines that already foul are dropped — *unless* every line fouls, in
+        which case the full set comes back, because the cards still have to
+        go somewhere. On randomly generated late-street boards that happens
+        roughly half the time, so do not read a non-empty result as a promise
+        that any of it is clean; check with ``Board.is_foul`` if it matters.
 
         Not meaningful in Fantasyland, where all thirteen cards are placed at
         once; that case returns an empty list and the solver is expected to
@@ -144,10 +159,16 @@ class Candidate:
     ev: float = 0.0
     detail: Dict[str, float] = field(default_factory=dict)
 
+    #: Keys ``to_dict`` owns. A detail entry using one of these is kept but
+    #: renamed, so a solver's diagnostics can never overwrite the placement
+    #: the GUI and the automation layer read back out.
+    RESERVED = ("placements", "discard", "ev")
+
     def to_dict(self) -> dict:
         out = self.action.to_texts()
         out["ev"] = round(self.ev, 3)
-        out.update({k: v for k, v in self.detail.items()})
+        for key, value in self.detail.items():
+            out[f"detail_{key}" if key in self.RESERVED else key] = value
         return out
 
 
@@ -216,21 +237,24 @@ def solve(request: SolveRequest, name: str) -> Advice:
     rather than propagating: a broken solver should cost the user their
     advice for one street, not their capture session.
     """
-    fn = get(name)
     started = time.perf_counter()
     try:
+        fn = get(name)
         advice = fn(request)
+        if advice is None:
+            return Advice(solver=name, elapsed=time.perf_counter() - started,
+                          note="solver returned nothing")
+        if not isinstance(advice, Advice):
+            return Advice(solver=name, elapsed=time.perf_counter() - started,
+                          note=f"solver returned {type(advice).__name__}, expected Advice")
+        if not advice.solver:
+            advice.solver = name
+        if not advice.elapsed:
+            advice.elapsed = time.perf_counter() - started
+        return advice
     except Exception as exc:                       # noqa: BLE001 - reported, not swallowed
         return Advice(solver=name, elapsed=time.perf_counter() - started,
                       note=f"{type(exc).__name__}: {exc}")
-    if advice is None:
-        return Advice(solver=name, elapsed=time.perf_counter() - started,
-                      note="solver returned nothing")
-    if not advice.solver:
-        advice.solver = name
-    if not advice.elapsed:
-        advice.elapsed = time.perf_counter() - started
-    return advice
 
 
 # ---------------------------------------------------------------- validation
@@ -267,6 +291,13 @@ def validate(request: SolveRequest, action: Action) -> Validation:
     """
     result = Validation()
 
+    unknown_rows = sorted({r for _, r in action.placements if r not in ROWS})
+    if unknown_rows:
+        # Everything below indexes by row, so there is nothing meaningful to
+        # check once a row name is not one of the three.
+        result.errors.append(f"places cards in unknown rows: {', '.join(unknown_rows)}")
+        return result
+
     placed = [c for c, _ in action.placements]
     available_cards = list(request.dealt)
 
@@ -290,22 +321,26 @@ def validate(request: SolveRequest, action: Action) -> Validation:
                 f"discards {code_to_text(action.discard)}, which was not dealt")
 
     if request.in_fantasyland:
-        if len(placed) != 13:
-            result.errors.append(f"fantasyland places {len(placed)} cards, expected 13")
+        needed = 13 - request.board.card_count()
+        if len(placed) != needed:
+            result.errors.append(
+                f"fantasyland places {len(placed)} cards, expected {needed}")
     else:
         expected = 5 if len(request.dealt) == 5 else 2
         if len(placed) != expected:
             result.errors.append(f"places {len(placed)} cards, expected {expected}")
+        # On a pineapple street exactly one card is mucked, and a solver that
+        # does not name it leaves the caller guessing which card to drag.
+        if expected == 2 and action.discard is None:
+            result.errors.append("does not say which card to discard")
 
     for row in ROWS:
         placing = sum(1 for _, r in action.placements if r == row)
-        room = CAPACITY[row] if request.in_fantasyland else request.board.free(row)
-        if placing > room:
+        if placing > request.board.free(row):
             result.errors.append(f"{row} row takes {placing} more than it has room for")
 
     if result.ok:
-        base = Board() if request.in_fantasyland else request.board
-        final = action.apply(base)
+        final = action.apply(request.board)
         if final.is_complete() and final.is_foul():
             result.warnings.append("this line fouls")
 

@@ -25,10 +25,22 @@ class Action:
     """One street's decision.
 
     ``placements`` pairs each card with the row it goes to. ``discard`` is the
-    card thrown away, and is ``None`` only on the opening five-card street.
+    card thrown away: ``None`` on the opening five-card street, one card on a
+    pineapple street, and — since Fantasyland deals more cards than it places
+    — the first of possibly several there, with the rest in ``discards``.
     """
     placements: Tuple[Tuple[int, str], ...]
     discard: Optional[int] = None
+    #: Every mucked card, for the deals that throw away more than one. Left
+    #: empty when ``discard`` already says everything.
+    discards: Tuple[int, ...] = ()
+
+    @property
+    def mucked(self) -> Tuple[int, ...]:
+        """All cards thrown away, however many there are."""
+        if self.discards:
+            return self.discards
+        return (self.discard,) if self.discard is not None else ()
 
     def apply(self, board: Board) -> Board:
         """A new board with this action played. The original is untouched."""
@@ -41,13 +53,15 @@ class Action:
         return {
             "placements": [{"card": code_to_text(c), "row": r} for c, r in self.placements],
             "discard": code_to_text(self.discard) if self.discard is not None else None,
+            "discards": [code_to_text(c) for c in self.mucked],
         }
 
     def __str__(self) -> str:
         moves = ", ".join(f"{code_to_text(c)}->{r}" for c, r in self.placements)
-        if self.discard is None:
+        mucked = self.mucked
+        if not mucked:
             return moves
-        return f"{moves}, discard {code_to_text(self.discard)}"
+        return f"{moves}, discard {' '.join(code_to_text(c) for c in mucked)}"
 
 
 def _fits(board: Board, assignment: Sequence[str]) -> bool:
@@ -100,12 +114,23 @@ def street_actions(dealt: Sequence[int], board: Board,
 
 def actions_for(dealt: Sequence[int], board: Board,
                 prune_fouled: bool = True) -> List[Action]:
-    """Dispatch on how many cards were dealt.
+    """Dispatch on how many cards were dealt: five opens, three continues.
 
-    Falls back to unpruned generation when pruning leaves nothing at all —
-    a board that fouls on every line still has to place its cards.
+    Falls back to unpruned generation when pruning leaves nothing at all — a
+    board that fouls whatever it does still has to place its cards. That
+    fallback fires on roughly half of randomly generated late-street boards,
+    so a caller that treats the result as "guaranteed not to foul" will be
+    wrong; check the returned actions if it matters.
     """
-    generate = initial_actions if len(dealt) == 5 else street_actions
+    if len(dealt) == 5:
+        generate = initial_actions
+    elif len(dealt) == 3:
+        generate = street_actions
+    else:
+        raise ValueError(
+            f"a street deals 5 cards (opening) or 3 (pineapple), got {len(dealt)}; "
+            "fantasyland places all thirteen at once and is the solver's own job")
+
     out = generate(dealt, board, prune_fouled=prune_fouled)
     if not out and prune_fouled:
         out = generate(dealt, board, prune_fouled=False)

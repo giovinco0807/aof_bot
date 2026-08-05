@@ -402,14 +402,18 @@ class OfcGui:
         self.btn_start.config(state="disabled")
         self.btn_stop.config(state="normal")
         self.var_status.set("attaching…")
-        self.capture_thread = threading.Thread(target=self._run_capture, daemon=True)
+        # Tk variables belong to the thread that made the root window, so
+        # everything the worker needs is read here and passed in. Calling
+        # .get() from the capture thread raises out of the Tcl interpreter.
+        process = self.var_process.get()
+        self.capture_thread = threading.Thread(target=self._run_capture, args=(process,),
+                                               daemon=True)
         self.capture_thread.start()
 
-    def _run_capture(self) -> None:
+    def _run_capture(self, process: str) -> None:
         try:
             from ofc.capture import OfcCapture
-            self.capture = OfcCapture(process_name=self.var_process.get(),
-                                      advisor=self.advisor)
+            self.capture = OfcCapture(process_name=process, advisor=self.advisor)
             self.root.after(0, lambda: self.var_status.set("attached"))
             self.capture.run()
         except Exception as exc:                   # noqa: BLE001
@@ -436,17 +440,29 @@ class OfcGui:
 
     # -------------------------------------------------------------- events
     def _drain(self) -> None:
-        while True:
-            try:
-                event = self.events.get_nowait()
-            except queue.Empty:
-                break
-            kind = event.get("type")
-            if kind == "ofc_advice":
-                self._on_live_advice(event)
-            elif kind == "ofc_result":
-                self._say(f"hand finished on table {event.get('table_id')}")
-        self.root.after(100, self._drain)
+        """Pump the event queue.
+
+        Rescheduling happens in ``finally`` on purpose: Tk prints an
+        exception raised inside an ``after`` callback and then simply does
+        not re-arm it, so one malformed event would silently stop the window
+        updating for the rest of the session.
+        """
+        try:
+            while True:
+                try:
+                    event = self.events.get_nowait()
+                except queue.Empty:
+                    break
+                try:
+                    kind = event.get("type")
+                    if kind == "ofc_advice":
+                        self._on_live_advice(event)
+                    elif kind == "ofc_result":
+                        self._say(f"hand finished on table {event.get('table_id')}")
+                except Exception as exc:           # noqa: BLE001
+                    self._say(f"could not render event: {type(exc).__name__}: {exc}")
+        finally:
+            self.root.after(100, self._drain)
 
     def _on_live_advice(self, event: dict) -> None:
         request = event.get("request", {})

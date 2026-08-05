@@ -72,9 +72,20 @@ class Board:
         return ev.royalty_breakdown(self.top, self.middle, self.bottom)
 
     def fantasyland_entry(self) -> int:
+        """Cards dealt if this board wins Fantasyland, else 0.
+
+        A board that is unfinished has not won anything yet, and one that
+        fouls is dead however good its top row looks — so both report 0,
+        unlike the row-only rule in ``evaluator``, which cannot see them.
+        """
+        if not self.is_complete() or self.is_foul():
+            return 0
         return ev.fantasyland_entry(self.top)
 
     def fantasyland_stay(self) -> bool:
+        """True when a finished, clean board keeps Fantasyland."""
+        if not self.is_complete() or self.is_foul():
+            return False
         return ev.fantasyland_stay(self.top, self.bottom)
 
     def doomed(self) -> bool:

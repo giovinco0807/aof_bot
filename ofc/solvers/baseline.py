@@ -96,15 +96,16 @@ def _solve_fantasyland(request: SolveRequest) -> Advice:
     placements = ([(c, TOP) for c in top] + [(c, MIDDLE) for c in middle]
                   + [(c, BOTTOM) for c in bottom])
     used = set(top) | set(middle) | set(bottom)
-    action = Action(tuple(placements), discard=None)
+    dropped = tuple(c for c in pool if c not in used)
+    action = Action(tuple(placements),
+                    discard=dropped[0] if dropped else None,
+                    discards=dropped)
     candidate = Candidate(
         action=action,
         ev=float(best_key[1]),
         detail={"royalty": float(best_key[1]), "keeps_fantasyland": float(best_key[0])},
     )
-    dropped = [c for c in pool if c not in used]
-    note = "discards " + " ".join(str(c) for c in dropped) if dropped else ""
-    return Advice.of(request, [candidate], solver="baseline", note=note)
+    return Advice.of(request, [candidate], solver="baseline")
 
 
 def solve(request: SolveRequest) -> Advice:

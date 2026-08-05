@@ -11,6 +11,7 @@ of thousands of random hands.
 
 import random
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
@@ -23,7 +24,7 @@ from ofc.cards import (                                            # noqa: E402
     wire_list_to_text, wire_to_text,
 )
 from ofc.solver import OpponentView, SolveRequest, solve, validate  # noqa: E402
-from ofc.state import Table, apply_packet                          # noqa: E402
+from ofc.state import HANDLERS, Table, apply_packet                          # noqa: E402
 
 PASSED = []
 FAILED = []
@@ -446,6 +447,335 @@ def test_pipeline():
           f"{inconsistent} bad")
 
 
+def test_packet_shapes():
+    """The PineCard layout the hook actually sends, not the loose arrays.
+
+    ``PineActionBRC`` carries both a cumulative ``card`` and separate row
+    arrays, and the status packets carry a board too. Reading only the loose
+    arrays lost cards and made a mid-hand attach believe every board was
+    empty, so these pin the behaviour down.
+    """
+    print("\npacket shapes")
+    hero_uid = 1001
+
+    def pine_card(top=(), middle=(), bottom=(), abandon=(), hand=()):
+        return {
+            "headCard": [_wire(c) for c in top],
+            "middleCard": [_wire(c) for c in middle],
+            "tailCard": [_wire(c) for c in bottom],
+            "abandonCard": [_wire(c) for c in abandon],
+            "handCard": [_wire(c) for c in hand],
+        }
+
+    # The cumulative card field wins over the row arrays.
+    table = Table(table_id=1, hero_uid=hero_uid)
+    apply_packet(table, "PineRoomStatusBRC",
+                 {"players": [{"uid": hero_uid, "seatId": 0, "name": "hero"}]})
+    apply_packet(table, "PineActionBRC", {
+        "uid": hero_uid, "seatId": 0,
+        "card": pine_card(top=["2d"], middle=["Kh", "7c"], bottom=["As", "Ad"]),
+        "middleCard": [_wire("5s")]})
+    check("the cumulative card field is preferred over the row arrays",
+          table.hero.board.card_count() == 5,
+          f"got {table.hero.board}")
+
+    # A row array that only names the new card must extend the row, not
+    # replace it — otherwise earlier cards vanish from the board and from
+    # the dead-card set.
+    delta = Table(table_id=2, hero_uid=hero_uid)
+    apply_packet(delta, "PineRoomStatusBRC",
+                 {"players": [{"uid": hero_uid, "seatId": 0, "name": "hero"}]})
+    apply_packet(delta, "PineActionBRC", {
+        "uid": hero_uid, "seatId": 0, "headCard": [_wire("2d")],
+        "middleCard": [_wire("Kh"), _wire("7c")],
+        "tailCard": [_wire("As"), _wire("Ad")]})
+    apply_packet(delta, "PineActionBRC", {
+        "uid": hero_uid, "seatId": 0, "middleCard": [_wire("5s")]})
+    check("a partial row array extends rather than replaces",
+          sorted(code_to_text(c) for c in delta.hero.board.middle) == ["5s", "7c", "Kh"],
+          f"got {delta.hero.board}")
+
+    # abandonCard states the discard outright.
+    muck = Table(table_id=3, hero_uid=hero_uid)
+    apply_packet(muck, "PineRoomStatusBRC",
+                 {"players": [{"uid": hero_uid, "seatId": 0, "name": "hero"}]})
+    apply_packet(muck, "PineActionBRC", {
+        "uid": hero_uid, "seatId": 0,
+        "card": pine_card(top=["2d"], middle=["Kh"], bottom=["As"], abandon=["9c"])})
+    check("abandonCard is read as the discard",
+          [code_to_text(c) for c in muck.hero.discards] == ["9c"])
+
+    # Attaching mid-hand: the status packet restates every board.
+    late = Table(table_id=4, hero_uid=hero_uid)
+    apply_packet(late, "PineRoomStatusBRC", {"players": [
+        {"uid": hero_uid, "seatId": 0, "name": "hero",
+         "card": pine_card(top=["2d"], middle=["Kh", "7c"], bottom=["As", "Ad"])},
+        {"uid": 2002, "seatId": 1, "name": "villain",
+         "card": pine_card(top=["3c"], middle=["9s", "9d"], bottom=["Qh", "Jh"])}]})
+    check("a mid-hand attach recovers hero's board",
+          late.hero.board.card_count() == 5)
+    check("a mid-hand attach recovers the opponent's board",
+          late.players[1].board.card_count() == 5)
+
+    apply_packet(late, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0,
+         "cards": [_wire("Ac"), _wire("5s"), _wire("3h")], "round": 1}]})
+    request = late.build_request()
+    check("a mid-hand attach counts the recovered cards as dead",
+          request is not None and len(request.deck) == 39,
+          f"deck {len(request.deck) if request else 'no request'}")
+
+
+def test_turn_tracking():
+    """Hero must get their turn in a multi-way hand."""
+    print("\nturn tracking")
+    hero_uid = 1001
+    table = Table(table_id=5, hero_uid=hero_uid)
+    apply_packet(table, "PineRoomStatusBRC", {"players": [
+        {"uid": 3003, "seatId": 0, "name": "early"},
+        {"uid": hero_uid, "seatId": 1, "name": "hero"},
+        {"uid": 2002, "seatId": 2, "name": "late"}]})
+    apply_packet(table, "PineGameStartBRC", {"gameId": "g1", "dealerSeatId": 2})
+
+    # Seat 0 acts first; hero is second.
+    apply_packet(table, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 1,
+         "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")], "round": 0}]})
+    check("hero is not on turn while an earlier seat acts", not table.hero_to_act())
+    check("hero still has a decision to prepare", table.hero_has_decision())
+
+    apply_packet(table, "PineActionBRC", {
+        "uid": 3003, "seatId": 0, "headCard": [_wire("3c")],
+        "middleCard": [_wire("9s"), _wire("9d")],
+        "tailCard": [_wire("Qh"), _wire("Jh")]})
+    check("the turn advances to hero once the earlier seat acts",
+          table.hero_to_act(), f"action_seat is {table.action_seat}")
+
+    # A hand that starts without its game-start packet must not stack boards.
+    stale = Table(table_id=6, hero_uid=hero_uid)
+    apply_packet(stale, "PineRoomStatusBRC",
+                 {"players": [{"uid": hero_uid, "seatId": 0, "name": "hero"}]})
+    apply_packet(stale, "PineResultBRC", {"playerResults": [
+        {"uid": hero_uid, "seatId": 0, "card": {
+            "headCard": [_wire(c) for c in ("2d", "3c", "4h")],
+            "middleCard": [_wire(c) for c in ("Kh", "7c", "5s", "8d", "9c")],
+            "tailCard": [_wire(c) for c in ("As", "Ad", "Ac", "Ts", "Jd")]}}]})
+    check("the finished board is recorded", stale.hero.board.card_count() == 13)
+    apply_packet(stale, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0,
+         "cards": [_wire(c) for c in ("2h", "3d", "4c", "5h", "6d")], "round": 0}]})
+    check("an opening deal onto a finished board starts the hand over",
+          stale.hero.board.card_count() == 0)
+    check("and the request that follows is playable",
+          stale.build_request() is not None)
+
+
+def test_validation_edges():
+    print("\nvalidation edges")
+    from ofc.actions import Action, actions_for
+    from ofc.solver import Advice, Candidate, register
+
+    board = Board()
+    street = SolveRequest(board=Board(top=C("2h"), middle=C("Kh", "7c"),
+                                      bottom=C("As", "Ad")),
+                          dealt=C("Ac", "5s", "3h"))
+
+    bad_row = Action(((text_to_code("Ac"), "Top"), (text_to_code("5s"), MIDDLE)),
+                     discard=text_to_code("3h"))
+    result = validate(street, bad_row)
+    check("an unknown row name is an error, not an exception", not result.ok)
+
+    no_discard = Action(((text_to_code("Ac"), BOTTOM), (text_to_code("5s"), MIDDLE)))
+    check("a pineapple street without a discard is rejected",
+          not validate(street, no_discard).ok)
+
+    # Fantasyland onto a board that is not empty must not pass validation and
+    # then blow up when the action is applied.
+    fl = SolveRequest(board=Board(top=C("2s")), in_fantasyland=True,
+                      dealt=C("Ah", "Ad", "Ac", "Kh", "Kd", "Ks", "Qh", "Qd",
+                              "7s", "8s", "9s", "Ts", "Js"))
+    overfull = Action(tuple([(c, TOP) for c in C("Ah", "Ad", "Ac")]
+                            + [(c, MIDDLE) for c in C("Kh", "Kd", "Ks", "Qh", "Qd")]
+                            + [(c, BOTTOM) for c in C("7s", "8s", "9s", "Ts", "Js")]))
+    result = validate(fl, overfull)
+    check("fantasyland validation respects the board it is given", not result.ok)
+
+    # A solver returning the wrong type must not escape solve().
+    register("wrong-type-for-test", lambda r: [Candidate(action=no_discard)], replace=True)
+    result = solve(street, "wrong-type-for-test")
+    check("a solver returning the wrong type is contained",
+          result.best is None and "expected Advice" in result.note)
+    check("an unregistered solver name is contained",
+          solve(street, "no-such-solver-anywhere").best is None)
+
+    # Detail keys must never overwrite the placement the caller reads back.
+    candidate = Candidate(action=no_discard, ev=3.5,
+                          detail={"ev": 0.0, "discard": 1.0, "foul_rate": 0.2})
+    data = candidate.to_dict()
+    check("a detail key cannot overwrite ev", data["ev"] == 3.5)
+    check("a detail key cannot overwrite discard", data["discard"] is None)
+    check("the shadowed detail is still reported", data["detail_ev"] == 0.0)
+    check("ordinary detail keys pass through", data["foul_rate"] == 0.2)
+
+    # Dead cards are a set: a card seen twice is still one card gone.
+    doubled = SolveRequest(
+        board=Board(top=C("As")), dealt=C("Kh", "Qd", "7c"),
+        opponents=[OpponentView(seat_id=1, board=Board(bottom=C("As", "2c")))])
+    check("dead cards are deduplicated",
+          len(doubled.dead_cards) + len(doubled.deck) == 52,
+          f"{len(doubled.dead_cards)} + {len(doubled.deck)}")
+
+    for size in (0, 1, 2, 4, 6, 13):
+        try:
+            actions_for(list(range(size)), Board())
+            check(f"actions_for rejects a {size}-card deal", False)
+            break
+        except ValueError:
+            continue
+    else:
+        check("actions_for rejects deals that are not 5 or 3 cards", True)
+
+    # Fantasyland mucks more than one card, and the action has to say so.
+    fl_clean = SolveRequest(board=Board(), in_fantasyland=True,
+                            dealt=C("Ah", "Ad", "Ac", "Kh", "Kd", "Ks", "Qh", "Qd",
+                                    "7s", "8s", "9s", "Ts", "Js", "2c"))
+    advice = solve(fl_clean, "baseline")
+    check("a fantasyland answer names every mucked card",
+          advice.best is not None and len(advice.best.action.mucked) == 1,
+          f"mucked {advice.best.action.mucked if advice.best else None}")
+    check("and it validates", advice.best is not None and validate(fl_clean, advice.best.action).ok)
+
+
+def test_board_rules():
+    print("\nboard rules")
+    fouled = Board.from_texts(top=["Ah", "Ad", "Ac"],
+                              middle=["2c", "3d", "4h", "5s", "7c"],
+                              bottom=["2s", "3s", "4s", "5c", "8d"])
+    check("a fouled board wins no fantasyland", fouled.fantasyland_entry() == 0)
+    check("a fouled board keeps no fantasyland", not fouled.fantasyland_stay())
+
+    partial = Board.from_texts(top=["Ah", "Ad", "Ac"])
+    check("an unfinished board wins no fantasyland", partial.fantasyland_entry() == 0)
+    check("an unfinished board keeps no fantasyland", not partial.fantasyland_stay())
+
+    good = Board.from_texts(top=["Qh", "Qd", "2c"],
+                            middle=["Kh", "Kd", "Ks", "3d", "4h"],
+                            bottom=["9h", "9d", "9c", "9s", "7c"])
+    check("a clean board still wins fantasyland", good.fantasyland_entry() == 14)
+    check("bottom quads still keep fantasyland", good.fantasyland_stay())
+
+
+def test_placer_safety():
+    print("\nplacer safety")
+    from ofc.placer import Layout, Placer
+    from ofc.solver import Advice, Candidate
+    from ofc.actions import Action
+
+    layout = Layout(
+        rows={TOP: [(10, 10), (20, 10), (30, 10)],
+              MIDDLE: [(10, 20), (20, 20), (30, 20), (40, 20), (50, 20)],
+              BOTTOM: [(10, 30), (20, 30), (30, 30), (40, 30), (50, 30)]},
+        hand=[(10, 40), (20, 40), (30, 40), (40, 40), (50, 40)],
+        confirm=(90, 90))
+    check("a fully measured layout reports no gaps", layout.missing() == [])
+    check("a three-position hand strip is not enough for the opening street",
+          Layout(rows=layout.rows, hand=layout.hand[:3]).missing() != [])
+
+    ac, five, three = text_to_code("Ac"), text_to_code("5s"), text_to_code("3h")
+    action = Action(((ac, BOTTOM), (five, MIDDLE)), discard=three)
+    advice = Advice(candidates=[Candidate(action=action, ev=1.0)])
+
+    placer = Placer(layout, verbose=False)
+    check("a disabled placer places nothing",
+          placer.execute(advice, hand_order=[ac, five, three]) is False)
+    check("a placer with no hand order refuses",
+          Placer(layout, verbose=False).execute(advice) is False)
+
+    # Slots must be counted from the first free position, not from zero.
+    board = Board(top=C("2h"), middle=C("Kh", "7c"), bottom=C("As", "Ad"))
+    moves = placer.plan(advice, hand_order=[ac, five, three], board=board)
+    slots = {m["row"]: m["slot"] for m in moves}
+    check("a partly filled row is placed at its next free slot",
+          slots[BOTTOM] == 2 and slots[MIDDLE] == 2, f"got {slots}")
+
+    # The hand strip is indexed by where the cards are, not where they go.
+    sources = {m["card"]: m["from"] for m in moves}
+    check("drags pick the card up from its own position on the strip",
+          sources["Ac"] == layout.hand[0] and sources["5s"] == layout.hand[1],
+          f"got {sources}")
+
+    unknown = placer.plan(advice, hand_order=[five, three], board=Board())
+    check("a card missing from the hand order is flagged, not guessed at",
+          any(m["unknown_source"] for m in unknown))
+
+
+def test_advisor():
+    print("\nadvisor")
+    import queue as _queue
+    from ofc.advisor import Advisor
+
+    hero_uid = 1001
+    events: "_queue.Queue" = _queue.Queue()
+    advisor = Advisor(hero_uid=hero_uid, solver="baseline", event_queue=events,
+                      verbose=False)
+    advisor.start()
+
+    advisor.feed("PineRoomStatusBRC", 1, {"players": [
+        {"uid": hero_uid, "seatId": 0, "name": "hero"},
+        {"uid": 2002, "seatId": 1, "name": "villain"}]})
+    advisor.feed("PineGameStartBRC", 1, {"gameId": "g1", "dealerSeatId": 0})
+    advisor.feed("PineHandCardBRC", 1, {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0,
+         "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")], "round": 0}]})
+
+    deadline = time.time() + 5
+    advice_events = []
+    while time.time() < deadline and not advice_events:
+        try:
+            event = events.get(timeout=0.2)
+        except _queue.Empty:
+            continue
+        if event.get("type") == "ofc_advice":
+            advice_events.append(event)
+    check("an advice event reaches the queue", bool(advice_events))
+    if advice_events:
+        payload = advice_events[0]
+        check("the advice event carries the request and the answer",
+              "request" in payload and payload["advice"].get("best"))
+        check("errors and warnings are reported separately",
+              "errors" in payload and "warnings" in payload)
+
+    # The same spot must not be solved twice.
+    before = advisor.decisions
+    advisor.feed("PineHandCardBRC", 1, {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0,
+         "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")], "round": 0}]})
+    time.sleep(0.4)
+    check("a repeated packet does not re-solve the same spot",
+          advisor.decisions == before, f"{before} -> {advisor.decisions}")
+
+    advisor.stop()
+    check("feeding a stopped advisor is refused",
+          advisor.feed("PineHandCardBRC", 1, {"handCards": []}) is False)
+
+    # Garbage from the wire must not escape into the caller.
+    rough = Advisor(hero_uid=hero_uid, solver="baseline", verbose=False)
+    rough.start()
+    try:
+        for pkt in ({"player": {"seatId": "x", "uid": None}},
+                    {"player": None},
+                    {"players": [None, {"seatId": 1}]},
+                    {"handCards": [{"seatId": 0, "cards": [None, "x"]}]},
+                    {"seatId": 0, "headCard": None}):
+            for name in HANDLERS:
+                rough.feed(name, 1, pkt)
+        check("malformed packets do not raise", True)
+    except Exception as exc:                       # noqa: BLE001
+        check("malformed packets do not raise", False, f"{type(exc).__name__}: {exc}")
+    finally:
+        rough.stop()
+
+
 def main() -> None:
     print("OFC package tests")
     test_cards()
@@ -453,7 +783,13 @@ def main() -> None:
     test_evaluator_against_pineapple()
     test_actions()
     test_state()
+    test_packet_shapes()
+    test_turn_tracking()
     test_solver_contract()
+    test_validation_edges()
+    test_board_rules()
+    test_placer_safety()
+    test_advisor()
     test_pipeline()
 
     print(f"\n{len(PASSED)} passed, {len(FAILED)} failed")
