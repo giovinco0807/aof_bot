@@ -525,6 +525,38 @@ def test_packet_shapes():
           request is not None and len(request.deck) == 39,
           f"deck {len(request.deck) if request else 'no request'}")
 
+    # Attaching with no status packet at all leaves the board unknown. That
+    # must produce silence, not confident advice on a board of nothing.
+    blind = Table(table_id=8, hero_uid=hero_uid)
+    apply_packet(blind, "PineSitDownBRC",
+                 {"player": {"uid": hero_uid, "seatId": 0, "name": "hero"}})
+    apply_packet(blind, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0,
+         "cards": [_wire("Ac"), _wire("5s"), _wire("4s")], "round": 2}]})
+    check("a three-card street onto an empty board is refused",
+          blind.build_request() is None)
+
+    # Every board size a pineapple street can legitimately follow.
+    for count, allowed in ((0, False), (4, False), (5, True), (6, False),
+                           (7, True), (9, True), (11, True), (13, False)):
+        spot = Table(table_id=9, hero_uid=hero_uid)
+        apply_packet(spot, "PineRoomStatusBRC",
+                     {"players": [{"uid": hero_uid, "seatId": 0, "name": "hero"}]})
+        deck = list(FULL_DECK)
+        layout = {"tailCard": [], "middleCard": [], "headCard": []}
+        for index in range(count):
+            key = ("tailCard" if index < 5 else
+                   "middleCard" if index < 10 else "headCard")
+            layout[key].append(_wire(code_to_text(deck[index])))
+        apply_packet(spot, "PineRoomStatusBRC", {"players": [
+            {"uid": hero_uid, "seatId": 0, "name": "hero", "card": layout}]})
+        apply_packet(spot, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+            {"uid": hero_uid, "seatId": 0,
+             "cards": [_wire(code_to_text(c)) for c in deck[20:23]], "round": 2}]})
+        got = spot.build_request() is not None
+        check(f"a three-card street with {count} cards placed is "
+              f"{'accepted' if allowed else 'refused'}", got == allowed)
+
 
 def test_turn_tracking():
     """Hero must get their turn in a multi-way hand."""

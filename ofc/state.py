@@ -405,16 +405,25 @@ class Table:
         if hero is None or not hero.holding or hero.unknown_cards:
             return None
 
+        # The board has to be a size this deal could actually follow. That is
+        # what catches attaching to a hand already in progress: the placed
+        # cards are only restated by a status packet, so without one hero's
+        # board reads as empty and a three-card street would be solved — and
+        # under auto-place, clicked — against a position that does not exist.
         held = len(hero.holding)
         placed = hero.board.card_count()
         if hero.in_fantasyland:
-            if held < 13:
+            if held < 13 or placed:
                 return None
         elif held == 5:
-            if placed:
-                return None                    # an opening deal onto a live board
+            if placed:                         # an opening deal onto a live board
+                return None
         elif held == 3:
-            if placed + 2 > 13:
+            # Boards go 5, 7, 9, 11 and finish at 13; nothing else can be
+            # sitting there when three cards arrive. Counting cards rather
+            # than trusting the round number keeps this independent of how
+            # the client numbers its streets.
+            if placed not in (5, 7, 9, 11):
                 return None
         else:
             # A short or oversized deal means a packet was misread; the hook
