@@ -84,6 +84,13 @@ python -m ofc.replay --synthetic 50 --solver mine
 | `req.deck` | **本物の残りデッキ**。ここからサンプリングする |
 | `req.dead_cards` | 見えているカード全部（重複排除済み、`len(dead)+len(deck)==52`） |
 | `req.legal_actions()` | 合法手。foul 確定の手は除外 |
+| `req.deadline` | 打ち切るべき時刻（`time.monotonic()` 基準） |
+| `req.time_left()` | 残り秒数 |
+
+探索型のソルバーは `req.time_budget` を秒数として使うか、
+`while time.monotonic() < req.deadline:` で回す。
+`time_budget` は**卓の残り時間で既に切り詰められている**ので、
+そのまま使えば時間切れになることはない。
 
 `legal_actions()` の注意: **全部の手が foul する局面では、除外せず全手を返す**
 （カードはどこかに置かねばならないため）。乱数生成した終盤局面では約半分で発生する。
@@ -174,6 +181,35 @@ python -m ofc.main --gui
 （打ち込んだ場合もピッカーの打ち消し線に反映される）。
 テキストで重複を作った場合は SOLVE 時に弾かれる。
 
+### 思考時間（各ターン別に設定）
+
+ストリートごとに秒数を設定できる。初手は合法手 232 通りで以降は 27 通りなので、
+探索量が桁違いになる。1 つの値で通すと初手が足りないか、以降が余る。
+
+GUI 上部の「Thinking time per turn」で設定し、`Save` で保存される
+（`ofc/data/budget.json`。マシン固有なので git 管理外）。
+
+CLI でも指定できる:
+
+```
+python -m ofc.main --show-budget                       # 現在の設定を表示
+python -m ofc.main --budget 5                          # 全ストリート一律 5 秒
+python -m ofc.main --budget-street 0=12 --budget-street 4=1
+python -m ofc.main --budget-fantasyland 30
+python -m ofc.main --ignore-table-clock                # 卓の制限時間を無視
+```
+
+既定値は 初手 6 秒 / St1-2 3 秒 / St3 2.5 秒 / St4 2 秒 / FL 15 秒。
+
+**卓の制限時間で自動的に切り詰められる。** パケットの `actionLeftTime` に
+持ち時間が入っているので、それより長い予算を設定しても
+`残り時間 − 2 秒`（配置操作と通信の余裕）まで縮む。時間切れになれば
+クライアントが勝手に置いてしまうので、間に合わない思考には意味がないため。
+`actionLeftTime` の単位は未確認なので、秒として不自然な値（1〜600 の範囲外）は
+信用せず無視する。この挙動はチェックボックスで切れる。
+
+ソルバーが予算を大幅に超過した場合はログに出る。
+
 ### オフライン検証
 
 ```
@@ -248,6 +284,7 @@ python -m ofc.placer --dry-run      # クリックせずに手順だけ表示
 | `board.py` | 3 行の盤面 |
 | `actions.py` | 合法手の列挙（foul 枝刈り込み） |
 | `state.py` | パケットから卓の状態を再構築 |
+| `budget.py` | ストリート別の思考時間、卓の制限時間との突き合わせ |
 | `solver.py` | **ソルバー契約とレジストリ** |
 | `solvers/baseline.py` | 動作確認用のプレースホルダ |
 | `advisor.py` | パケット → 状態 → ソルバー → イベント |

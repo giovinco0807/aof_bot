@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ofc import solver as solver_api                      # noqa: E402
 from ofc.advisor import Advisor                            # noqa: E402
+from ofc.budget import STREETS, TimeBudget                  # noqa: E402
 from ofc.board import BOTTOM, Board, MIDDLE, ROWS, TOP     # noqa: E402
 from ofc.cards import (                                          # noqa: E402
     RANKS, SUITS, code_to_text, is_red, pretty, text_to_code,
@@ -247,9 +248,20 @@ class OfcGui:
         self.var_hero_uid = tk.StringVar(value="0")
         self.var_process = tk.StringVar(value="PPPoker.exe")
         self.var_solver = tk.StringVar(value=(solver_api.available() or ["baseline"])[0])
-        self.var_budget = tk.DoubleVar(value=4.0)
         self.var_status = tk.StringVar(value="idle")
         self.var_deck = tk.StringVar(value="")
+
+        # Thinking time, per street, remembered between sessions.
+        self.budget = TimeBudget.load()
+        self.var_budget_street = {
+            street: tk.DoubleVar(value=self.budget.per_street.get(street, self.budget.default))
+            for street in STREETS
+        }
+        self.var_budget_fl = tk.DoubleVar(value=self.budget.fantasyland)
+        self.var_respect_clock = tk.BooleanVar(value=self.budget.respect_table_clock)
+        #: Which budget the manual panel solves with — manual spots have no
+        #: table clock and no street of their own until the deal says.
+        self.var_budget = tk.DoubleVar(value=self.budget.per_street.get(0, 6.0))
 
         self.var_top = tk.StringVar()
         self.var_mid = tk.StringVar()
@@ -279,16 +291,34 @@ class OfcGui:
                                        values=solver_api.available(), state="readonly")
         self.cmb_solver.pack(side="left", padx=4)
         ttk.Button(line, text="Reload", command=self._reload_solvers).pack(side="left")
-        ttk.Label(line, text="Budget (s):").pack(side="left", padx=(12, 0))
-        ttk.Spinbox(line, textvariable=self.var_budget, from_=0.1, to=30.0,
-                    increment=0.5, width=6).pack(side="left", padx=4)
-
         self.btn_start = ttk.Button(line, text="ATTACH", command=self._start)
         self.btn_start.pack(side="left", padx=(16, 4))
         self.btn_stop = ttk.Button(line, text="STOP", command=self._stop, state="disabled")
         self.btn_stop.pack(side="left")
         ttk.Label(line, textvariable=self.var_status,
                   foreground="#0a6").pack(side="left", padx=12)
+
+        # Thinking time. Split by street because the opening deal has 232
+        # legal placements and the streets after it at most 27, so one number
+        # either starves the opening or wastes time on the rest.
+        clock = ttk.LabelFrame(self.root, text="Thinking time per turn (seconds)")
+        clock.pack(fill="x", padx=8, pady=(0, 4))
+        row = ttk.Frame(clock)
+        row.pack(fill="x", pady=4)
+        for street in STREETS:
+            label = "Open (5 cards)" if street == 0 else f"St {street}"
+            ttk.Label(row, text=f"{label}:").pack(side="left", padx=(8, 2))
+            ttk.Spinbox(row, textvariable=self.var_budget_street[street],
+                        from_=0.1, to=120.0, increment=0.5, width=5,
+                        command=self._save_budget).pack(side="left")
+        ttk.Label(row, text="Fantasyland:").pack(side="left", padx=(12, 2))
+        ttk.Spinbox(row, textvariable=self.var_budget_fl, from_=0.1, to=300.0,
+                    increment=1.0, width=5,
+                    command=self._save_budget).pack(side="left")
+        ttk.Checkbutton(row, text="never exceed the table clock",
+                        variable=self.var_respect_clock,
+                        command=self._save_budget).pack(side="left", padx=(14, 4))
+        ttk.Button(row, text="Save", command=self._save_budget).pack(side="left", padx=4)
 
         body = ttk.Frame(self.root)
         body.pack(fill="both", expand=True, padx=8)
@@ -378,6 +408,46 @@ class OfcGui:
     def _say(self, text: str) -> None:
         self.log.insert("end", text.rstrip() + "\n")
         self.log.see("end")
+
+    def _read_budget(self) -> TimeBudget:
+        """The budget as the spinboxes currently read it."""
+        budget = TimeBudget(
+            per_street={}, fantasyland=self.budget.fantasyland,
+            default=self.budget.default, reserve=self.budget.reserve,
+            respect_table_clock=bool(self.var_respect_clock.get()))
+        for street, var in self.var_budget_street.items():
+            try:
+                budget.set_street(street, float(var.get()))
+            except (TypeError, ValueError, tk.TclError):
+                budget.set_street(street, self.budget.per_street.get(street, 3.0))
+        try:
+            budget.fantasyland = max(0.1, float(self.var_budget_fl.get()))
+        except (TypeError, ValueError, tk.TclError):
+            pass
+        return budget
+
+    def apply_budget(self, budget: TimeBudget) -> None:
+        """Load a budget into the spinboxes, for the command line to pass one in."""
+        self.budget = budget
+        for street, var in self.var_budget_street.items():
+            var.set(budget.per_street.get(street, budget.default))
+        self.var_budget_fl.set(budget.fantasyland)
+        self.var_respect_clock.set(budget.respect_table_clock)
+        self.var_budget.set(budget.per_street.get(0, budget.default))
+
+    def _save_budget(self) -> None:
+        """Apply the spinboxes, remember them, and tell a running session."""
+        self.budget = self._read_budget()
+        try:
+            self.budget.save()
+        except OSError as exc:
+            self._say(f"could not save the thinking time: {exc}")
+        # Manual solves use the opening-street value: a hand-built spot has
+        # no table clock and no street until its deal says otherwise.
+        self.var_budget.set(self.budget.per_street.get(0, self.budget.default))
+        if self.advisor is not None:
+            self.advisor.time_budget = self.budget
+        self._say(f"thinking time: {self.budget.describe()}")
 
     def _reload_solvers(self) -> None:
         names = solver_api.available()
@@ -648,10 +718,12 @@ class OfcGui:
             self._say("set your hero UID first — without it the bot cannot tell which seat is yours")
             return
 
+        self.budget = self._read_budget()
         self.advisor = Advisor(hero_uid=hero_uid, solver=self.var_solver.get(),
                                event_queue=self.events,
-                               time_budget=float(self.var_budget.get()))
+                               time_budget=self.budget)
         self.advisor.start()
+        self._say(f"thinking time: {self.budget.describe()}")
 
         self.btn_start.config(state="disabled")
         self.btn_stop.config(state="normal")

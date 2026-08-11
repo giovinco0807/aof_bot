@@ -23,6 +23,7 @@ import threading
 import time
 from typing import Callable, Optional
 
+from .budget import TimeBudget
 from .solver import Advice, Validation, describe, solve, validate
 from .state import HANDLERS, Table, Tables, apply_packet
 
@@ -44,12 +45,18 @@ class Advisor:
                  solver: str = "baseline",
                  event_queue: Optional[queue.Queue] = None,
                  on_advice: Optional[Callable[[Advice], None]] = None,
-                 time_budget: float = 4.0,
+                 time_budget=None,
                  verbose: bool = True):
         self.hero_uid = hero_uid
         self.solver = solver
         self.event_queue = event_queue
         self.on_advice = on_advice
+        #: A :class:`~ofc.budget.TimeBudget`, or a plain number for one value
+        #: across every street.
+        if time_budget is None:
+            time_budget = TimeBudget.load()
+        elif isinstance(time_budget, (int, float)):
+            time_budget = TimeBudget.uniform(float(time_budget))
         self.time_budget = time_budget
         self.verbose = verbose
 
@@ -177,9 +184,17 @@ class Advisor:
             check = validate(request, advice.best.action)
 
         if self.verbose:
+            clock = ("" if request.action_left is None
+                     else f", table clock {request.action_left:g}s")
             print(f"\n  [OFC] table {table_id} street {request.street} "
-                  f"dealt {' '.join(request.texts()['dealt'])}")
+                  f"dealt {' '.join(request.texts()['dealt'])} "
+                  f"(thinking up to {request.time_budget:.1f}s{clock})")
             print(f"  {describe(advice)}")
+            # An overrun is worth saying out loud: past the table's clock the
+            # client places the cards itself, so late advice is no advice.
+            if advice.elapsed > request.time_budget * 1.25:
+                print(f"  [OFC] the solver took {advice.elapsed:.1f}s against a "
+                      f"{request.time_budget:.1f}s budget")
             for problem in check.problems:
                 print(f"  [OFC] {problem}")
 

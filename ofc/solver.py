@@ -74,10 +74,17 @@ class SolveRequest:
     discards: List[int] = field(default_factory=list)
     opponents: List[OpponentView] = field(default_factory=list)
     in_fantasyland: bool = False
+    #: Seconds the solver may spend on this decision. Already trimmed to what
+    #: the table's clock allows — see :mod:`ofc.budget`.
     time_budget: float = 4.0
     seed: int = 0
     table_id: int = 0
     hero_seat: int = -1
+    #: Seconds the table said hero has left, when it said. Informational: the
+    #: budget has already accounted for it.
+    action_left: Optional[float] = None
+    #: When this request was built, on the monotonic clock. Set automatically.
+    created: float = field(default_factory=time.monotonic)
 
     # ------------------------------------------------------------ derived
     @property
@@ -108,6 +115,20 @@ class SolveRequest:
         """The true remaining deck, dead cards removed."""
         return remaining_deck(self.dead_cards)
 
+    @property
+    def deadline(self) -> float:
+        """The monotonic time this decision should be finished by.
+
+        Convenience for a searching solver, which can loop on
+        ``while time.monotonic() < req.deadline:`` rather than doing the
+        arithmetic itself and getting the start time subtly wrong.
+        """
+        return self.created + self.time_budget
+
+    def time_left(self) -> float:
+        """Seconds of budget remaining, never below zero."""
+        return max(0.0, self.deadline - time.monotonic())
+
     def legal_actions(self) -> List[Action]:
         """Every legal way to play this street.
 
@@ -132,6 +153,8 @@ class SolveRequest:
             "table_id": self.table_id,
             "hero_seat": self.hero_seat,
             "in_fantasyland": self.in_fantasyland,
+            "time_budget": round(self.time_budget, 2),
+            "action_left": self.action_left,
             "board": self.board.to_texts(),
             "dealt": codes_to_texts(self.dealt),
             "discards": codes_to_texts(self.discards),

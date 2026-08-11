@@ -808,6 +808,103 @@ def test_advisor():
         rough.stop()
 
 
+def test_time_budget():
+    print("\nthinking time")
+    from ofc.budget import STREETS, TimeBudget
+
+    budget = TimeBudget()
+    check("the opening street gets the most time",
+          budget.for_street(0) > budget.for_street(1),
+          f"{budget.for_street(0)} vs {budget.for_street(1)}")
+    check("fantasyland gets its own budget",
+          budget.for_street(0, in_fantasyland=True) == budget.fantasyland)
+    check("an unknown street falls back to the default",
+          budget.for_street(99) == budget.default)
+
+    budget.set_street(0, 12.0)
+    check("a street can be set", budget.for_street(0) == 12.0)
+    check("setting one street leaves the others alone", budget.for_street(1) == 3.0)
+    budget.set_street(0, -5)
+    check("a budget is never zero or negative", budget.for_street(0) > 0)
+
+    uniform = TimeBudget.uniform(2.5)
+    check("a uniform budget is the same everywhere",
+          all(uniform.for_street(s) == 2.5 for s in STREETS)
+          and uniform.for_street(0, in_fantasyland=True) == 2.5)
+
+    # The table's own clock is the real limit: past it the client places the
+    # cards itself, so a longer budget buys nothing.
+    clocked = TimeBudget.uniform(20.0)
+    clocked.reserve = 2.0
+    check("the table clock shortens a longer budget",
+          clocked.for_street(1, action_left=10.0) == 8.0,
+          f"got {clocked.for_street(1, action_left=10.0)}")
+    check("a generous clock does not lengthen the budget",
+          clocked.for_street(1, action_left=600.0) == 20.0)
+    ignoring = TimeBudget.uniform(20.0)
+    ignoring.respect_table_clock = False
+    check("ignoring the clock keeps the full budget",
+          ignoring.for_street(1, action_left=10.0) == 20.0)
+
+    # An implausible clock reading is not believed — capping to a misread
+    # zero would mean never thinking at all.
+    for nonsense in (0.0, -1.0, 100000.0):
+        if clocked.for_street(1, action_left=nonsense) != 20.0:
+            check(f"an implausible clock of {nonsense} is ignored", False)
+            break
+    else:
+        check("an implausible clock reading is ignored", True)
+    check("a clock shorter than the reserve still leaves time to think",
+          clocked.for_street(1, action_left=1.5) > 0)
+
+    # Round trip through disk.
+    import tempfile
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "budget.json"
+        original = TimeBudget()
+        original.set_street(0, 9.5)
+        original.fantasyland = 42.0
+        original.respect_table_clock = False
+        original.save(path)
+        loaded = TimeBudget.load(path)
+        check("a saved budget comes back the same",
+              loaded.for_street(0) == 9.5 and loaded.fantasyland == 42.0
+              and loaded.respect_table_clock is False)
+        (Path(folder) / "junk.json").write_text("not json at all")
+        check("a corrupt budget file falls back to the defaults",
+              TimeBudget.load(Path(folder) / "junk.json").for_street(0) == 6.0)
+        check("a missing budget file falls back to the defaults",
+              TimeBudget.load(Path(folder) / "absent.json").for_street(0) == 6.0)
+
+    # The request carries the chosen budget and a deadline a solver can use.
+    request = SolveRequest(board=Board(), dealt=C("As", "Ad", "Kh", "7c", "2d"),
+                           time_budget=1.0)
+    check("a request exposes a deadline", request.deadline > request.created)
+    check("and the time left counts down from the budget",
+          0 < request.time_left() <= 1.0)
+
+    # A table that reports its clock has the budget trimmed to fit.
+    hero_uid = 1001
+    table = Table(table_id=12, hero_uid=hero_uid)
+    apply_packet(table, "PineRoomStatusBRC",
+                 {"players": [{"uid": hero_uid, "seatId": 0, "name": "hero"}]})
+    apply_packet(table, "PineGameStartBRC", {"gameId": "g", "dealerSeatId": 0})
+    apply_packet(table, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0,
+         "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")],
+         "round": 0, "actionLeftTime": 9}]})
+    built = table.build_request(time_budget=TimeBudget.uniform(20.0))
+    check("the table's clock reaches the request",
+          built is not None and built.action_left == 9.0)
+    check("and trims the budget it was given",
+          built is not None and built.time_budget == 7.0,
+          f"got {built.time_budget if built else None}")
+
+    plain = table.build_request(time_budget=2.0)
+    check("a plain number is still accepted as a budget",
+          plain is not None and plain.time_budget == 2.0)
+
+
 def test_gui_picker():
     """The click-to-pick path, when a display is available.
 
@@ -925,6 +1022,7 @@ def main() -> None:
     test_board_rules()
     test_placer_safety()
     test_advisor()
+    test_time_budget()
     test_gui_picker()
     test_pipeline()
 

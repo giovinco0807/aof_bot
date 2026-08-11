@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ofc import solver as solver_api                # noqa: E402
 from ofc.advisor import Advisor                     # noqa: E402
+from ofc.budget import TimeBudget                   # noqa: E402
 from ofc.capture import OfcCapture                  # noqa: E402
 
 
@@ -44,8 +45,19 @@ def main() -> None:
     parser.add_argument("--solver", default="baseline")
     parser.add_argument("--solver-file", type=Path, action="append", default=[],
                         help="import an extra solver module before starting; repeatable")
-    parser.add_argument("--budget", type=float, default=4.0,
-                        help="seconds a solver may spend on one decision")
+    parser.add_argument("--budget", type=float, default=None,
+                        help="seconds per decision, the same for every street; "
+                             "overrides the saved per-street settings")
+    parser.add_argument("--budget-street", action="append", default=[],
+                        metavar="STREET=SECONDS",
+                        help="thinking time for one street, e.g. --budget-street 0=8 "
+                             "(street 0 is the opening five cards). Repeatable.")
+    parser.add_argument("--budget-fantasyland", type=float, default=None,
+                        metavar="SECONDS", help="thinking time for a Fantasyland deal")
+    parser.add_argument("--ignore-table-clock", action="store_true",
+                        help="do not shorten the budget to fit the table's own timer")
+    parser.add_argument("--show-budget", action="store_true",
+                        help="print the thinking time that would be used and exit")
     parser.add_argument("--auto-place", action="store_true",
                         help="actually place the cards (needs a calibrated layout)")
     parser.add_argument("--list-solvers", action="store_true")
@@ -68,6 +80,25 @@ def main() -> None:
             print(f"  {name}  (failed to load: {why})")
         return
 
+    # Thinking time: the saved per-street settings, then whatever the flags
+    # override. --budget flattens everything to one value; the more specific
+    # flags adjust individual streets.
+    budget = TimeBudget.uniform(args.budget) if args.budget else TimeBudget.load()
+    for pair in args.budget_street:
+        street, _, seconds = pair.partition("=")
+        try:
+            budget.set_street(int(street), float(seconds))
+        except ValueError:
+            parser.error(f"--budget-street wants STREET=SECONDS, got {pair!r}")
+    if args.budget_fantasyland is not None:
+        budget.fantasyland = max(0.1, args.budget_fantasyland)
+    if args.ignore_table_clock:
+        budget.respect_table_clock = False
+
+    if args.show_budget:
+        print(budget.describe())
+        return
+
     if args.gui:
         from ofc.gui import OfcGui
         gui = OfcGui()
@@ -76,7 +107,7 @@ def main() -> None:
         gui.var_process.set(args.process)
         if args.solver in solver_api.available():
             gui.var_solver.set(args.solver)
-        gui.var_budget.set(args.budget)
+        gui.apply_budget(budget)
         gui.run()
         return
 
@@ -103,13 +134,14 @@ def main() -> None:
         print("auto-place is ON — move the mouse to a screen corner to abort")
 
     advisor = Advisor(hero_uid=args.hero_uid, solver=args.solver,
-                      time_budget=args.budget, verbose=not args.quiet,
+                      time_budget=budget, verbose=not args.quiet,
                       on_advice=on_advice)
     capture = OfcCapture(process_name=args.process, advisor=advisor,
                          verbose=not args.quiet)
 
     print(f"solver: {args.solver} | hero uid: {args.hero_uid} | "
           f"mode: {'auto-place' if on_advice else 'advice only'}")
+    print(f"thinking time: {budget.describe()}")
     try:
         capture.run()
     except KeyboardInterrupt:

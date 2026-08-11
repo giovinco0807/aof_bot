@@ -101,12 +101,18 @@ class Player:
     discards: List[int] = field(default_factory=list)
     unknown_cards: bool = False
 
+    #: Seconds this seat has left to act, as the table last reported them.
+    #: ``None`` when it has not said. The field's unit is not documented, so
+    #: nothing relies on it without a plausibility check first.
+    action_left: Optional[float] = None
+
     def reset_hand(self) -> None:
         self.board = Board()
         self.holding = []
         self.discards = []
         self.in_fantasyland = False
         self.unknown_cards = False
+        self.action_left = None
 
 
 @dataclass
@@ -208,10 +214,12 @@ class Table:
         layout = info.get("card") or {}
         if layout:
             self._absorb_pine_card(player, layout)
-            if _as_int(layout.get("actionLeftTime"), 0) > 0:
-                self.action_seat = seat_id
-        if _as_int(info.get("actionLeftTime"), 0) > 0:
+
+        left = _as_int(info.get("actionLeftTime"), 0) or _as_int(
+            layout.get("actionLeftTime"), 0)
+        if left > 0:
             self.action_seat = seat_id
+            player.action_left = float(left)
 
     def _absorb_pine_card(self, player: "Player", layout: dict) -> None:
         """Read a ``PineCard`` onto a player: rows, discards and hand."""
@@ -286,8 +294,10 @@ class Table:
             if uid:
                 player.uid = uid
             player.in_fantasyland = bool(_as_int(entry.get("fantasy"), 0))
-            if _as_int(entry.get("actionLeftTime"), 0) > 0:
+            left = _as_int(entry.get("actionLeftTime"), 0)
+            if left > 0:
                 self.action_seat = seat_id
+                player.action_left = float(left)
 
             texts = wire_list_to_text(entry.get("cards") or ())
             if not texts:
@@ -392,7 +402,7 @@ class Table:
             player.holding = []
 
     # ------------------------------------------------------------- request
-    def build_request(self, time_budget: float = 4.0, seed: int = 0) -> Optional[SolveRequest]:
+    def build_request(self, time_budget=None, seed: int = 0) -> Optional[SolveRequest]:
         """The decision hero currently faces, or ``None`` if there isn't one.
 
         Returns nothing when hero is unknown or holds nothing, when hero's own
@@ -400,6 +410,10 @@ class Table:
         from a misread board is worse than no advice. An opponent's unreadable
         card does not block hero: it costs some dead-card accuracy, which is
         much cheaper than silence for the rest of the hand.
+
+        ``time_budget`` may be a :class:`~ofc.budget.TimeBudget`, which picks
+        the seconds for this street and trims them to whatever the table's own
+        clock allows, or a plain number to use as-is.
         """
         hero = self.hero
         if hero is None or not hero.holding or hero.unknown_cards:
@@ -443,6 +457,16 @@ class Table:
                          in_fantasyland=p.in_fantasyland)
             for p in self.opponents()
         ]
+
+        if time_budget is None:
+            seconds = 4.0
+        elif hasattr(time_budget, "for_street"):
+            seconds = time_budget.for_street(
+                street=self.street, in_fantasyland=hero.in_fantasyland,
+                action_left=hero.action_left)
+        else:
+            seconds = float(time_budget)
+
         return SolveRequest(
             board=hero.board,
             dealt=list(hero.holding),
@@ -450,10 +474,11 @@ class Table:
             discards=list(hero.discards),
             opponents=opponents,
             in_fantasyland=hero.in_fantasyland,
-            time_budget=time_budget,
+            time_budget=seconds,
             seed=seed,
             table_id=self.table_id,
             hero_seat=hero.seat_id,
+            action_left=hero.action_left,
         )
 
     def snapshot(self) -> dict:
