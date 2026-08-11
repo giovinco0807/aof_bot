@@ -340,6 +340,7 @@ python -m ofc.placer --dry-run      # クリックせずに手順だけ表示
 | `state.py` | パケットから卓の状態を再構築 |
 | `budget.py` | ストリート別の思考時間、卓の制限時間との突き合わせ |
 | `solver.py` | **ソルバー契約とレジストリ** |
+| `solvers/m3engine.py` | pineapple の学習済みエンジンを繋ぐプラグイン |
 | `solvers/baseline.py` | 動作確認用のプレースホルダ |
 | `advisor.py` | パケット → 状態 → ソルバー → イベント |
 | `capture.py` | Frida 接続 |
