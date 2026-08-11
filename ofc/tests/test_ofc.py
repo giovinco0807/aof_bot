@@ -602,6 +602,99 @@ def test_turn_tracking():
           stale.build_request() is not None)
 
 
+def test_who_is_in_the_hand():
+    """Occupying a chair is not the same as contesting the hand.
+
+    This decides whether a hand counts as heads-up, and the only solver worth
+    playing is heads-up only — so a spectator counted as an opponent costs
+    the whole session.
+    """
+    print("\nwho is in the hand")
+    hero_uid = 1001
+    deal = [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")]
+
+    def table(seats, start_info=None, deal_hand=True):
+        t = Table(table_id=1, hero_uid=hero_uid)
+        apply_packet(t, "PineRoomStatusBRC", {"players": seats})
+        if start_info is not None:
+            apply_packet(t, "PineGameStartBRC",
+                         {"gameId": "g", "dealerSeatId": 0, "startInfo": start_info})
+        if deal_hand:
+            apply_packet(t, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+                {"uid": hero_uid, "seatId": 0, "cards": deal, "round": 0}]})
+        return t
+
+    def third(**extra):
+        return [{"uid": hero_uid, "seatId": 0, "name": "hero"},
+                {"uid": 2002, "seatId": 1, "name": "villain"},
+                dict({"uid": 3003, "seatId": 2, "name": "third"}, **extra)]
+
+    two_in = [{"seatId": 0, "chips": 500}, {"seatId": 1, "chips": 500}]
+    three_in = two_in + [{"seatId": 2, "chips": 500}]
+
+    t = table([{"uid": hero_uid, "seatId": 0, "name": "hero"},
+               {"uid": 2002, "seatId": 1, "name": "villain"}], two_in)
+    check("two players at a three-seat table is heads-up",
+          len(t.build_request().opponents) == 1)
+
+    t = table(third(sittingOut=True), two_in)
+    check("a seat sitting out is not an opponent",
+          len(t.build_request().opponents) == 1)
+    check("but it is still a seat at the table", len(t.seated()) == 2)
+
+    t = table(third(), two_in)
+    check("a seat missing from startInfo is not an opponent",
+          len(t.build_request().opponents) == 1)
+
+    t = table(third(), three_in)
+    check("three players actually dealt in is three-handed",
+          len(t.build_request().opponents) == 2)
+
+    # Attaching mid-hand, with no game start ever seen.
+    t = table(third(sittingOut=True), None)
+    check("without a game start, sitting out still excludes",
+          len(t.build_request().opponents) == 1)
+    t = table(third(), None)
+    check("without a game start, an active seat counts",
+          len(t.build_request().opponents) == 2)
+
+    # Taking a seat mid-hand does not join that hand.
+    def pine_card(top=(), mid=(), bot=()):
+        return {"headCard": [_wire(c) for c in top],
+                "middleCard": [_wire(c) for c in mid],
+                "tailCard": [_wire(c) for c in bot], "abandonCard": []}
+
+    t = table([{"uid": hero_uid, "seatId": 0, "name": "hero"},
+               {"uid": 2002, "seatId": 1, "name": "villain"}], two_in)
+    apply_packet(t, "PineActionBRC", {
+        "uid": hero_uid, "seatId": 0,
+        "card": pine_card(top=["2d"], mid=["Kh", "7c"], bot=["As", "Ad"])})
+    apply_packet(t, "PineActionBRC", {
+        "uid": 2002, "seatId": 1,
+        "card": pine_card(top=["3c"], mid=["9s", "9d"], bot=["Qh", "Jh"])})
+    apply_packet(t, "PineSitDownBRC",
+                 {"player": {"uid": 3003, "seatId": 2, "name": "latecomer"}})
+    apply_packet(t, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0,
+         "cards": [_wire("Ac"), _wire("5s"), _wire("3h")], "round": 1}]})
+    check("sitting down mid-hand does not join that hand",
+          len(t.build_request().opponents) == 1)
+
+    apply_packet(t, "PineResultBRC", {"playerResults": []})
+    apply_packet(t, "PineGameStartBRC",
+                 {"gameId": "g2", "dealerSeatId": 1, "startInfo": three_in})
+    apply_packet(t, "PineHandCardBRC", {"actionSeatId": 0, "handCards": [
+        {"uid": hero_uid, "seatId": 0, "cards": deal, "round": 0}]})
+    check("and does join the next one",
+          len(t.build_request().opponents) == 2)
+
+    # The snapshot has to carry the distinction so the GUI can show it.
+    snapshot = t.snapshot()
+    check("the snapshot reports who is in the hand",
+          all("in_hand" in p for p in snapshot["players"])
+          and snapshot["num_in_hand"] == 3)
+
+
 def test_validation_edges():
     print("\nvalidation edges")
     from ofc.actions import Action, actions_for
@@ -1214,6 +1307,7 @@ def main() -> None:
     test_state()
     test_packet_shapes()
     test_turn_tracking()
+    test_who_is_in_the_hand()
     test_solver_contract()
     test_validation_edges()
     test_board_rules()

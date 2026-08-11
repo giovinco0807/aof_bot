@@ -96,6 +96,14 @@ class Player:
     board: Board = field(default_factory=Board)
     in_fantasyland: bool = False
 
+    #: Sitting at the table but not taking hands, as the client reports it.
+    sitting_out: bool = False
+    #: Dealt into the hand in progress. Occupying a seat is not the same as
+    #: contesting the hand: a player can sit out, or sit down while a hand is
+    #: already running and wait for the next one. Counting them as an
+    #: opponent turns a genuinely heads-up hand into a three-handed one.
+    dealt_in: bool = True
+
     # Hero only: the wire shows nobody else's hand or discards.
     holding: List[int] = field(default_factory=list)
     discards: List[int] = field(default_factory=list)
@@ -142,7 +150,36 @@ class Table:
         hero = self.hero
         return hero.seat_id if hero else -1
 
+    def _hand_running(self) -> bool:
+        """True when cards are out, so a new arrival cannot be in this hand."""
+        if self.hand_complete:
+            return False
+        return any(p.board.card_count() or p.holding for p in self.players.values())
+
+    def contesting(self, player: Player) -> bool:
+        """Is this seat actually playing the hand in progress?
+
+        A seat can be occupied without being in the hand — sitting out, or
+        sat down while a hand was already running and waiting for the next.
+        Counting one of those as an opponent turns a genuinely heads-up hand
+        into a three-handed one, which costs the solver that only plays
+        heads-up its whole session.
+
+        Cards settle it either way, which is what makes this right after
+        attaching mid-hand, when no game-start packet was ever seen.
+        """
+        if player.board.card_count() or player.holding:
+            return True
+        return player.dealt_in and not player.sitting_out
+
     def opponents(self) -> List[Player]:
+        """Every seat contesting the hand against hero."""
+        hero_seat = self.hero_seat
+        return [p for sid, p in sorted(self.players.items())
+                if sid != hero_seat and self.contesting(p)]
+
+    def seated(self) -> List[Player]:
+        """Every seat at the table, contesting the hand or not."""
         hero_seat = self.hero_seat
         return [p for sid, p in sorted(self.players.items()) if sid != hero_seat]
 
@@ -201,8 +238,11 @@ class Table:
         player = self.players.get(seat_id)
         if player is None or (uid and player.uid and player.uid != uid):
             # A different player in the seat: start their state clean rather
-            # than leaving the previous occupant's cards sitting there.
-            player = Player(seat_id=seat_id)
+            # than leaving the previous occupant's cards sitting there. Taking
+            # a seat while a hand is running does not join that hand, so they
+            # only count from the next deal — the alternative would make a
+            # heads-up hand look three-handed the moment somebody sat down.
+            player = Player(seat_id=seat_id, dealt_in=not self._hand_running())
             self.players[seat_id] = player
 
         player.uid = uid or player.uid
@@ -210,6 +250,8 @@ class Table:
         player.chips = _as_int(info.get("chips"), player.chips)
         if "fantasy" in info:
             player.in_fantasyland = bool(_as_int(info.get("fantasy"), 0))
+        if "sittingOut" in info:
+            player.sitting_out = bool(info.get("sittingOut"))
 
         layout = info.get("card") or {}
         if layout:
@@ -270,10 +312,20 @@ class Table:
         self.hand_complete = False
         for player in self.players.values():
             player.reset_hand()
-        for info in pkt.get("startInfo") or ():
-            seat_id = info.get("seatId", -1)
+
+        # startInfo is the client's own list of who was dealt in, so it is
+        # what decides how many opponents hero actually faces — not how many
+        # chairs are occupied. When the packet omits it, fall back to the
+        # sitting-out flag rather than assuming everybody plays.
+        start_info = pkt.get("startInfo") or ()
+        dealt_in = {_as_int(info.get("seatId"), -1) for info in start_info if info}
+        dealt_in.discard(-1)
+        for seat_id, player in self.players.items():
+            player.dealt_in = seat_id in dealt_in if dealt_in else not player.sitting_out
+        for info in start_info:
+            seat_id = _as_int((info or {}).get("seatId"), -1)
             if seat_id in self.players:
-                self.players[seat_id].chips = info.get("chips", 0)
+                self.players[seat_id].chips = _as_int(info.get("chips"), 0)
 
     def on_hand_card(self, pkt: dict) -> None:
         """Record a deal.
@@ -494,6 +546,10 @@ class Table:
             "hero_to_act": self.hero_to_act(),
             "hero_has_decision": self.hero_has_decision(),
             "hand_complete": self.hand_complete,
+            "seated": len(self.players),
+            #: Seats contesting the hand, which is what decides whether this
+            #: is heads-up — not how many chairs are taken.
+            "num_in_hand": sum(1 for p in self.players.values() if self.contesting(p)),
             "players": [
                 {
                     "seat_id": p.seat_id,
@@ -502,6 +558,8 @@ class Table:
                     "chips": p.chips,
                     "is_hero": p.seat_id == hero_seat,
                     "in_fantasyland": p.in_fantasyland,
+                    "in_hand": self.contesting(p),
+                    "sitting_out": p.sitting_out,
                     "board": p.board.to_texts(),
                     "holding": [code_to_text(c) for c in p.holding],
                     "discards": [code_to_text(c) for c in p.discards],
