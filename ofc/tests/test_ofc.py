@@ -793,6 +793,8 @@ def test_board_rules():
 def test_placer_safety():
     print("\nplacer safety")
     import json
+    import types
+    from ofc import placer as placer_module
     from ofc.placer import Layout, Placer
     from ofc.solver import Advice, Candidate
     from ofc.actions import Action
@@ -886,6 +888,64 @@ def test_placer_safety():
     check("a layout measured at another window size is caught",
           any("recalibrate" in p or "not found" in p
               for p in stale.window_problems() or ["not found"]))
+
+    # A drag has to land on the client and nowhere else. Both halves of that
+    # — the point being inside the window, and the window actually being in
+    # front — are checked here without a real win32, because the machine that
+    # runs these tests is not the machine that plays.
+    check("a point inside the client is inside",
+          placer._in_window((500, 400), (0, 0, 1000, 800)))
+    check("a point past the right edge is outside",
+          not placer._in_window((1200, 400), (0, 0, 1000, 800)))
+    check("a point above the top edge is outside",
+          not placer._in_window((500, 50), (0, 100, 1000, 800)))
+    check("bounds follow the window when it moves",
+          placer._in_window((1100, 400), (900, 100, 1000, 800)))
+
+    # execute() reaches its own checks only past the platform ones, which on
+    # anything but Windows refuse first. Standing those two down leaves the
+    # part that is the same everywhere.
+    def _armed(stub_rect, focus_reason=None):
+        armed = Placer(layout, verbose=False)
+        armed.enabled = True
+        armed.input_problems = lambda: []
+        armed.window_problems = lambda: []
+        armed._focus = lambda: focus_reason
+        armed.drags = []
+        armed.drag = lambda start, end, steps=24: (armed.drags.append((start, end))
+                                                   or True)
+        armed._controller = types.SimpleNamespace(tap=lambda *a, **k: None)
+        placer_module.client_rect = lambda title="PPPoker": stub_rect
+        return armed
+
+    real_client_rect = placer_module.client_rect
+    try:
+        # A window too short for the stored coordinates: the hand strip at
+        # y=40 falls below the bottom edge, so every drag would start on
+        # whatever is behind the client.
+        cramped = _armed((0, 0, 1064, 35))
+        check("a drag that would land outside the client is refused",
+              cramped.execute(advice, request) is False)
+        check("and no drag is attempted at all", cramped.drags == [],
+              str(cramped.drags))
+
+        # Windows refuses foreground steals silently, so a refusal has to
+        # stop the placement rather than be dragged through.
+        covered = _armed((0, 0, 1064, 970), focus_reason="the client would not "
+                         "come to the front")
+        check("a client that will not come forward is refused",
+              covered.execute(advice, request) is False)
+        check("and nothing is dragged across whatever covers it",
+              covered.drags == [], str(covered.drags))
+
+        # With both satisfied, the same position does place.
+        clear = _armed((0, 0, 1064, 970))
+        check("a focused client with in-bounds points does place",
+              clear.execute(advice, request) is True)
+        check("every planned card was dragged", len(clear.drags) == 2,
+              str(clear.drags))
+    finally:
+        placer_module.client_rect = real_client_rect
 
     # A dry run plans without needing the mouse, so a calibration can be
     # reviewed from anywhere; it must still refuse to report success.

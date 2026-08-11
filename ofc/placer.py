@@ -246,19 +246,45 @@ class Placer:
         ctypes.windll.user32.GetCursorPos(ctypes.byref(point))
         return int(point.x), int(point.y)
 
-    def _focus(self) -> bool:
-        """Bring the client to the front, so a drag lands on it and not on
-        whatever the user has on top."""
+    def _focus(self) -> Optional[str]:
+        """Bring the client to the front. Returns a reason it failed, or None.
+
+        Asking is not the same as getting it: Windows refuses
+        ``SetForegroundWindow`` from a process that does not own the current
+        foreground window, and it refuses silently. Taking the return value
+        on trust is how a placement ends up dragged across whatever the user
+        actually has on top, so the result is read back.
+        """
         try:
             import ctypes                             # noqa: PLC0415
+
+            user32 = ctypes.windll.user32
             hwnd = self._pc()._find_hwnd()
             if not hwnd:
-                return False
-            ctypes.windll.user32.SetForegroundWindow(hwnd)
-            time.sleep(0.12)
-            return True
-        except Exception:                             # noqa: BLE001
-            return False
+                return f"the {self.window_title} window was not found"
+            # Already there: say so without the wait. This runs before every
+            # drag, and five settling delays per placement is time the table
+            # clock does not give back.
+            if user32.GetForegroundWindow() == hwnd and not user32.IsIconic(hwnd):
+                return None
+            if user32.IsIconic(hwnd):
+                user32.ShowWindow(hwnd, 9)            # SW_RESTORE
+                time.sleep(0.2)
+            user32.SetForegroundWindow(hwnd)
+            time.sleep(0.15)
+            if user32.GetForegroundWindow() != hwnd:
+                return ("the client would not come to the front — a drag would "
+                        "have landed on whatever is covering it")
+            if user32.IsIconic(hwnd):
+                return "the client is minimised"
+            return None
+        except Exception as exc:                      # noqa: BLE001
+            return f"could not focus the client: {type(exc).__name__}: {exc}"
+
+    def _in_window(self, point: Tuple[int, int],
+                   rect: Tuple[int, int, int, int]) -> bool:
+        x, y, width, height = rect
+        return x <= point[0] < x + width and y <= point[1] < y + height
 
     def drag(self, start: Tuple[int, int], end: Tuple[int, int],
              steps: int = 24) -> bool:
@@ -450,15 +476,34 @@ class Placer:
                 return False
             origin = (rect[0], rect[1])
 
-            if not self._focus():
-                self._refuse("could not bring the client to the front; a drag "
-                             "would have landed on whatever is on top")
+            # Every point has to land inside the client. A calibration made
+            # against a different layout can put one outside, and a drag that
+            # starts or ends off the window is a drag on another application.
+            for move in moves:
+                for point in (_offset(move["from"], origin),
+                              _offset(move["to"], origin)):
+                    if not self._in_window(point, rect):
+                        self._refuse(f"{move['card']} would be dragged to {point}, "
+                                     f"outside the client window {rect} — "
+                                     "recalibrate")
+                        return False
+
+            problem = self._focus()
+            if problem:
+                self._refuse(problem)
                 return False
 
             for index, move in enumerate(moves, start=1):
                 if self.should_continue is not None and not self.should_continue():
                     self.aborted = True
                     self._refuse(f"stopped after {index - 1} of {len(moves)} drags")
+                    return False
+                # Focus can be taken between drags as easily as before the
+                # first one, and a half-placed board is worse than none.
+                problem = self._focus()
+                if problem:
+                    self._refuse(f"{problem}; stopped after {index - 1} of "
+                                 f"{len(moves)} drags")
                     return False
                 if self.verbose:
                     print(f"  [OFC place] {move['card']} -> "
