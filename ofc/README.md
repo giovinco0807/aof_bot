@@ -359,7 +359,20 @@ OFC の配置はドラッグ操作で、`PcController` にはタップしか無�
 ```
 python -m ofc.placer --calibrate    # 各位置にマウスを乗せて Enter
 python -m ofc.placer --show         # 保存済みレイアウト
-python -m ofc.placer --dry-run      # クリックせずに手順だけ表示
+
+# 実卓に繋いで、クリックせずに毎回のドラッグ手順だけ出す（推奨: これで先に確認する）
+python -m ofc.main --hero-uid <UID> --solver m3 --dry-place
+
+# 納得してから初めて
+python -m ofc.main --hero-uid <UID> --solver m3 --auto-place
+```
+
+`--dry-place` の出力例:
+
+```
+  [OFC place] dry run — nothing will be clicked:
+    Ac -> bottom[2]  (100, 400) -> (200, 300)
+    5s -> bottom[3]  (150, 400) -> (250, 300)
 ```
 
 座標が 1 つでも未計測なら `Placer.readiness()` が実行を拒否する。

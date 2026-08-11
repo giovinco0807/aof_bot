@@ -60,6 +60,9 @@ def main() -> None:
                         help="print the thinking time that would be used and exit")
     parser.add_argument("--auto-place", action="store_true",
                         help="actually place the cards (needs a calibrated layout)")
+    parser.add_argument("--dry-place", action="store_true",
+                        help="print the drags each decision would make, click nothing "
+                             "— check a calibration against live hands this way first")
     parser.add_argument("--list-solvers", action="store_true")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
@@ -119,19 +122,27 @@ def main() -> None:
                      "which seat is yours")
 
     on_advice = None
-    if args.auto_place:
+    if args.auto_place or args.dry_place:
         from ofc.placer import Placer
-        placer = Placer()
+        placer = Placer(dry_run=args.dry_place)
         problems = placer.readiness()
         if problems:
-            print("auto-place refused — the layout is not ready:")
+            print("placement refused — the layout is not ready:")
             for problem in problems:
                 print(f"  {problem}")
             print("run:  python -m ofc.placer --calibrate")
             return
         placer.enabled = True
-        on_advice = placer.execute
-        print("auto-place is ON — move the mouse to a screen corner to abort")
+
+        # The advisor hands over the request alongside the advice, because
+        # the drags need the dealt order and the board the cards go onto.
+        def on_advice(advice, request):
+            placer.execute(advice, request)
+
+        if args.dry_place:
+            print("dry placement — every drag will be printed, nothing clicked")
+        else:
+            print("auto-place is ON — move the mouse to a screen corner to abort")
 
     advisor = Advisor(hero_uid=args.hero_uid, solver=args.solver,
                       time_budget=budget, verbose=not args.quiet,
@@ -140,7 +151,7 @@ def main() -> None:
                          verbose=not args.quiet)
 
     print(f"solver: {args.solver} | hero uid: {args.hero_uid} | "
-          f"mode: {'auto-place' if on_advice else 'advice only'}")
+          f"mode: {'dry placement' if args.dry_place else 'auto-place' if on_advice else 'advice only'}")
     print(f"thinking time: {budget.describe()}")
     try:
         capture.run()

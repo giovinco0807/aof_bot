@@ -44,16 +44,20 @@ class Advisor:
     """Turns the OFC packet stream into advice events.
 
     ``event_queue`` receives the events; anything with ``put_nowait`` works,
-    including the queue the existing GUIs already drain. ``on_advice`` is an
-    optional callback for a caller that wants the advice directly — the
-    automation layer uses it, and it runs on the worker thread.
+    including the queue the existing GUIs already drain.
+
+    ``on_advice(advice, request)`` is an optional callback for a caller that
+    wants to act on the answer — the placement layer uses it, and it runs on
+    the worker thread. The request comes with it because playing an action
+    needs the position it belongs to: the cards dealt, in the order they
+    arrived, and the board they go onto.
     """
 
     def __init__(self,
                  hero_uid: int = 0,
                  solver: str = "baseline",
                  event_queue: Optional[queue.Queue] = None,
-                 on_advice: Optional[Callable[[Advice], None]] = None,
+                 on_advice: Optional[Callable[[Advice, "SolveRequest"], None]] = None,
                  time_budget=None,
                  verbose: bool = True,
                  record: bool = True,
@@ -262,9 +266,13 @@ class Advisor:
         # A fouling line still gets played — sometimes every line fouls. An
         # action that failed validation outright never does. Neither does one
         # that finished after the advisor was stopped.
+        #
+        # The request goes with the advice because acting on it needs the
+        # position: which cards were dealt, in what order, and what was
+        # already on the board. An advice alone cannot be played.
         if self.on_advice is not None and check.ok and self._running:
             try:
-                self.on_advice(advice)
+                self.on_advice(advice, request)
             except Exception as exc:               # noqa: BLE001
                 if self.verbose:
                     print(f"  [OFC] advice callback failed: {type(exc).__name__}: {exc}")

@@ -809,15 +809,17 @@ def test_placer_safety():
     ac, five, three = text_to_code("Ac"), text_to_code("5s"), text_to_code("3h")
     action = Action(((ac, BOTTOM), (five, MIDDLE)), discard=three)
     advice = Advice(candidates=[Candidate(action=action, ev=1.0)])
+    board = Board(top=C("2h"), middle=C("Kh", "7c"), bottom=C("As", "Ad"))
+    request = SolveRequest(board=board, dealt=[ac, five, three], street=1,
+                           opponents=[OpponentView(seat_id=1, board=Board())])
 
     placer = Placer(layout, verbose=False)
     check("a disabled placer places nothing",
-          placer.execute(advice, hand_order=[ac, five, three]) is False)
-    check("a placer with no hand order refuses",
-          Placer(layout, verbose=False).execute(advice) is False)
+          placer.execute(advice, request) is False)
+    check("a placer with no request refuses",
+          Placer(layout, verbose=False).execute(advice, None) is False)
 
     # Slots must be counted from the first free position, not from zero.
-    board = Board(top=C("2h"), middle=C("Kh", "7c"), bottom=C("As", "Ad"))
     moves = placer.plan(advice, hand_order=[ac, five, three], board=board)
     slots = {m["row"]: m["slot"] for m in moves}
     check("a partly filled row is placed at its next free slot",
@@ -832,6 +834,49 @@ def test_placer_safety():
     unknown = placer.plan(advice, hand_order=[five, three], board=Board())
     check("a card missing from the hand order is flagged, not guessed at",
           any(m["unknown_source"] for m in unknown))
+
+    # A dry run plans without needing the mouse, so a calibration can be
+    # reviewed from anywhere; it must still refuse to report success.
+    dry = Placer(layout, verbose=False, dry_run=True)
+    dry.enabled = True
+    check("a dry run needs only the layout", dry.readiness() == [],
+          str(dry.readiness()))
+    check("and still reports that nothing was placed",
+          dry.execute(advice, request) is False)
+    check("an uncalibrated dry run is still refused",
+          Placer(Layout(), verbose=False, dry_run=True).readiness() != [])
+
+    # The advice has to reach the placer at all — the wiring that carries the
+    # request alongside it is the part that was broken.
+    from ofc.advisor import Advisor
+
+    seen = []
+    advisor = Advisor(hero_uid=1001, solver="baseline", verbose=False, record=False,
+                      on_advice=lambda a, r: seen.append((a, r)))
+    advisor.start()
+    try:
+        advisor.feed("PineRoomStatusBRC", 1, {"players": [
+            {"uid": 1001, "seatId": 0, "name": "hero"},
+            {"uid": 2002, "seatId": 1, "name": "villain"}]})
+        advisor.feed("PineGameStartBRC", 1, {
+            "gameId": "g", "dealerSeatId": 0,
+            "startInfo": [{"seatId": 0}, {"seatId": 1}]})
+        advisor.feed("PineHandCardBRC", 1, {"actionSeatId": 0, "handCards": [
+            {"uid": 1001, "seatId": 0,
+             "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")],
+             "round": 0}]})
+        time.sleep(0.6)
+    finally:
+        advisor.stop()
+
+    check("a decision reaches the placement callback", len(seen) == 1)
+    if seen:
+        advice_out, request_out = seen[0]
+        check("and it arrives with the position it belongs to",
+              request_out is not None and len(request_out.dealt) == 5)
+        plan = placer.plan(advice_out, list(request_out.dealt), request_out.board)
+        check("which is enough to plan every drag",
+              len(plan) == 5 and all(m["from"] and m["to"] for m in plan))
 
 
 def test_advisor():

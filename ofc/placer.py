@@ -112,20 +112,63 @@ class Placer:
     instead of being pushed into that class, which the working bot depends on.
     """
 
-    def __init__(self, layout: Optional[Layout] = None, verbose: bool = True):
+    def __init__(self, layout: Optional[Layout] = None, verbose: bool = True,
+                 dry_run: bool = False):
         self.layout = layout if layout is not None else Layout.load()
         self.verbose = verbose
         self.enabled = False                 # must be set on purpose
+        #: Plan and print the drags without performing any. The way to check
+        #: a calibration against live hands before letting it touch the mouse.
+        self.dry_run = dry_run
         self._controller = None
 
     # ------------------------------------------------------------ readiness
     def readiness(self) -> List[str]:
-        """Everything standing between this and a safe placement."""
+        """Everything standing between this and a safe placement.
+
+        A dry run only needs the layout — it never touches the mouse — so
+        the input-layer checks are skipped for it. That way a calibration
+        can be reviewed from anywhere, not only from the machine that will
+        play with it.
+        """
         problems = list(self.layout.missing())
-        try:
-            self._pc()
-        except Exception as exc:             # noqa: BLE001
-            problems.append(f"input layer unavailable: {type(exc).__name__}: {exc}")
+        if self.dry_run:
+            return problems
+        return problems + self.input_problems()
+
+    def input_problems(self) -> List[str]:
+        """Why the mouse could not be driven, if it could not.
+
+        Checks the input layer for real rather than only constructing it: a
+        missing dependency that surfaces as a printed warning during setup
+        would otherwise surface as a placement that silently does nothing.
+        """
+        problems: List[str] = []
+
+        # The drag is SetCursorPos + mouse_event, which is win32 only.
+        if sys.platform != "win32":
+            problems.append(f"dragging needs Windows; this is {sys.platform}")
+        else:
+            try:
+                import ctypes
+                ctypes.windll.user32
+            except Exception as exc:         # noqa: BLE001
+                problems.append(f"no user32 to drag with: {type(exc).__name__}: {exc}")
+
+        # Only the confirm tap goes through PcController, so pyautogui is
+        # required exactly when a confirm button was calibrated.
+        if self.layout.confirm:
+            try:
+                self._pc()
+            except Exception as exc:         # noqa: BLE001
+                problems.append(f"input layer unavailable: {type(exc).__name__}: {exc}")
+            else:
+                try:
+                    import pyautogui             # noqa: F401,PLC0415
+                except ImportError:
+                    problems.append("a confirm button is calibrated but pyautogui is "
+                                    "missing, so it could not be pressed — "
+                                    "pip install pyautogui")
         return problems
 
     def _pc(self):
@@ -235,12 +278,18 @@ class Placer:
             })
         return moves
 
-    def execute(self, advice: Advice, hand_order: Optional[List[int]] = None,
-                board: Optional["object"] = None) -> bool:
+    def execute(self, advice: Advice, request,
+                hand_order: Optional[List[int]] = None) -> bool:
         """Perform the placement. Returns False if nothing was placed.
 
-        Refuses rather than improvises: an uncalibrated slot, a card whose
-        position on the strip is unknown, or the safety still off all stop
+        ``request`` is the position the advice answers, and it is required:
+        the drags need the cards in the order they were dealt and the board
+        they go onto, neither of which an :class:`Advice` carries. Pass
+        ``hand_order`` to override the dealt order when the strip has been
+        read off the screen.
+
+        Refuses rather than improvises. An uncalibrated slot, a card whose
+        position on the strip is unknown, or the safety still off each stop
         the placement before anything moves.
         """
         if not self.enabled:
@@ -255,14 +304,22 @@ class Placer:
                     print(f"  [OFC place] refused: {problem}")
             return False
 
-        if hand_order is None:
+        if request is None:
             if self.verbose:
-                print("  [OFC place] refused: hand_order is required — without it "
-                      "the drags would pick up the wrong cards")
+                print("  [OFC place] refused: no request — the drags would not "
+                      "know which card is where on the strip")
             return False
 
-        moves = self.plan(advice, hand_order, board)
+        order = list(hand_order) if hand_order is not None else list(request.dealt)
+        moves = self.plan(advice, order, request.board)
         if not moves:
+            return False
+
+        if self.dry_run:
+            print("  [OFC place] dry run — nothing will be clicked:")
+            for move in moves:
+                print(f"    {move['card']} -> {move['row']}[{move['slot']}]  "
+                      f"{move['from']} -> {move['to']}")
             return False
 
         for move in moves:
