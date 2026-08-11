@@ -905,6 +905,140 @@ def test_time_budget():
           plain is not None and plain.time_budget == 2.0)
 
 
+def test_m3_engine():
+    """The pineapple m3 engine plug-in, when it is available.
+
+    Skipped unless the regular-OFC project is checked out and built — set
+    OFC_REGULAR_ROOT. The decoding test below runs either way, because it is
+    pure arithmetic on the engine's key format and a change there would
+    otherwise only show up as silently missing candidates.
+    """
+    print("\nm3 engine plug-in")
+    from ofc.solvers.m3engine import M3Engine, decode_action_key
+
+    # The action-key format: rak1:<top>:<middle>:<bottom>:<discard>, four
+    # 52-bit masks, bit = suit*13 + rank over suits "hdcs", ranks "2".."A".
+    def mask(*texts):
+        value = 0
+        for t in texts:
+            value |= 1 << ("hdcs".index(t[1]) * 13 + "23456789TJQKA".index(t[0]))
+        return f"{value:013x}"
+
+    token = f"rak1:{mask()}:{mask()}:{mask('Ac', '5s')}:{mask('3h')}"
+    action = decode_action_key(token)
+    check("an action key decodes to the right placements",
+          action is not None
+          and sorted((code_to_text(c), r) for c, r in action.placements)
+              == [("5s", BOTTOM), ("Ac", BOTTOM)],
+          str(action))
+    check("an action key decodes the discard",
+          action is not None and action.mucked == (text_to_code("3h"),))
+
+    spread = f"rak1:{mask('Kh')}:{mask('As', 'Ad')}:{mask('7c', '2d')}:{mask()}"
+    action = decode_action_key(spread)
+    check("a key spanning every row decodes",
+          action is not None and len(action.placements) == 5 and not action.mucked)
+
+    for bad in ("", "rak1:x", "nope:0:0:0:0", "rak1:0:0:0:0",
+                f"rak1:{mask()}:{mask()}:{mask()}"):
+        if decode_action_key(bad) is not None:
+            check(f"a malformed key {bad[:18]!r} is rejected", False)
+            break
+    else:
+        check("malformed action keys are rejected rather than raising", True)
+
+    engine = M3Engine()
+    if engine.load() is None:
+        print(f"  -- engine unavailable, live tests skipped ({engine.error})")
+        return
+
+    def spot(street, hero, opponent, dealt, discards=()):
+        return SolveRequest(
+            board=hero, dealt=texts_to_codes(dealt), street=street,
+            discards=texts_to_codes(discards),
+            opponents=[OpponentView(seat_id=1, name="v", board=opponent)])
+
+    live = [
+        ("T0 first", spot(0, Board(), Board(), ["As", "Ad", "Kh", "7c", "2d"])),
+        ("T0 second", spot(0, Board(),
+                           Board.from_texts(top=["2h"], middle=["9s", "8s"],
+                                            bottom=["Qc", "Jc"]),
+                           ["As", "Ad", "Kh", "7c", "2d"])),
+        ("T1 first", spot(1, Board.from_texts(top=["2d"], middle=["Kh", "7c"],
+                                              bottom=["As", "Ad"]),
+                          Board.from_texts(top=["3c"], middle=["9s", "9d"],
+                                           bottom=["Qh", "Jh"]),
+                          ["Ac", "5s", "3h"])),
+        ("T2 first", spot(2, Board.from_texts(top=["2d"], middle=["Kh", "7c", "5s"],
+                                              bottom=["As", "Ad", "Ac"]),
+                          Board.from_texts(top=["3c"], middle=["9s", "9d", "8h"],
+                                           bottom=["Qh", "Jh", "Th"]),
+                          ["Kd", "6c", "4h"], ["2c"])),
+        ("T3 first", spot(3, Board.from_texts(top=["2d", "4c"],
+                                              middle=["Kh", "7c", "5s", "6d"],
+                                              bottom=["As", "Ad", "Ac"]),
+                          Board.from_texts(top=["3c", "5h"],
+                                           middle=["9s", "9d", "8h", "7h"],
+                                           bottom=["Qh", "Jh", "Th"]),
+                          ["Qs", "8d", "3d"], ["2c", "4d"])),
+    ]
+    for label, request in live:
+        advice = solve(request, "m3")
+        if advice.best is None:
+            check(f"{label} is answered", False, advice.note)
+            continue
+        result = validate(request, advice.best.action)
+        check(f"{label} is answered and legal", result.ok,
+              f"{advice.note} / {result.errors}")
+        # Latency is reported rather than asserted: it depends on the machine,
+        # and pinning this box's numbers as a correctness bound would make the
+        # suite fail on a slower one for no good reason. The ceiling below is
+        # only a "something is badly wrong" guard.
+        print(f"       {label}: {advice.elapsed * 1000:6.0f} ms, "
+              f"{len(advice.candidates)} candidate(s)")
+        check(f"{label} finishes at all", advice.elapsed < 60.0,
+              f"{advice.elapsed:.1f}s")
+
+    # A ranked street must return the whole fan, not a single pick.
+    ranked = solve(live[2][1], "m3")
+    check("a ranked street returns every legal candidate",
+          len(ranked.candidates) == len(live[2][1].legal_actions()),
+          f"{len(ranked.candidates)} vs {len(live[2][1].legal_actions())}")
+    check("and ranks them best first",
+          all(ranked.candidates[i].ev >= ranked.candidates[i + 1].ev
+              for i in range(len(ranked.candidates) - 1)))
+
+    # Positions the engine cannot serve must decline with a reason, never
+    # raise and never answer wrongly.
+    refusals = [
+        ("three-handed", SolveRequest(
+            board=Board(), dealt=texts_to_codes(["As", "Ad", "Kh", "7c", "2d"]),
+            opponents=[OpponentView(seat_id=1, board=Board()),
+                       OpponentView(seat_id=2, board=Board())])),
+        ("no opponent", SolveRequest(
+            board=Board(), dealt=texts_to_codes(["As", "Ad", "Kh", "7c", "2d"]))),
+        ("fantasyland", SolveRequest(
+            board=Board(), in_fantasyland=True,
+            dealt=texts_to_codes(["As", "Ad", "Kh", "7c", "2d", "3c", "4d", "5h",
+                                  "6s", "7d", "8c", "9h", "Ts"]),
+            opponents=[OpponentView(seat_id=1, board=Board())])),
+        ("board does not match the street", spot(
+            1, Board.from_texts(top=["2d"], middle=["Kh"], bottom=["As"]),
+            Board.from_texts(top=["3c"], middle=["9s"], bottom=["Qh"]),
+            ["Ac", "5s", "3h"])),
+        ("hero discards missing", spot(
+            2, Board.from_texts(top=["2d"], middle=["Kh", "7c", "5s"],
+                                bottom=["As", "Ad", "Ac"]),
+            Board.from_texts(top=["3c"], middle=["9s", "9d", "8h"],
+                             bottom=["Qh", "Jh", "Th"]),
+            ["Kd", "6c", "4h"])),
+    ]
+    for label, request in refusals:
+        advice = solve(request, "m3")
+        check(f"{label} is declined with a reason",
+              advice.best is None and bool(advice.note), advice.note)
+
+
 def test_gui_picker():
     """The click-to-pick path, when a display is available.
 
@@ -1022,6 +1156,7 @@ def main() -> None:
     test_board_rules()
     test_placer_safety()
     test_advisor()
+    test_m3_engine()
     test_time_budget()
     test_gui_picker()
     test_pipeline()

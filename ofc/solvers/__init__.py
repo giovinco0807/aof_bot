@@ -12,7 +12,7 @@ taking the whole package down with it.
 import importlib
 from typing import Dict, List
 
-_BUILTIN = ("baseline",)
+_BUILTIN = ("baseline", "m3engine")
 
 #: Modules that failed to import, mapped to why. Shown by the GUI and CLI so
 #: a solver that quietly did not load is visible instead of just absent.
