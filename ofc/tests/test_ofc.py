@@ -1138,6 +1138,69 @@ def test_gui_picker():
         gui.events.put({"type": "ofc_advice"})
         gui._drain()
         check("a malformed event does not stop the event pump", True)
+
+        # Following a live hand: the window has to keep up between hero's
+        # turns, not only when advice arrives.
+        from ofc.advisor import Advisor
+
+        gui._clear_manual()
+        hero_uid = 1001
+        advisor = Advisor(hero_uid=hero_uid, solver="baseline",
+                          event_queue=gui.events, verbose=False)
+        advisor.start()
+
+        def pine_card(top=(), mid=(), bot=()):
+            return {"headCard": [_wire(c) for c in top],
+                    "middleCard": [_wire(c) for c in mid],
+                    "tailCard": [_wire(c) for c in bot], "abandonCard": []}
+
+        def settle():
+            time.sleep(0.3)
+            gui._drain()
+            gui.root.update_idletasks()
+
+        try:
+            advisor.feed("PineRoomStatusBRC", 7, {"players": [
+                {"uid": hero_uid, "seatId": 0, "name": "hero"},
+                {"uid": 2002, "seatId": 1, "name": "villain"}]})
+            advisor.feed("PineGameStartBRC", 7, {"gameId": "g1", "dealerSeatId": 0})
+            settle()
+            check("a seated opponent appears on screen", len(gui.opp_canvases) == 1)
+
+            # The opponent acting is not hero's turn, so nothing would be
+            # rendered at all if the window only followed advice.
+            advisor.feed("PineActionBRC", 7, {
+                "uid": 2002, "seatId": 1,
+                "card": pine_card(top=["3c"], mid=["9s", "9d"], bot=["Qh", "Jh"])})
+            settle()
+            check("an opponent's placement shows without any advice",
+                  bool(gui.var_opp.get()), repr(gui.var_opp.get()))
+
+            advisor.feed("PineHandCardBRC", 7, {"actionSeatId": 0, "handCards": [
+                {"uid": hero_uid, "seatId": 0,
+                 "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")],
+                 "round": 0}]})
+            settle()
+            check("hero's deal reaches the window",
+                  gui.var_dealt.get().split() == ["As", "Ad", "Kh", "7c", "2d"],
+                  repr(gui.var_dealt.get()))
+
+            advisor.feed("PineActionBRC", 7, {
+                "uid": hero_uid, "seatId": 0,
+                "card": pine_card(top=["2d"], mid=["Kh", "7c"], bot=["As", "Ad"])})
+            settle()
+            check("hero's own placement follows",
+                  (gui.var_top.get(), gui.var_mid.get(), gui.var_bot.get())
+                  == ("2d", "Kh 7c", "As Ad"))
+            check("and the hand empties once placed", gui.var_dealt.get() == "")
+        finally:
+            advisor.stop()
+
+        for state in ("waiting for the client…", "attached — following the table"):
+            gui.events.put({"type": "ofc_status", "state": state})
+            gui._drain()
+            check(f"the status label shows {state.split()[0]!r}",
+                  gui.var_status.get() == state)
     finally:
         gui.root.destroy()
 

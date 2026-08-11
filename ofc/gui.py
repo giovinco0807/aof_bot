@@ -727,7 +727,7 @@ class OfcGui:
 
         self.btn_start.config(state="disabled")
         self.btn_stop.config(state="normal")
-        self.var_status.set("attaching…")
+        self.var_status.set("waiting for the client…")
         # Tk variables belong to the thread that made the root window, so
         # everything the worker needs is read here and passed in. Calling
         # .get() from the capture thread raises out of the Tcl interpreter.
@@ -736,11 +736,27 @@ class OfcGui:
                                                daemon=True)
         self.capture_thread.start()
 
+    #: What each capture state should say in the status label.
+    _STATUS_TEXT = {
+        "waiting": "waiting for the client…",
+        "attached": "attached — following the table",
+        "disconnected": "client closed — waiting",
+    }
+
     def _run_capture(self, process: str) -> None:
+        def on_status(state: str) -> None:
+            # Runs on the capture thread; Tk variables belong to the main
+            # one, so this goes through the same queue as everything else.
+            self.events.put({"type": "ofc_status",
+                             "state": self._STATUS_TEXT.get(state, state)})
+            self.events.put({"type": "ofc_log", "line": f"capture: {state}"})
+
         try:
             from ofc.capture import OfcCapture
-            self.capture = OfcCapture(process_name=process, advisor=self.advisor)
-            self.root.after(0, lambda: self.var_status.set("attached"))
+            self.capture = OfcCapture(process_name=process, advisor=self.advisor,
+                                      on_status=on_status)
+            # Waits for PPPoker rather than refusing when it is not up yet,
+            # and re-attaches by itself when the client restarts.
             self.capture.run()
         except Exception as exc:                   # noqa: BLE001
             message = f"{type(exc).__name__}: {exc}"
@@ -783,12 +799,58 @@ class OfcGui:
                     kind = event.get("type")
                     if kind == "ofc_advice":
                         self._on_live_advice(event)
+                    elif kind == "ofc_state":
+                        self._on_live_state(event)
                     elif kind == "ofc_result":
+                        self._on_live_state(event)
                         self._say(f"hand finished on table {event.get('table_id')}")
+                    elif kind == "ofc_status":
+                        self.var_status.set(event.get("state", ""))
+                    elif kind == "ofc_log":
+                        self._say(event.get("line", ""))
                 except Exception as exc:           # noqa: BLE001
                     self._say(f"could not render event: {type(exc).__name__}: {exc}")
         finally:
             self.root.after(100, self._drain)
+
+    def _on_live_state(self, event: dict) -> None:
+        """Follow the table between decisions.
+
+        The advisor emits this on every packet, so the window keeps up with
+        the hand as it is played — opponents placing cards, seats filling,
+        the deal arriving — rather than jumping only at hero's turn.
+        """
+        players = event.get("players") or []
+        if not players:
+            return
+
+        hero = next((p for p in players if p.get("is_hero")), None)
+        opponents = [p for p in players if not p.get("is_hero")]
+
+        if hero is not None:
+            board = hero.get("board") or {}
+            self.var_top.set(" ".join(board.get("top", [])))
+            self.var_mid.set(" ".join(board.get("middle", [])))
+            self.var_bot.set(" ".join(board.get("bottom", [])))
+            self.var_dealt.set(" ".join(hero.get("holding", [])))
+
+        # The opponent field holds one flat list, so only the first opponent
+        # is mirrored into it; every opponent is still drawn below the board.
+        if opponents:
+            first = opponents[0].get("board") or {}
+            self.var_opp.set(" ".join(first.get("bottom", []) + first.get("middle", [])
+                                      + first.get("top", [])))
+
+        self._sync_manual()
+        self._render_opponents([
+            OpponentView(seat_id=p.get("seat_id", -1), name=p.get("name", ""),
+                         board=Board.from_texts(**(p.get("board") or {})))
+            for p in opponents
+        ])
+
+        street = event.get("street")
+        turn = " — your turn" if event.get("hero_to_act") else ""
+        self.var_deck.set(f"table {event.get('table_id')} · street {street}{turn}")
 
     def _on_live_advice(self, event: dict) -> None:
         request = event.get("request", {})

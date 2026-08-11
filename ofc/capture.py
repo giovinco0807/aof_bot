@@ -17,6 +17,7 @@ If you would rather run one process for both games, use
 """
 
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Optional
@@ -62,19 +63,38 @@ def find_pid(process_name: str) -> Optional[int]:
 
 
 class OfcCapture:
-    """Frida session that feeds OFC packets to an advisor."""
+    """Frida session that feeds OFC packets to an advisor.
+
+    Attaching is a loop, not a one-shot. PPPoker is normally started after
+    the bot, restarted during a session, or simply not up yet when the user
+    presses the button — and each of those should mean "wait", not "give up".
+    :meth:`run` therefore waits for the process to appear, attaches, and goes
+    back to waiting if the session drops.
+    """
 
     def __init__(self, process_name: str = "PPPoker.exe", advisor=None,
-                 hook_script: Path = HOOK_SCRIPT, verbose: bool = True):
+                 hook_script: Path = HOOK_SCRIPT, verbose: bool = True,
+                 reconnect: bool = True, poll_interval: float = 2.0,
+                 on_status=None):
         self.process_name = process_name
         self.advisor = advisor
         self.hook_script = Path(hook_script)
         self.verbose = verbose
+        #: Keep waiting for the process, and re-attach if the session drops.
+        self.reconnect = reconnect
+        self.poll_interval = poll_interval
+        #: Called with a short state word — waiting / attached / disconnected.
+        #: Runs on the capture thread, so a GUI must marshal it.
+        self.on_status = on_status
 
         self.running = False
+        self.attached = False
         self.packets = 0
+        self.attaches = 0
         self.session = None
         self.script = None
+        self._dropped = threading.Event()
+        self._stopping = False
 
     # ------------------------------------------------------------ lifecycle
     def start(self) -> None:
@@ -99,19 +119,48 @@ class OfcCapture:
         if self.verbose:
             print(f"  [OFC] attaching to {self.process_name} (pid {pid})")
 
+        self._dropped.clear()
         self.session = frida.attach(pid)
+        # The client closing, crashing, or being restarted all arrive here;
+        # without this the capture would sit on a dead session forever.
+        try:
+            self.session.on("detached", self._on_detached)
+        except Exception:                          # noqa: BLE001 - older frida
+            pass
         self.script = self.session.create_script(self.hook_script.read_text(encoding="utf-8"))
         self.script.on("message", self._on_message)
         self.script.load()
         self.running = True
+        self.attached = True
+        self.attaches += 1
 
         if self.advisor is not None:
             self.advisor.start()
+        self._status("attached")
         if self.verbose:
-            print("  [OFC] hook loaded, waiting for OFC packets")
+            print("  [OFC] hook loaded, following the table")
+
+    def _on_detached(self, *args) -> None:
+        self.attached = False
+        self._dropped.set()
+        reason = args[0] if args else "detached"
+        self._status("disconnected")
+        if self.verbose:
+            print(f"  [OFC] session ended ({reason})")
+
+    def _status(self, state: str) -> None:
+        if self.on_status is None:
+            return
+        try:
+            self.on_status(state)
+        except Exception:                          # noqa: BLE001
+            pass
 
     def stop(self) -> None:
+        self._stopping = True
         self.running = False
+        self.attached = False
+        self._dropped.set()
         if self.script is not None:
             try:
                 self.script.unload()
@@ -128,13 +177,76 @@ class OfcCapture:
             self.advisor.stop()
 
     def run(self) -> None:
-        """Attach and block until stopped."""
-        self.start()
+        """Follow the client until stopped.
+
+        Waits for PPPoker to appear rather than refusing when it is not up,
+        and re-attaches after it restarts. With ``reconnect`` off this is the
+        old behaviour: attach once, raise if the process is not there.
+        """
+        if not self.reconnect:
+            self.start()
+            try:
+                while self.running and not self._dropped.is_set():
+                    time.sleep(0.1)
+            finally:
+                self.stop()
+            return
+
+        self._stopping = False
+        if self.advisor is not None:
+            self.advisor.start()
+
+        announced = False
         try:
-            while self.running:
-                time.sleep(0.1)
+            while not self._stopping:
+                if find_pid(self.process_name) is None:
+                    if not announced:
+                        self._status("waiting")
+                        if self.verbose:
+                            print(f"  [OFC] waiting for {self.process_name} to start")
+                        announced = True
+                    time.sleep(self.poll_interval)
+                    continue
+
+                announced = False
+                try:
+                    self.start()
+                except Exception as exc:           # noqa: BLE001
+                    # A process that is up but not yet attachable — still
+                    # loading, or a hook that failed — is worth retrying, not
+                    # worth ending the session over.
+                    self._status("waiting")
+                    if self.verbose:
+                        print(f"  [OFC] could not attach ({type(exc).__name__}: {exc}); "
+                              "retrying")
+                    time.sleep(self.poll_interval)
+                    continue
+
+                while self.running and not self._dropped.is_set() and not self._stopping:
+                    time.sleep(0.1)
+
+                self._teardown()
+                if not self._stopping:
+                    self._status("waiting")
         finally:
             self.stop()
+
+    def _teardown(self) -> None:
+        """Drop the current session, leaving the loop free to re-attach."""
+        self.attached = False
+        if self.script is not None:
+            try:
+                self.script.unload()
+            except Exception:                      # noqa: BLE001
+                pass
+            self.script = None
+        if self.session is not None:
+            try:
+                self.session.detach()
+            except Exception:                      # noqa: BLE001
+                pass
+            self.session = None
+        self._dropped.clear()
 
     # -------------------------------------------------------------- packets
     def _on_message(self, message: dict, data) -> None:

@@ -212,7 +212,12 @@ python -m ofc.main --gui
 2 つのモードがある。
 
 - **manual** — ゲームを起動せずに局面を作って SOLVE。ソルバー開発はこれが一番速い。
-- **live** — Hero UID を入れて ATTACH。実際の卓に追随する。
+- **live** — Hero UID を入れて ATTACH。以降は自動で追随する。
+  - PPPoker がまだ起動していなくてもよい。**起動を待って自動でアタッチ**する
+  - PPPoker を閉じて開き直しても**自動で再接続**する
+  - 盤面は自分の手番だけでなく、**相手が置いた時点でも更新**される
+  - 状態はヘッダーに出る（`waiting for the client` / `attached — following the table` /
+    `client closed — waiting`）
 
 候補一覧をクリックすると、その配置が盤面上に**黄色の枠**で重ねて描かれる。
 
