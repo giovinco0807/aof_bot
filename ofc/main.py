@@ -124,7 +124,12 @@ def main() -> None:
     on_advice = None
     if args.auto_place or args.dry_place:
         from ofc.placer import Placer
-        placer = Placer(dry_run=args.dry_place)
+        # Checked between drags, so Ctrl-C stops a placement already under
+        # way rather than only preventing the next one.
+        state = {"advisor": None}
+        placer = Placer(dry_run=args.dry_place,
+                        should_continue=lambda: (state["advisor"] is None
+                                                 or state["advisor"].running))
         problems = placer.readiness()
         if problems:
             print("placement refused — the layout is not ready:")
@@ -147,6 +152,8 @@ def main() -> None:
     advisor = Advisor(hero_uid=args.hero_uid, solver=args.solver,
                       time_budget=budget, verbose=not args.quiet,
                       on_advice=on_advice)
+    if args.auto_place or args.dry_place:
+        state["advisor"] = advisor
     capture = OfcCapture(process_name=args.process, advisor=advisor,
                          verbose=not args.quiet)
 

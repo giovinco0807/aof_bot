@@ -93,6 +93,15 @@ class Advisor:
         #: describe one decision.
         self._solved: dict = {}
 
+    @property
+    def running(self) -> bool:
+        """Whether the advisor is still accepting and acting on work.
+
+        Public because a placement in progress needs to ask: a stop reaches a
+        sequence of drags only if the sequence checks between them.
+        """
+        return self._running
+
     # ------------------------------------------------------------ lifecycle
     def start(self) -> None:
         if self._running:

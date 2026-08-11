@@ -792,19 +792,38 @@ def test_board_rules():
 
 def test_placer_safety():
     print("\nplacer safety")
+    import json
     from ofc.placer import Layout, Placer
     from ofc.solver import Advice, Candidate
     from ofc.actions import Action
 
     layout = Layout(
+        window_size=(1064, 970),
         rows={TOP: [(10, 10), (20, 10), (30, 10)],
               MIDDLE: [(10, 20), (20, 20), (30, 20), (40, 20), (50, 20)],
               BOTTOM: [(10, 30), (20, 30), (30, 30), (40, 30), (50, 30)]},
-        hand=[(10, 40), (20, 40), (30, 40), (40, 40), (50, 40)],
+        hands={5: [(10, 40), (20, 40), (30, 40), (40, 40), (50, 40)],
+               3: [(15, 40), (25, 40), (35, 40)]},
         confirm=(90, 90))
-    check("a fully measured layout reports no gaps", layout.missing() == [])
-    check("a three-position hand strip is not enough for the opening street",
-          Layout(rows=layout.rows, hand=layout.hand[:3]).missing() != [])
+    check("a fully measured layout reports no gaps", layout.missing() == [],
+          str(layout.missing()))
+    check("a layout with no three-card strip is incomplete",
+          Layout(window_size=(1, 1), rows=layout.rows,
+                 hands={5: layout.hands[5]}).missing() != [])
+    check("a layout with no window size is incomplete",
+          Layout(rows=layout.rows, hands=layout.hands).missing() != [])
+
+    # The three-card strip is measured separately because the client does not
+    # draw three cards where it draws five.
+    check("each deal size has its own strip",
+          layout.strip(5) != layout.strip(3) and len(layout.strip(3)) == 3)
+
+    # Coordinates survive a round trip through disk.
+    restored = Layout.from_dict(json.loads(json.dumps(layout.to_dict())))
+    check("a saved layout comes back the same",
+          restored.strip(3) == layout.strip(3)
+          and restored.window_size == layout.window_size
+          and restored.rows[TOP] == layout.rows[TOP])
 
     ac, five, three = text_to_code("Ac"), text_to_code("5s"), text_to_code("3h")
     action = Action(((ac, BOTTOM), (five, MIDDLE)), discard=three)
@@ -825,15 +844,48 @@ def test_placer_safety():
     check("a partly filled row is placed at its next free slot",
           slots[BOTTOM] == 2 and slots[MIDDLE] == 2, f"got {slots}")
 
-    # The hand strip is indexed by where the cards are, not where they go.
+    # The hand strip is indexed by where the cards are, not where they go,
+    # and a three-card deal uses the three-card strip.
     sources = {m["card"]: m["from"] for m in moves}
     check("drags pick the card up from its own position on the strip",
-          sources["Ac"] == layout.hand[0] and sources["5s"] == layout.hand[1],
+          sources["Ac"] == layout.strip(3)[0] and sources["5s"] == layout.strip(3)[1],
           f"got {sources}")
+
+    opening = SolveRequest(board=Board(), dealt=C("As", "Ad", "Kh", "7c", "2d"),
+                           opponents=[OpponentView(seat_id=1, board=Board())])
+    five_card = placer.plan(solve(opening, "baseline"), list(opening.dealt), Board())
+    check("a five-card deal uses the five-card strip",
+          {m["from"] for m in five_card} <= set(layout.strip(5)),
+          str([m["from"] for m in five_card]))
+
+    # Drags go rightmost-strip-card first, so a strip that closes up as cards
+    # leave it does not shift the positions still to be used.
+    indices = [m["strip_index"] for m in five_card]
+    check("drags run from the right of the strip inwards",
+          indices == sorted(indices, reverse=True), str(indices))
 
     unknown = placer.plan(advice, hand_order=[five, three], board=Board())
     check("a card missing from the hand order is flagged, not guessed at",
           any(m["unknown_source"] for m in unknown))
+
+    # Fantasyland is refused outright rather than failing per-card on a strip
+    # that was never measured for thirteen.
+    fl_request = SolveRequest(
+        board=Board(), in_fantasyland=True,
+        dealt=C("As", "Ad", "Ac", "Kh", "Kd", "Ks", "Qh", "Qd", "7s", "8s",
+                "9s", "Ts", "Js"),
+        opponents=[OpponentView(seat_id=1, board=Board())])
+    fl_placer = Placer(layout, verbose=False, dry_run=True)
+    fl_placer.enabled = True
+    check("fantasyland is refused", fl_placer.execute(advice, fl_request) is False)
+
+    # A resized window means the stored points describe a different layout.
+    stale = Placer(Layout(window_size=(800, 600), rows=layout.rows,
+                          hands=layout.hands), verbose=False)
+    stale.enabled = True
+    check("a layout measured at another window size is caught",
+          any("recalibrate" in p or "not found" in p
+              for p in stale.window_problems() or ["not found"]))
 
     # A dry run plans without needing the mouse, so a calibration can be
     # reviewed from anywhere; it must still refuse to report success.
