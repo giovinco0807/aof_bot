@@ -1132,6 +1132,134 @@ def test_m3_engine():
               advice.best is None and bool(advice.note), advice.note)
 
 
+def test_recorder():
+    """Every hand is written down, including the ones no solver will touch."""
+    print("\nrecording")
+    import json
+    import sqlite3
+    import tempfile
+    from ofc.advisor import Advisor
+    from ofc.recorder import Recorder, mistakes, summarise
+
+    hero_uid = 1001
+
+    def pine_card(top=(), mid=(), bot=()):
+        return {"headCard": [_wire(c) for c in top],
+                "middleCard": [_wire(c) for c in mid],
+                "tailCard": [_wire(c) for c in bot], "abandonCard": []}
+
+    with tempfile.TemporaryDirectory() as folder:
+        db = Path(folder) / "ofc.db"
+        recorder = Recorder(db_path=db, verbose=False)
+        advisor = Advisor(hero_uid=hero_uid, solver="baseline", verbose=False,
+                          recorder=recorder)
+        advisor.start()
+
+        def play(table_id, seats, start_info):
+            advisor.feed("PineRoomStatusBRC", table_id, {"players": seats})
+            advisor.feed("PineGameStartBRC", table_id, {
+                "gameId": f"g{table_id}", "dealerSeatId": 0, "startInfo": start_info})
+            advisor.feed("PineHandCardBRC", table_id, {"actionSeatId": 0, "handCards": [
+                {"uid": hero_uid, "seatId": 0,
+                 "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")],
+                 "round": 0}]})
+            time.sleep(0.5)
+            advisor.feed("PineActionBRC", table_id, {
+                "uid": hero_uid, "seatId": 0,
+                "card": pine_card(top=["2d"], mid=["Kh", "7c"], bot=["As", "Ad"])})
+            time.sleep(0.2)
+            advisor.feed("PineResultBRC", table_id, {"playerResults": [
+                {"uid": hero_uid, "seatId": 0, "name": "hero", "card": pine_card(
+                    top=["2d", "3d", "4d"], mid=["Kh", "7c", "5s", "8d", "9c"],
+                    bot=["As", "Ad", "Ac", "Ts", "Jd"])}]})
+            time.sleep(0.3)
+
+        two = [{"uid": hero_uid, "seatId": 0, "name": "hero"},
+               {"uid": 2002, "seatId": 1, "name": "villain"}]
+        in2 = [{"seatId": 0, "chips": 500}, {"seatId": 1, "chips": 500}]
+        play(1, two, in2)
+        play(2, two + [{"uid": 3003, "seatId": 2, "name": "third"}],
+             in2 + [{"seatId": 2, "chips": 500}])
+
+        advisor.stop()
+        time.sleep(0.4)
+
+        connection = sqlite3.connect(str(db))
+        try:
+            by_seats = dict(connection.execute(
+                "SELECT seats, COUNT(*) FROM decisions GROUP BY seats"))
+            check("a heads-up decision is recorded", by_seats.get(2) == 1, str(by_seats))
+            check("a three-handed decision is recorded too",
+                  by_seats.get(3) == 1, str(by_seats))
+
+            hands = dict(connection.execute(
+                "SELECT seats, COUNT(*) FROM hands GROUP BY seats"))
+            check("both hands are recorded", hands.get(2) == 1 and hands.get(3) == 1,
+                  str(hands))
+
+            played, rank, loss = connection.execute(
+                "SELECT played, played_rank, ev_loss FROM decisions"
+                " WHERE seats = 2").fetchone()
+            check("hero's actual placement is recorded", played is not None)
+            if played:
+                moves = json.loads(played)["placements"]
+                check("and it is the placement hero really made",
+                      sorted((m["card"], m["row"]) for m in moves)
+                      == sorted([("2d", TOP), ("Kh", MIDDLE), ("7c", MIDDLE),
+                                 ("As", BOTTOM), ("Ad", BOTTOM)]))
+            check("it is graded against the ranking", rank is not None and loss is not None,
+                  f"rank={rank} loss={loss}")
+
+        finally:
+            connection.close()
+
+        report = summarise(db)
+        check("the summary splits by table size",
+              set(report["by_table_size"]) == {"2", "3"},
+              str(report["by_table_size"]))
+        check("the summary counts the hands", report["hands"]["recorded"] == 2)
+        check("the costliest decisions can be listed", isinstance(mistakes(db), list))
+
+    # A solver that declines has to leave its reason in the record, or a spot
+    # with no advice is indistinguishable from one nobody looked at.
+    from ofc.solver import Advice as _Advice, register as _register
+
+    _register("declines-for-test",
+              lambda r: _Advice(solver="declines-for-test",
+                                note="not playing this one"), replace=True)
+    with tempfile.TemporaryDirectory() as folder:
+        db = Path(folder) / "ofc.db"
+        recorder = Recorder(db_path=db, verbose=False)
+        advisor = Advisor(hero_uid=hero_uid, solver="declines-for-test",
+                          verbose=False, recorder=recorder)
+        advisor.start()
+        advisor.feed("PineRoomStatusBRC", 5, {"players": [
+            {"uid": hero_uid, "seatId": 0, "name": "hero"},
+            {"uid": 2002, "seatId": 1, "name": "villain"}]})
+        advisor.feed("PineGameStartBRC", 5, {
+            "gameId": "g5", "dealerSeatId": 0,
+            "startInfo": [{"seatId": 0}, {"seatId": 1}]})
+        advisor.feed("PineHandCardBRC", 5, {"actionSeatId": 0, "handCards": [
+            {"uid": hero_uid, "seatId": 0,
+             "cards": [_wire(c) for c in ("As", "Ad", "Kh", "7c", "2d")],
+             "round": 0}]})
+        time.sleep(0.5)
+        advisor.stop()
+        time.sleep(0.3)
+
+        connection = sqlite3.connect(str(db))
+        try:
+            note, candidates = connection.execute(
+                "SELECT note, candidates FROM decisions").fetchone()
+            check("a declined spot is still recorded", candidates == "[]")
+            check("and the record says why", note == "not playing this one", repr(note))
+        finally:
+            connection.close()
+
+    check("a missing database summarises without raising",
+          "error" in summarise(Path(folder) / "gone.db"))
+
+
 def test_gui_picker():
     """The click-to-pick path, when a display is available.
 
@@ -1314,6 +1442,7 @@ def main() -> None:
     test_placer_safety()
     test_advisor()
     test_m3_engine()
+    test_recorder()
     test_time_budget()
     test_gui_picker()
     test_pipeline()

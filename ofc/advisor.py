@@ -24,11 +24,20 @@ import time
 from typing import Callable, Optional
 
 from .budget import TimeBudget
+from .recorder import Recorder
 from .solver import Advice, Validation, describe, solve, validate
 from .state import HANDLERS, Table, Tables, apply_packet
 
 #: Packets that can change whether hero has a decision to make.
 TRIGGERS = ("PineHandCardBRC", "PineActionBRC")
+
+
+def _as_seat(pkt: dict) -> int:
+    """The seat a placement packet is about, tolerating a malformed field."""
+    try:
+        return int(pkt.get("seatId", -1))
+    except (TypeError, ValueError):
+        return -1
 
 
 class Advisor:
@@ -46,11 +55,19 @@ class Advisor:
                  event_queue: Optional[queue.Queue] = None,
                  on_advice: Optional[Callable[[Advice], None]] = None,
                  time_budget=None,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 record: bool = True,
+                 recorder=None):
         self.hero_uid = hero_uid
         self.solver = solver
         self.event_queue = event_queue
         self.on_advice = on_advice
+        #: Every decision and every finished hand is written down, whatever
+        #: the table looks like. A hand the solver cannot touch — three
+        #: players, say — is exactly the one worth having a record of.
+        if recorder is None and record:
+            recorder = Recorder(verbose=verbose)
+        self.recorder = recorder
         #: A :class:`~ofc.budget.TimeBudget`, or a plain number for one value
         #: across every street.
         if time_budget is None:
@@ -77,6 +94,8 @@ class Advisor:
         if self._running:
             return
         self._running = True
+        if self.recorder is not None:
+            self.recorder.start()
         self._worker = threading.Thread(target=self._run, name="ofc-advisor", daemon=True)
         self._worker.start()
 
@@ -105,6 +124,8 @@ class Advisor:
             except queue.Empty:
                 break
         self._solved.clear()
+        if self.recorder is not None:
+            self.recorder.stop()
 
     # ---------------------------------------------------------------- input
     def feed(self, name: str, table_id: int, pkt: dict) -> bool:
@@ -121,14 +142,29 @@ class Advisor:
 
         with self._lock:
             table = self.tables.get(table_id)
+            hero_before = None
+            if name == "PineActionBRC":
+                hero = table.hero
+                if hero is not None and _as_seat(pkt) == hero.seat_id:
+                    hero_before = hero.board.to_texts()
             apply_packet(table, name, pkt)
             snapshot = table.snapshot()
+            hero_after = None
+            if hero_before is not None and table.hero is not None:
+                hero_after = table.hero.board.to_texts()
             if name == "PineResultBRC":
                 self._solved.pop(table_id, None)
 
         self._emit("ofc_state", snapshot)
 
+        # Hero placing is the moment the last decision can be graded: the
+        # wire never states the action, only the board it produced.
+        if hero_after is not None and self.recorder is not None:
+            self.recorder.record_played(table_id, hero_after)
+
         if name == "PineResultBRC":
+            if self.recorder is not None:
+                self.recorder.record_hand(snapshot)
             self._emit("ofc_result", snapshot)
             return True
 
@@ -207,6 +243,14 @@ class Advisor:
             "elapsed": round(time.perf_counter() - started, 3),
         }
         self._emit("ofc_advice", payload)
+
+        # Written down whether or not the solver managed an answer. A spot it
+        # declined — a three-handed table, say — is still a spot hero faced,
+        # and the note records why there is no advice beside it.
+        if self.recorder is not None:
+            with self._lock:
+                snapshot = self.tables.get(table_id).snapshot()
+            self.recorder.record_decision(request, advice, snapshot)
 
         if advice.best is None:
             # Nothing to act on, and the spot may be worth another try when

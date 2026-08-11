@@ -272,6 +272,52 @@ python -m ofc.main --ignore-table-clock                # 卓の制限時間を�
 
 ソルバーが予算を大幅に超過した場合はログに出る。
 
+### 記録（人数に関わらず全部残す）
+
+**卓の人数に関係なく記録する。** 強いソルバー（`m3`）はヘッズアップ専用だが、
+3人卓のハンドも同じゲームで同じミスが出る。むしろ今日解けない卓こそ
+データを取っておく価値がある。
+
+記録先は `ofc/data/ofc.db`（SQLite、マシン固有なので git 管理外）。
+テーブルは2つ:
+
+| テーブル | 内容 |
+|---|---|
+| `hands` | 完了したハンド1件につき1行。全員の最終盤面、foul、ロイヤリティ、FL入場 |
+| `decisions` | 自分が直面した局面1つにつき1行。盤面・配牌・デッドカード・**候補全部のランキング**・そして自分が実際に置いた手とその順位・EVロス |
+
+`decisions` には**ソルバーが答えられなかった局面も残る**。
+そのとき `note` に理由が入る（例: `the engine plays heads-up; this table has 2 opponents`）。
+`seats` 列で人数を絞れるので、3人卓のデータだけ後から取り出せる。
+
+自分の着手は自動で採点される。パケットは着手そのものを送ってこないので、
+**置く前と後の盤面の差分**から復元し、候補ランキングの何位だったか・
+ベストとのEV差はいくつかを記録する。
+
+```
+python -m ofc.recorder --summary            # 件数と平均EVロス（人数別・ストリート別）
+python -m ofc.recorder --mistakes 20        # 損失の大きい判断を悪い順に
+python -m ofc.recorder --mistakes 20 --seats 3 --street 1
+```
+
+`--mistakes` の出力例:
+
+```
+2026-08-11T03:46:09  street 0  2 players  rank 53  cost 12.926
+  board  T[-] M[-] B[-]
+  dealt  As Ad Kh 7c 2d
+  played 2d->top, Kh->middle, 7c->middle, As->bottom, Ad->bottom
+  best   Kh->top, Ad->middle, As->middle, 2d->bottom, 7c->bottom
+```
+
+書き込みは専用スレッド。パケット処理は Frida のコールバックスレッドで走るので、
+そこで SQLite に書くとキャプチャが止まる。
+`Advisor(record=False)` で無効化できる。
+
+**採点にはソルバーが候補を全部返す必要がある。** 上位N件に切り詰めると、
+学ぶ価値のある「上位から外れた手」がちょうど採点対象から漏れる。
+同梱ソルバーは両方とも全候補を返す。
+
 ### オフライン検証
 
 ```
@@ -346,6 +392,7 @@ python -m ofc.placer --dry-run      # クリックせずに手順だけ表示
 | `board.py` | 3 行の盤面 |
 | `actions.py` | 合法手の列挙（foul 枝刈り込み） |
 | `state.py` | パケットから卓の状態を再構築 |
+| `recorder.py` | ハンドと判断の記録・採点（人数不問） |
 | `budget.py` | ストリート別の思考時間、卓の制限時間との突き合わせ |
 | `solver.py` | **ソルバー契約とレジストリ** |
 | `solvers/m3engine.py` | pineapple の学習済みエンジンを繋ぐプラグイン |

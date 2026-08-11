@@ -117,12 +117,14 @@ def solve(request: SolveRequest) -> Advice:
     if not actions:
         return Advice(solver="baseline", note="no legal placement")
 
+    # Every candidate, not a top-N slice: they are all scored anyway, and a
+    # truncated list cannot grade what hero actually played — the placement
+    # to learn from is usually the one that fell outside the top few.
     candidates = [
         Candidate(action=a, ev=score_action(request.board, a), detail={})
         for a in actions
     ]
-    candidates.sort(key=lambda c: c.ev, reverse=True)
-    return Advice.of(request, candidates[:8], solver="baseline")
+    return Advice.of(request, candidates, solver="baseline")
 
 
 register("baseline", solve)
