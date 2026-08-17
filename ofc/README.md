@@ -3,6 +3,46 @@
 PPPoker の OFC（Pineapple）用ボット。カード取得は既存の AoF Frida フックを**そのまま流用**し、
 この `ofc/` パッケージが「状態の記憶」「ソルバーの差し込み口」「盤面と推奨配置の表示」を担当する。
 
+---
+
+## セットアップ（Windows）
+
+**必ず Windows 側に置くこと。WSL では動かない** — フックが `PPPoker.exe`（Windowsプロセス）に
+アタッチし、配置ドラッグは win32 直呼びで、エンジンは `.dll` が要る（WSL でビルドすると
+`.so` ができるが Windows の Python からは読めない）。
+
+前提: [Git](https://git-scm.com/download/win) / [Python 3.9+](https://www.python.org/downloads/windows/) /
+[Rust](https://rustup.rs/)（エンジンのビルドに必要。Rust を入れずに済ませたい場合は
+下の `--no-engine` を使う。ただしソルバーは弱い `baseline` になる）
+
+```powershell
+cd C:\
+git clone -b claude/ofc-automation-bot-myd8aj https://github.com/giovinco0807/aof_bot.git
+cd aof_bot
+python -m ofc.install
+```
+
+`ofc/install.py` が残り全部をやる: エンジンのリポジトリを `C:\regular-ofc-pineapple` に
+clone（`main` には学習済みモデルが無いので `codex/trainer-accounts` ブランチ）→
+Rust ライブラリをビルド → 依存パッケージを導入 → テストスイートを流して結果を出す。
+**何度実行しても安全**で、済んでいる段は飛ばす（ビルドをやり直さない）。
+どこかで失敗したら、その場で止まって直し方を出す。
+
+| オプション | 用途 |
+|---|---|
+| `--engine-root <path>` | エンジンを別の場所に置く（既定は `aof_bot` の隣。隣なら設定不要で自動検出される） |
+| `--no-engine` | Rust を入れずに `baseline` だけで動かす |
+| `--no-packages` | pip を実行しない |
+| `--with-aof` | AoF ボットの OCR スタックも入れる（数GB。**OFC では一切使わない**） |
+
+導入するのは `frida` `frida-tools` `pygetwindow` の3つだけ。
+`automation/requirements.txt` は既定では**使わない** — あれは AoF 側のもので、
+`easyocr` が torch を引く。OFC はパケットからカードを読むので画素を1つも見ない。
+
+**キャリブレーションだけは移せない。** スロット座標（`ofc/data/`）は
+PC ごと・ウィンドウサイズごとの実測値なので git に入っていない。
+自動配置を使う場合は `python -m ofc.placer --calibrate` を実行環境で行うこと。
+
 **ソルバー本体はこのパッケージには入っていない。** ここにあるのは受け皿だけで、
 戦略ロジックは `ofc.solver.register()` で差し込む。同梱の `baseline` は配線確認用の
 プレースホルダで、強くない（実測 foul 率 59%）。
