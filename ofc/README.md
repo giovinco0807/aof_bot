@@ -519,10 +519,18 @@ python -m ofc.main --hero-uid <UID> --solver m3 --auto-place
 | `gui.py` | 盤面と推奨配置の表示 |
 | `placer.py` | 自動配置（Phase 2） |
 | `replay.py` | オフライン再生・検証 |
+| `discover.py` | 自分の UID をパケットから特定 |
+| `install.py` | clone 後のセットアップ一式 |
 | `tests/test_ofc.py` | テスト |
 
 依存は Python 標準ライブラリのみ。ライブ接続時のみ `frida`、
-自動配置時のみ `pyautogui`（`automation/requirements.txt` に既にある）。
+自動配置時のみ `pygetwindow`（ウィンドウ矩形の取得に使う）。
+
+**`pyautogui` は不要。** ドラッグもタップも `SetCursorPos` + `mouse_event` の
+ctypes 直呼びで、ウィンドウハンドルの取得も `EnumWindows`。
+`pc_input.py` は pyautogui が無ければ `None` にフォールバックする。
+（この結果、pyautogui の `FAILSAFE`（画面隅で中止）は**効かない**。
+中止手段は Ctrl-C とカーソル移動検知の2つ。上記「中断について」を参照）
 
 ---
 
