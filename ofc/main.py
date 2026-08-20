@@ -35,6 +35,49 @@ def _load_extra_solver(path: Path) -> None:
     spec.loader.exec_module(module)
 
 
+def _discover(process_name: str) -> None:
+    """Watch until a deal names hero, then say so and stop.
+
+    Runs before anything needs a UID, so it deliberately builds no advisor,
+    loads no solver and touches no mouse.
+    """
+    import threading
+
+    from ofc.capture import OfcCapture
+    from ofc.discover import Discoverer
+
+    found = threading.Event()
+    discoverer = Discoverer(on_hero=lambda uid: found.set())
+    capture = OfcCapture(process_name=process_name, advisor=discoverer,
+                         verbose=True)
+
+    print(f"watching {process_name} for a deal. Sit at an OFC table and play "
+          "one hand;")
+    print("your cards arriving is what identifies you. Ctrl-C to stop.\n")
+    print("seats seen so far:")
+
+    worker = threading.Thread(target=capture.run, daemon=True)
+    worker.start()
+    try:
+        while not found.wait(timeout=0.2):
+            if not worker.is_alive():
+                break
+    except KeyboardInterrupt:
+        print("\nstopping")
+    finally:
+        capture.stop()
+
+    if discoverer.hero_uid is None:
+        print(f"\nno deal seen ({discoverer.packets} packets). If you were "
+              "seated and a hand was")
+        print("dealt, the hook may not be attached — check the messages above.")
+        return
+
+    print("\nNow run:\n")
+    print(f"  python -m ofc.main --hero-uid {discoverer.hero_uid} "
+          "--solver m3 --gui")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -63,6 +106,8 @@ def main() -> None:
     parser.add_argument("--dry-place", action="store_true",
                         help="print the drags each decision would make, click nothing "
                              "— check a calibration against live hands this way first")
+    parser.add_argument("--discover", action="store_true",
+                        help="watch one hand and print your UID, then exit")
     parser.add_argument("--list-solvers", action="store_true")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
@@ -100,6 +145,10 @@ def main() -> None:
 
     if args.show_budget:
         print(budget.describe())
+        return
+
+    if args.discover:
+        _discover(args.process)
         return
 
     if args.gui:
@@ -147,7 +196,13 @@ def main() -> None:
         if args.dry_place:
             print("dry placement — every drag will be printed, nothing clicked")
         else:
-            print("auto-place is ON — move the mouse to a screen corner to abort")
+            print("auto-place is ON. To stop it: press Ctrl-C, which is "
+                  "checked between drags,")
+            print("or just move the mouse — a cursor that leaves the "
+                  "expected path aborts the drag.")
+            print("Moving to a screen corner does NOT stop it; that is "
+                  "pyautogui's failsafe and")
+            print("these drags are direct win32 calls.")
 
     advisor = Advisor(hero_uid=args.hero_uid, solver=args.solver,
                       time_budget=budget, verbose=not args.quiet,

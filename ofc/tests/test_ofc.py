@@ -1583,6 +1583,83 @@ def test_gui_picker():
         gui.root.destroy()
 
 
+def test_uid_discovery():
+    """Hero's UID is answerable from the wire, and must be answered exactly.
+
+    Only hero's entry in a deal carries cards — the client is never told
+    what anyone else holds. That asymmetry is the whole mechanism, so the
+    tests that matter are the ones where a weaker rule would pick wrong.
+    """
+    print("\nuid discovery")
+    from ofc.discover import Discoverer
+
+    def wire(text):
+        suits = {"d": 1, "c": 2, "h": 3, "s": 4}
+        ranks = {"T": 10, "J": 11, "Q": 12, "K": 13, "A": 14}
+        rank = ranks.get(text[0], int(text[0]) if text[0].isdigit() else 0)
+        return (suits[text[1]] << 8) | rank
+
+    opening = [wire(t) for t in ("As", "Ad", "Kh", "7c", "2d")]
+
+    # Three seats, one deal: the seat holding cards is hero. Seat order and
+    # who acts first are both irrelevant, and neither is consulted.
+    found = Discoverer(verbose=False)
+    found.feed("PineRoomStatusBRC", 7, {"players": [
+        {"uid": 111, "seatId": 0, "name": "alice"},
+        {"uid": 222, "seatId": 1, "name": "bob"},
+        {"uid": 333, "seatId": 2, "name": "carol"}]})
+    found.feed("PineHandCardBRC", 7, {"actionSeatId": 0, "handCards": [
+        {"uid": 111, "seatId": 0, "cards": []},
+        {"uid": 222, "seatId": 1, "cards": opening},
+        {"uid": 333, "seatId": 2, "cards": []}]})
+    check("hero is the seat that was dealt real cards", found.hero_uid == 222,
+          f"got {found.hero_uid}")
+
+    # A deal that names the seat but not the uid still resolves, because the
+    # roster already carries it.
+    by_seat = Discoverer(verbose=False)
+    by_seat.feed("PineRoomStatusBRC", 7, {"players": [
+        {"uid": 999, "seatId": 3, "name": "me"}]})
+    by_seat.feed("PineHandCardBRC", 7, {"handCards": [
+        {"seatId": 3, "cards": opening}]})
+    check("a deal with no uid falls back to the seat", by_seat.hero_uid == 999,
+          f"got {by_seat.hero_uid}")
+
+    # PineGameStartBRC's startInfo has seats and chips but no uid. Letting it
+    # write through would blank a seat the roster had already named.
+    kept = Discoverer(verbose=False)
+    kept.feed("PineRoomStatusBRC", 7, {"players": [
+        {"uid": 555, "seatId": 0, "name": "x"}]})
+    kept.feed("PineGameStartBRC", 7, {"gameId": "g",
+                                      "startInfo": [{"seatId": 0, "chips": 100}]})
+    check("a uid-less packet does not blank a known seat",
+          kept.seats[(7, 0)]["uid"] == 555, str(kept.seats))
+
+    # Nobody dealt means nobody identified. Guessing here would attach the
+    # bot to the wrong seat for the whole session.
+    empty = Discoverer(verbose=False)
+    empty.feed("PineHandCardBRC", 7, {"handCards": [
+        {"uid": 1, "seatId": 0, "cards": []},
+        {"uid": 2, "seatId": 1, "cards": []}]})
+    check("a deal nobody can see does not identify anyone",
+          empty.hero_uid is None, f"got {empty.hero_uid}")
+
+    # Later streets deal to hero too; the first answer stands.
+    stable = Discoverer(verbose=False)
+    stable.feed("PineHandCardBRC", 7, {"handCards": [
+        {"uid": 42, "seatId": 0, "cards": opening}]})
+    stable.feed("PineHandCardBRC", 7, {"handCards": [
+        {"uid": 77, "seatId": 1,
+         "cards": [wire(t) for t in ("2c", "3c", "4c")]}]})
+    check("a later deal does not overwrite the answer", stable.hero_uid == 42,
+          f"got {stable.hero_uid}")
+
+    # OfcCapture calls advisor.feed(name, table, pkt) and nothing else, so
+    # that signature is the whole contract discovery has to satisfy.
+    check("unrelated packets are ignored",
+          stable.feed("PineActionBRC", 7, {}) is False)
+
+
 def main() -> None:
     print("OFC package tests")
     test_cards()
@@ -1601,6 +1678,7 @@ def main() -> None:
     test_m3_engine()
     test_recorder()
     test_time_budget()
+    test_uid_discovery()
     test_gui_picker()
     test_pipeline()
 
