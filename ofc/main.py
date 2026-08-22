@@ -78,6 +78,38 @@ def _discover(process_name: str) -> None:
           "--solver m3 --gui")
 
 
+def _show_pins() -> None:
+    """Say which weights the engine is actually playing.
+
+    The engine project pins its own set and that pin moves as models are
+    promoted, so "which model am I studying against" has a different answer
+    depending on when the engine repository was last pulled. Nothing about a
+    ranked list on screen reveals which one produced it — this does.
+    """
+    from ofc.solvers.m3engine import _ENGINE as ENGINE, CONFIG_PATH  # noqa: PLC0415
+
+    pins = ENGINE.pins()
+    if not pins:
+        print(f"the m3 engine did not load: {ENGINE.error}")
+        return
+
+    override = ENGINE.overrides()
+    print(f"engine root: {ENGINE.root}")
+    print(f"weights:     {len(pins)} files\n")
+    width = max(len(slot) for slot in pins)
+    for slot, (filename, sha) in pins.items():
+        mark = "  <- pinned locally" if slot in override else ""
+        print(f"  {slot:<{width}}  {filename:<26} {sha[:12]}{mark}")
+    print(f"\nfingerprint: {ENGINE.identity}")
+    print("recorded with every decision, so a study log can tell which "
+          "opponent\ngraded it. Rows with different fingerprints are not "
+          "comparable.")
+    if not override:
+        print(f"\nTo try a model the project has not pinned yet, put it in "
+              f"the weights\ndirectory and name it in {CONFIG_PATH}:")
+        print('  {"weights": {"t2_second": "t2_model_v3x16.bin"}}')
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -109,6 +141,9 @@ def main() -> None:
     parser.add_argument("--discover", action="store_true",
                         help="watch one hand and print your UID, then exit")
     parser.add_argument("--list-solvers", action="store_true")
+    parser.add_argument("--show-pins", action="store_true",
+                        help="print the weight files the m3 engine loaded, and "
+                             "the fingerprint recorded beside every decision")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
 
@@ -126,6 +161,10 @@ def main() -> None:
             print(f"  {name}")
         for name, why in solvers.failed.items():
             print(f"  {name}  (failed to load: {why})")
+        return
+
+    if args.show_pins:
+        _show_pins()
         return
 
     # Thinking time: the saved per-street settings, then whatever the flags

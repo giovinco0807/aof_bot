@@ -112,7 +112,7 @@ PC ごと・ウィンドウサイズごとの実測値なので git に入って
 
 ### `m3` — pineapple の学習済みエンジン
 
-`ofc_hu_m3_engine`（Rust cdylib）と m7v5 ピン14個を使う。ストリート別・席別の
+`ofc_hu_m3_engine`（Rust cdylib）と m7v5 ピンの重み14個を使う。ストリート別・席別の
 学習済みモデルで、**探索なしの順伝播1回**で全候補をランキングする。
 
 トレーナーの資料にある「初手20.5秒」は**教師探索**（232候補を全部ロールアウトして
@@ -142,7 +142,58 @@ set OFC_REGULAR_ROOT=D:\path\to\regular-ofc-pineapple
 ```
 
 必要なのは `target/release/` のライブラリと
-`rust/hu_m3_engine/tests/fixtures/` の `.bin` 14個。両方ともリポジトリに入っている。
+`rust/hu_m3_engine/tests/fixtures/` の重み。ディレクトリには 20 個入っていて、
+そのうち **14 個がピン留めされている**（残りは旧版）。
+
+### どの重みを使っているか
+
+ピン表はエンジン側（`trainer/engine_eval.py` の `WEIGHT_FILES`）が持っていて、
+**モデルが昇格するたびに動く**。つまり「m3 エンジン」は時期によって別物になる。
+今どれを読み込んでいるかは:
+
+```
+python -m ofc.main --show-pins
+```
+
+| スロット | ファイル |
+|---|---|
+| `t0_first` | `t0first_model_v1.bin` |
+| `t0_second` | `t0_model_v1.bin` |
+| `t1_first` | `t1first_model_v1.bin` |
+| `t1_second` | `t1_model_v1.bin` |
+| `t2_first` | `t2first_model_v2.bin` |
+| `t2_second` | `t2_model_v2.bin` |
+| `t3_first` | `t3first_model_v2.bin` |
+| `t3_second` | `t3_model_v3.bin` |
+| `t4` | `t4_model_v6.bin` |
+| `fast_*` ×5 | `fast_{t0_second,t1_first,t1_second,t2_first,t2_second}_v1.bin` |
+
+（`codex/trainer-accounts` の `e1e6aed` 時点。`fast_*` は内部ロールアウト用の軽量版）
+
+**まだリポジトリに入っていないモデルを試す場合**は、重みを fixtures に置いて
+`ofc/data/m3engine.json` でスロットを指名する。エンジン側のリポジトリを
+編集しないので、`git pull` と喧嘩しない:
+
+```json
+{"weights": {"t2_second": "t2_model_v3x16.bin"}}
+```
+
+指名したスロットが存在しない、ファイルが無い、という場合は
+**黙って既定に戻さず拒否する**。記録が「使ったつもりのモデル」と食い違うのを防ぐため。
+
+### 記録にモデルの素性が残る
+
+読み込んだ重み全部の sha から指紋を作り（例 `m3:c86e3e7fac91`）、
+**判断1件ごとに `decisions.engine` に記録する**。
+エンジンが入れ替われば指紋も変わるので、後から
+
+```sql
+SELECT engine, COUNT(*), AVG(ev_loss) FROM decisions GROUP BY engine;
+```
+
+で切り分けられる。**指紋の違う行同士の EV ロスは比較できない** —
+採点した相手が別物だから。学習ログとしてはここが生命線で、
+指紋が無いと「上達したのか、相手が変わったのか」が永久に分からなくなる。
 
 **制限**（該当時は理由付きで推奨を出さずに黙る）:
 

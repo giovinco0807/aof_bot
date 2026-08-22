@@ -64,6 +64,11 @@ python -m ofc.tests.test_ofc
 - **テストと開発は Linux/macOS でもできる。** GUI と m3 のテストは自動スキップされる
 - **エンジン（m3）は別リポジトリ。** `pineapple` の `codex/trainer-accounts` ブランチ。
   `OFC_REGULAR_ROOT` か `aof_bot` の隣に置く。`python -m ofc.install` が用意する
+- **重みのピンはエンジン側が持っていて、モデル昇格のたびに動く。**
+  「m3」は時期によって別物になる。`python -m ofc.main --show-pins` で今の中身を出す。
+  読み込んだ重みの指紋を `decisions.engine` に記録しているので、
+  **この記録を落とさないこと** — 指紋が無いと学習ログの EV ロスが
+  「上達」なのか「相手が変わった」のか区別できなくなる
 
 ### git に入れないもの
 

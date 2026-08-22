@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS decisions (
     opponents     TEXT,           -- json list of {seat_id, board}
     deck_size     INTEGER,
     solver        TEXT,
+    engine        TEXT,           -- which build of it: the exact weights loaded
     note          TEXT,           -- why the solver declined, when it did
     elapsed       REAL,
     candidates    TEXT,           -- json: the ranked list, best first
@@ -81,7 +82,34 @@ CREATE TABLE IF NOT EXISTS decisions (
 CREATE INDEX IF NOT EXISTS idx_decisions_recorded ON decisions(recorded);
 CREATE INDEX IF NOT EXISTS idx_decisions_seats ON decisions(seats);
 CREATE INDEX IF NOT EXISTS idx_decisions_loss ON decisions(ev_loss);
+CREATE INDEX IF NOT EXISTS idx_decisions_engine ON decisions(engine);
 """
+
+#: Columns added after the first release. ``CREATE TABLE IF NOT EXISTS`` does
+#: nothing to a table that already exists, so a database made by an earlier
+#: version keeps its old shape and every insert naming a new column fails.
+#: Each entry is applied only if the column is genuinely absent; the records
+#: already in the file are left exactly as they are.
+ADDED_COLUMNS = (
+    ("decisions", "engine", "TEXT"),
+)
+
+
+def _migrate(connection) -> None:
+    """Bring an older database up to the current shape, additively.
+
+    Runs before :data:`SCHEMA`, not after: the schema script indexes columns
+    it declares, and indexing a column an older file has not got yet fails
+    the whole script. A brand-new database has no tables here, so every entry
+    is skipped and the schema creates it complete.
+    """
+    for table, column, kind in ADDED_COLUMNS:
+        rows = connection.execute(f"PRAGMA table_info({table})").fetchall()
+        if not rows:
+            continue                      # the schema above just created it
+        if any(row[1] == column for row in rows):
+            continue
+        connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
 
 
 def _now() -> str:
@@ -144,6 +172,11 @@ class Recorder:
         connection = sqlite3.connect(str(self.db_path))
         try:
             connection.execute("PRAGMA journal_mode=WAL")
+            # Migrate first: SCHEMA indexes the columns it declares, and an
+            # index on a column an older database has not got yet fails the
+            # whole script. On a database that does not exist there is nothing
+            # to migrate, and SCHEMA below creates it complete.
+            _migrate(connection)
             connection.executescript(SCHEMA)
             connection.commit()
             while True:
@@ -188,7 +221,9 @@ class Recorder:
             _dump([{"seat_id": o["seat_id"], "board": o["board"]}
                    for o in texts["opponents"]]),
             texts["deck_size"],
-            (advice.solver if advice else ""), (advice.note if advice else ""),
+            (advice.solver if advice else ""),
+            (getattr(advice, "engine", "") if advice else ""),
+            (advice.note if advice else ""),
             round(advice.elapsed, 3) if advice else 0.0,
             _dump(candidates),
             _dump(candidates[0]) if candidates else None,
@@ -202,8 +237,8 @@ class Recorder:
             cursor = connection.execute(
                 "INSERT INTO decisions (recorded, table_id, game_id, street, seats,"
                 " hero_seat, hero_first, board, dealt, discards, opponents,"
-                " deck_size, solver, note, elapsed, candidates, advised)"
-                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", row)
+                " deck_size, solver, engine, note, elapsed, candidates, advised)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", row)
             pending.row_id = cursor.lastrowid
             self._pending[table_id] = pending
             self.decisions += 1

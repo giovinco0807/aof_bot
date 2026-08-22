@@ -34,6 +34,7 @@ Fantasyland is not handled here: that lives in a different crate with its own
 weights, and is not reachable through this library.
 """
 
+import hashlib
 import json
 import os
 import sys
@@ -113,6 +114,10 @@ class M3Engine:
         self._engine_eval = None
         self._library = None
         self.error: Optional[str] = None
+        #: slot -> (filename, sha256) for the weights actually loaded.
+        self.weights: dict = {}
+        #: A short fingerprint of that set, recorded beside every decision.
+        self.identity: str = ""
 
     # ------------------------------------------------------------ discovery
     @staticmethod
@@ -139,6 +144,49 @@ class M3Engine:
                           here.parent / "pineapple"):
             if (candidate / "rust" / "hu_m3_engine").is_dir():
                 return candidate
+        return None
+
+    @staticmethod
+    def _config() -> dict:
+        if not CONFIG_PATH.is_file():
+            return {}
+        try:
+            data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def _apply_pins(self, engine_eval) -> Optional[str]:
+        """Point named slots at different weight files. Returns a refusal.
+
+        The project pins its own weight set, and that pin is the right
+        default — it is what the engine was gated against. But a model gets
+        promoted before the pin catches up, and editing the engine repository
+        to try it turns a checkout into something a `git pull` will fight. So
+        the override lives here instead::
+
+            {"root": "...", "weights": {"t2_second": "t2_model_v3x16.bin"}}
+
+        A slot the project does not have, or a file that is not there, is
+        refused rather than skipped: quietly falling back to the pinned model
+        would mean a study log that says one thing and played another.
+        """
+        wanted = self._config().get("weights")
+        if not wanted:
+            return None
+        if not isinstance(wanted, dict):
+            return f'"weights" in {CONFIG_PATH} must be a slot-to-filename map'
+
+        known = set(engine_eval.WEIGHT_FILES)
+        for slot, filename in wanted.items():
+            if slot not in known:
+                return (f"{CONFIG_PATH} pins slot {slot!r}, which this engine "
+                        f"does not have (it has {', '.join(sorted(known))})")
+            candidate = engine_eval.WEIGHTS_DIR / str(filename)
+            if not candidate.is_file():
+                return (f"{CONFIG_PATH} pins {slot} to {filename}, which is not "
+                        f"in {engine_eval.WEIGHTS_DIR}")
+            engine_eval.WEIGHT_FILES[slot] = str(filename)
         return None
 
     def _library_path(self) -> Path:
@@ -183,24 +231,62 @@ class M3Engine:
             return None
 
         engine_eval.LIBRARY_PATH = library
+
+        # Before the first load: the project caches the weight set on the
+        # first call and never re-reads it.
+        problem = self._apply_pins(engine_eval)
+        if problem:
+            self.error = problem
+            return None
+
         try:
-            self._library, _ = engine_eval._ensure_loaded()
+            self._library, weights = engine_eval._ensure_loaded()
         except Exception as exc:                             # noqa: BLE001
             self.error = f"engine would not load: {type(exc).__name__}: {exc}"
             return None
 
+        # Which files answered, not which files were asked for. The engine
+        # hashes what it read, so this is the ground truth even if the pin
+        # table and the directory disagree.
+        self.weights = {slot: (Path(path).name, sha)
+                        for slot, (path, sha) in sorted(weights.items())}
+        self.identity = self._fingerprint(self.weights)
+
         self._engine_eval = engine_eval
         return engine_eval
+
+    @staticmethod
+    def _fingerprint(weights: dict) -> str:
+        """One short string standing for the whole weight set.
+
+        Recorded with every decision. Two rows carrying the same fingerprint
+        were graded by the same opponent and can be compared; two rows that
+        differ cannot, however similar the numbers look.
+        """
+        if not weights:
+            return ""
+        joined = "\n".join(f"{slot}={sha}" for slot, (_, sha) in sorted(weights.items()))
+        return "m3:" + hashlib.sha256(joined.encode()).hexdigest()[:12]
+
+    def pins(self) -> dict:
+        """The loaded weight set, or an empty map if it never loaded."""
+        self.load()
+        return dict(self.weights)
+
+    def overrides(self) -> dict:
+        """The slots this machine pins differently from the project."""
+        wanted = self._config().get("weights")
+        return dict(wanted) if isinstance(wanted, dict) else {}
 
     # ---------------------------------------------------------------- solving
     def rank(self, request: SolveRequest) -> Advice:
         engine_eval = self.load()
         if engine_eval is None:
-            return Advice(solver="m3", note=self.error or "engine unavailable")
+            return Advice(solver="m3", engine=self.identity, note=self.error or "engine unavailable")
 
         refusal = self._refuse(request)
         if refusal:
-            return Advice(solver="m3", note=refusal)
+            return Advice(solver="m3", engine=self.identity, note=refusal)
 
         opponent = request.opponents[0]
         hero_rows = request.board.to_texts()
@@ -234,11 +320,11 @@ class M3Engine:
                                 opponent_rows, dealt, discards)
             if move is not None:
                 return move
-            return Advice(solver="m3", note=f"{type(exc).__name__}: {exc}")
+            return Advice(solver="m3", engine=self.identity, note=f"{type(exc).__name__}: {exc}")
 
         rows = response.get("actions") or []
         if not rows:
-            return Advice(solver="m3", note="the engine ranked nothing")
+            return Advice(solver="m3", engine=self.identity, note="the engine ranked nothing")
 
         # The engine names actions by key rather than by placement, so decode
         # each one and keep only what is legal on the board we asked about.
@@ -263,7 +349,8 @@ class M3Engine:
             note += f"; {undecodable} action keys could not be decoded"
         if not candidates:
             note += "; nothing the engine returned was legal here"
-        return Advice.of(request, candidates, solver="m3", note=note)
+        return Advice.of(request, candidates, solver="m3",
+                         engine=self.identity, note=note)
 
     def _decide(self, engine_eval, request: SolveRequest, seat: str,
                 hero_rows, opponent_rows, dealt, discards) -> Optional[Advice]:
@@ -295,7 +382,7 @@ class M3Engine:
                         discards=mucked)
         return Advice.of(request, [Candidate(action=action, ev=0.0,
                                              detail={"ranked": 0.0})],
-                         solver="m3",
+                         solver="m3", engine=self.identity,
                          note=(f"{seat} seat, {out.get('evaluator', 'decide')} — "
                                "the move only; this street's fan cannot be ranked"))
 

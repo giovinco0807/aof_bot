@@ -1289,6 +1289,99 @@ def test_m3_engine():
               advice.best is None and bool(advice.note), advice.note)
 
 
+def test_engine_identity():
+    """A study log has to say which opponent graded it.
+
+    The engine project moves its own weight pin as models are promoted, so
+    "the m3 engine" is not one thing over time. Every decision records which
+    build answered it, and an older database gains that column without
+    losing what it already holds.
+    """
+    print("\nengine identity")
+    import sqlite3
+    import tempfile
+    from ofc.actions import Action
+    from ofc.recorder import Recorder, SCHEMA
+    from ofc.solver import Advice, Candidate
+    from ofc.solvers.m3engine import M3Engine
+
+    # The fingerprint stands for the whole set, so any slot changing changes it.
+    base = {"t2_second": ("t2_model_v2.bin", "aaaa"),
+            "t4": ("t4_model_v6.bin", "bbbb")}
+    moved = {"t2_second": ("t2_model_v3x16.bin", "cccc"),
+             "t4": ("t4_model_v6.bin", "bbbb")}
+    renamed = {"t2_second": ("renamed.bin", "aaaa"),
+               "t4": ("t4_model_v6.bin", "bbbb")}
+
+    check("a weight set has a fingerprint", M3Engine._fingerprint(base) != "")
+    check("the same set fingerprints the same",
+          M3Engine._fingerprint(base) == M3Engine._fingerprint(dict(base)))
+    check("a promoted model changes it",
+          M3Engine._fingerprint(base) != M3Engine._fingerprint(moved))
+    # Content, not filename: a renamed file is the same opponent.
+    check("a renamed but identical file does not",
+          M3Engine._fingerprint(base) == M3Engine._fingerprint(renamed))
+    check("no weights means no fingerprint", M3Engine._fingerprint({}) == "")
+
+    # An older database predates the column. Opening it must add the column
+    # and keep every row already in the file.
+    older = Path(tempfile.mkdtemp()) / "old.db"
+    stripped = SCHEMA
+    for line in SCHEMA.splitlines(keepends=True):
+        if "engine" in line:
+            stripped = stripped.replace(line, "")
+    connection = sqlite3.connect(older)
+    connection.executescript(stripped)
+    connection.execute("INSERT INTO decisions (recorded, solver, note)"
+                       " VALUES ('2026-01-01', 'old', 'kept')")
+    connection.commit()
+    had_column = any(row[1] == "engine"
+                     for row in connection.execute("PRAGMA table_info(decisions)"))
+    connection.close()
+    check("the older database really lacks the column", not had_column)
+
+    request = SolveRequest(board=Board(), dealt=C("As", "Ad", "Kh", "7c", "2d"),
+                           opponents=[OpponentView(seat_id=1, board=Board())])
+    action = Action(((text_to_code("As"), BOTTOM),))
+
+    recorder = Recorder(db_path=older, verbose=False)
+    recorder.start()
+    try:
+        for fingerprint in ("m3:aaaaaaaaaaaa", "m3:bbbbbbbbbbbb"):
+            recorder.record_decision(
+                request,
+                Advice(candidates=[Candidate(action=action, ev=1.0)],
+                       solver="m3", engine=fingerprint),
+                {"game_id": "g"})
+    finally:
+        recorder.stop()          # joins the writer, so this flushes
+
+    connection = sqlite3.connect(older)
+    columns = [row[1] for row in connection.execute("PRAGMA table_info(decisions)")]
+    rows = connection.execute("SELECT solver, engine, note FROM decisions"
+                              " ORDER BY id").fetchall()
+    counted = connection.execute(
+        "SELECT engine, COUNT(*) FROM decisions"
+        " WHERE engine IS NOT NULL AND engine != '' GROUP BY engine").fetchall()
+    connection.close()
+
+    check("opening it adds the column", "engine" in columns)
+    check("and the rows already there survive",
+          rows and rows[0][2] == "kept", str(rows[:1]))
+    check("new decisions carry the fingerprint", len(counted) == 2, str(counted))
+    check("so a log can be split by which build graded it",
+          {c for _, c in counted} == {1}, str(counted))
+
+    # Re-opening must not double-apply.
+    again = Recorder(db_path=older, verbose=False)
+    again.start()
+    again.stop()
+    connection = sqlite3.connect(older)
+    total = connection.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+    connection.close()
+    check("re-opening changes nothing", total == 3, f"{total} rows")
+
+
 def test_recorder():
     """Every hand is written down, including the ones no solver will touch."""
     print("\nrecording")
@@ -1676,6 +1769,7 @@ def main() -> None:
     test_placer_safety()
     test_advisor()
     test_m3_engine()
+    test_engine_identity()
     test_recorder()
     test_time_budget()
     test_uid_discovery()

@@ -117,6 +117,37 @@ def looks_like_engine(root: Path) -> bool:
     return (root / "rust" / "hu_m3_engine").is_dir()
 
 
+def report_if_behind(root: Path) -> None:
+    """Say when the engine checkout is behind the branch it tracks.
+
+    This matters more than a stale dependency usually does. The project moves
+    its own weight pin as models are promoted, so an out-of-date checkout does
+    not fail — it quietly plays an older opponent, and a study log spanning
+    the gap compares numbers produced by two different engines.
+
+    Reported, never applied: pulling could rebuild or invalidate a working
+    engine, and that is the operator's call.
+    """
+    fetch = subprocess.run(["git", "fetch", "--quiet", "origin", ENGINE_BRANCH],
+                           cwd=str(root), capture_output=True, text=True)
+    if fetch.returncode != 0:
+        say("  could not check for newer weights (no network?) — carrying on")
+        return
+    count = subprocess.run(["git", "rev-list", "--count", "HEAD..FETCH_HEAD"],
+                           cwd=str(root), capture_output=True, text=True)
+    behind = count.stdout.strip()
+    if count.returncode != 0 or not behind.isdigit():
+        return
+    if behind == "0":
+        say("  up to date with the branch it tracks")
+        return
+    say(f"  NOTE: {behind} commits behind {ENGINE_BRANCH}. The weight pin moves "
+        "with that\n        branch, so this may be playing an older model than "
+        "you think.")
+    say(f"        To update:  git -C {root} pull --ff-only origin {ENGINE_BRANCH}")
+    say("        Then rebuild, and re-check `python -m ofc.main --show-pins`.")
+
+
 def fetch_engine(root: Path) -> None:
     """Clone the engine, or bring an existing clone to the right branch."""
     if looks_like_engine(root):
@@ -127,6 +158,7 @@ def fetch_engine(root: Path) -> None:
         if branch and branch != ENGINE_BRANCH:
             say(f"  on branch {branch}, and the weights are on {ENGINE_BRANCH}")
             say("  leaving it alone — check it out yourself if that is wrong")
+        report_if_behind(root)
         return
 
     if root.exists() and any(root.iterdir()):
@@ -255,6 +287,15 @@ def run_tests(root: Path) -> None:
                      "run `python -m ofc.tests.test_ofc` to see it in full")
 
 
+def report_pins() -> None:
+    """Name the weight set, so the install ends knowing which one it got."""
+    result = subprocess.run([sys.executable, "-m", "ofc.main", "--show-pins"],
+                            cwd=str(REPO), capture_output=True, text=True)
+    for line in result.stdout.splitlines():
+        if line.startswith(("weights:", "fingerprint:")):
+            say("  " + line)
+
+
 def check_solver() -> bool:
     """Does the engine actually answer, through the same path a hand takes?"""
     result = subprocess.run([sys.executable, "-m", "ofc.main", "--list-solvers"],
@@ -315,6 +356,7 @@ def main() -> int:
         if not args.no_engine:
             if check_solver():
                 say("  the m3 engine loads and is selectable")
+                report_pins()
             else:
                 say("  the m3 engine did NOT load — the line above says why")
 

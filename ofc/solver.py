@@ -202,6 +202,11 @@ class Advice:
     solver: str = ""
     elapsed: float = 0.0
     note: str = ""
+    #: Which build of the solver answered — for ``m3``, a fingerprint of the
+    #: exact weight files it loaded. Recorded beside every decision, because a
+    #: study log is only comparable across the stretch where the opponent it
+    #: was graded against did not change.
+    engine: str = ""
 
     @property
     def best(self) -> Optional[Candidate]:
@@ -209,15 +214,17 @@ class Advice:
 
     @classmethod
     def of(cls, request: "SolveRequest", candidates: Sequence[Candidate],
-           solver: str = "", elapsed: float = 0.0, note: str = "") -> "Advice":
+           solver: str = "", elapsed: float = 0.0, note: str = "",
+           engine: str = "") -> "Advice":
         """Build an advice with the candidates sorted best-first."""
         ordered = sorted(candidates, key=lambda c: c.ev, reverse=True)
         return cls(candidates=list(ordered), solver=solver,
-                   elapsed=elapsed, note=note)
+                   elapsed=elapsed, note=note, engine=engine)
 
     def to_dict(self) -> dict:
         return {
             "solver": self.solver,
+            "engine": self.engine,
             "elapsed": round(self.elapsed, 3),
             "note": self.note,
             "best": self.candidates[0].to_dict() if self.candidates else None,
