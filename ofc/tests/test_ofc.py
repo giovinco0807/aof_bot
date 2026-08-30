@@ -1366,6 +1366,16 @@ def test_device_selection():
     check("the default is still this machine",
           capture_module.OfcCapture().device == "local")
 
+    # Played through an emulator, the window the drags land on belongs to the
+    # emulator, not to a process called PPPoker at all.
+    from ofc.placer import Layout, Placer
+    named = Placer(Layout(), verbose=False, window_title="LDPlayer")
+    check("the drag target window can be named",
+          named.window_title == "LDPlayer")
+    check("and a missing one is reported by that name",
+          any("LDPlayer" in problem for problem in named.window_problems()),
+          str(named.window_problems()))
+
 
 def test_engine_identity():
     """A study log has to say which opponent graded it.

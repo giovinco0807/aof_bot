@@ -118,6 +118,10 @@ def main() -> None:
     parser.add_argument("--process", default="PPPoker.exe",
                         help="the client's process name; on Android the app's "
                              "identifier works too")
+    parser.add_argument("--window", default="PPPoker",
+                        help="title of the window the drags land on. Not always "
+                             "the client itself: playing through an Android "
+                             "emulator, the window belongs to the emulator")
     parser.add_argument("--device", default="local",
                         help="which Frida device to attach through: local "
                              "(default), usb for a phone or emulator running "
@@ -223,6 +227,7 @@ def main() -> None:
         # way rather than only preventing the next one.
         state = {"advisor": None}
         placer = Placer(dry_run=args.dry_place,
+                        window_title=args.window,
                         should_continue=lambda: (state["advisor"] is None
                                                  or state["advisor"].running))
         problems = placer.readiness()
