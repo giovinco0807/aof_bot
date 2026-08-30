@@ -11,6 +11,7 @@ of thousands of random hands.
 
 import random
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -1392,6 +1393,87 @@ def test_device_selection():
     # Nothing changes for anyone who does not ask for a device.
     check("the default is still this machine",
           capture_module.OfcCapture().device == "local")
+
+    # Played away from home the link drops — a tunnel, a network change, the
+    # phone sleeping. Looking for the client then raises, and an exception
+    # escaping the follow loop ends the session for the rest of the evening.
+    link = {"up": True, "opens": 0}
+
+    class Flaky:
+        def enumerate_processes(self):
+            if not link["up"]:
+                raise OSError("connection reset by peer")
+            return [types.SimpleNamespace(
+                pid=99, name="com.pppoker.android",
+                parameters={"identifier": "com.pppoker.android"})]
+
+        def attach(self, pid):
+            if not link["up"]:
+                raise OSError("connection reset by peer")
+            return FlakySession()
+
+    class FlakySession:
+        def on(self, *args):
+            pass
+
+        def create_script(self, source):
+            return FlakyScript()
+
+        def detach(self):
+            pass
+
+    class FlakyScript:
+        def on(self, *args):
+            pass
+
+        def load(self):
+            pass
+
+        def unload(self):
+            pass
+
+    class FlakyManager:
+        def add_remote_device(self, address):
+            link["opens"] += 1
+            if not link["up"]:
+                raise OSError("host unreachable")
+            return Flaky()
+
+    flaky = types.ModuleType("frida")
+    flaky.get_device_manager = lambda: FlakyManager()
+    flaky.get_local_device = lambda: Flaky()
+
+    real_again = sys.modules.get("frida")
+    sys.modules["frida"] = flaky
+    capture = capture_module.OfcCapture(
+        process_name="com.pppoker.android", device="100.64.0.2",
+        verbose=False, poll_interval=0.05)
+    follower = threading.Thread(target=capture.run, daemon=True)
+    try:
+        follower.start()
+        time.sleep(0.4)
+        check("it attaches over the network", capture.attached)
+
+        link["up"] = False
+        capture._dropped.set()
+        time.sleep(0.4)
+        check("a dropped link does not end the session", follower.is_alive())
+        check("and it stops claiming to be attached", not capture.attached)
+
+        opens_before = link["opens"]
+        link["up"] = True
+        capture._dropped.clear()
+        time.sleep(0.6)
+        check("it re-attaches when the link comes back", capture.attached)
+        check("by redialling rather than reusing the dead connection",
+              link["opens"] > opens_before,
+              f"{opens_before} -> {link['opens']}")
+    finally:
+        capture.stop()
+        if real_again is None:
+            sys.modules.pop("frida", None)
+        else:
+            sys.modules["frida"] = real_again
 
     # Played through an emulator, the window the drags land on belongs to the
     # emulator, not to a process called PPPoker at all.

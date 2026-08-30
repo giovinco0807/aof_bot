@@ -202,12 +202,27 @@ class OfcCapture:
 
     # ------------------------------------------------------------ lifecycle
     def _find(self) -> Optional[int]:
-        """The client's pid, wherever this capture is looking for it."""
+        """The client's pid, wherever this capture is looking for it.
+
+        Raises when the device itself cannot be reached — a phone over the
+        network is a link that drops, not a process table that is always
+        there. The caller decides whether that ends the session.
+        """
         if self.device in ("", "local"):
             return find_pid(self.process_name)
         if self._device is None:
             self._device = open_device(self.device)
         return find_pid_on(self._device, self.process_name)
+
+    def _forget_device(self) -> None:
+        """Drop the cached device so the next look re-opens the connection.
+
+        A remote device object outlives the link it was made for. Retrying
+        through a dead one fails exactly as often as the first attempt did,
+        which turns one dropped connection into a session that never comes
+        back.
+        """
+        self._device = None
 
     def start(self) -> None:
         """Attach and load the hook. Raises rather than exiting the process.
@@ -321,8 +336,32 @@ class OfcCapture:
 
         announced = False
         try:
+            unreachable = False
             while not self._stopping:
-                if self._find() is None:
+                # Looking for the client can itself fail: over the network the
+                # phone goes out of range, changes network, or sleeps. That is
+                # a reason to wait and try again, never a reason to end the
+                # session — which is what an exception escaping here would do.
+                try:
+                    pid = self._find()
+                except Exception as exc:           # noqa: BLE001
+                    self._forget_device()
+                    self._status("waiting")
+                    if self.verbose and not unreachable:
+                        print(f"  [OFC] cannot reach {self.device} "
+                              f"({type(exc).__name__}); retrying quietly")
+                    unreachable = True
+                    announced = True
+                    time.sleep(self.poll_interval)
+                    continue
+
+                if unreachable:
+                    unreachable = False
+                    announced = False
+                    if self.verbose:
+                        print(f"  [OFC] {self.device} is reachable again")
+
+                if pid is None:
                     if not announced:
                         self._status("waiting")
                         if self.verbose:
@@ -337,7 +376,10 @@ class OfcCapture:
                 except Exception as exc:           # noqa: BLE001
                     # A process that is up but not yet attachable — still
                     # loading, or a hook that failed — is worth retrying, not
-                    # worth ending the session over.
+                    # worth ending the session over. Over the network the
+                    # cause may be the link rather than the client, so the
+                    # device goes too and the next attempt redials.
+                    self._forget_device()
                     self._status("waiting")
                     if self.verbose:
                         print(f"  [OFC] could not attach ({type(exc).__name__}: {exc}); "
