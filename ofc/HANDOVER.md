@@ -510,11 +510,24 @@ GUI も同じ画面に出せる。ただし RVA はエミュレータ上の ABI 
 
 **C はスマホを見ながら PC の画面をちらちら見ることになる。** 動くが使い勝手は悪い。
 
-**D は未実装で、実装は別物。** Android のオーバーレイ（`SYSTEM_ALERT_WINDOW`）を
-使う Kotlin アプリを新規に書き、PC から助言を送る経路も要る。
-あるいは全部スマホ内で完結させるなら、Rust エンジンを `aarch64-linux-android` 向けに
-クロスビルドし、Termux で Python を回し、GUI をオーバーレイに置き換える。
-どちらもこのリポジトリの外の仕事になる。
+**D は未実装。** ただし調べた限り、実装可能ではある。2通りある。
+
+**D1（スマホに表示、計算は PC）** — Android のオーバーレイ
+（`SYSTEM_ALERT_WINDOW`）を使う Kotlin アプリを新規に書き、
+`adb reverse` でソケットを通して PC から助言を送る。
+`ofc/` 側は既存の `on_advice` に送信口を足すだけ。標準 API のみで、実現性は高い。
+スマホは PC に繋いだままになる。
+
+**D2（全部スマホ内で完結）** — 障害になりそうな2点は、確かめたところ両方とも問題ない:
+
+- **Rust エンジンは `aarch64-linux-android` 向けに `cargo check` が通る。**
+  依存5個（blake2b_simd / rayon / serde / serde_json / sha2）は全て純 Rust で、
+  C バインディングが無い。最終リンクに NDK が要るだけ
+- **Python 側は numpy も torch も要らない。** `engine_eval` が辿る
+  `ofc_regular` の連鎖は標準ライブラリだけで動く（Termux の Python で回せる）
+
+残る難所は frida-python を Termux（aarch64）に入れる部分と root 必須なこと。
+D1 より工数と壊れやすさが跳ね上がるので、先に D1 を試すべき。
 
 **自動配置について。** ドラッグは win32 直呼びなので、**C と D では動かない**。
 A と B はウィンドウが Windows 側にあるので理屈の上では動くが、
