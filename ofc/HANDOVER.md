@@ -463,7 +463,48 @@ SELECT engine, COUNT(*), AVG(ev_loss) FROM decisions GROUP BY engine;
 
 スロットが無い・ファイルが無い場合は、黙って既定に戻さず**拒否する**。
 
-### 7.6 未完了・既知の制限
+### 7.6 Android で使えるか
+
+**Python 側は全部そのまま使える。** 状態復元・ソルバー・GUI・記録はパケットしか
+見ていないので、パケットさえ届けば端末の種類を問わない。
+**ボットは PC で動かしたまま、スマホを USB で繋ぐ**構成になる
+（Python をスマホに入れる必要はない）。
+
+```powershell
+python -m ofc.main --device usb --process com.pppoker.android --hero-uid <UID> --gui
+```
+
+接続層は対応済み（`--device local|usb|remote|<device id>`）。
+Android はアプリ名とプロセス名が一致しないので、**identifier でも名前でも**引ける。
+
+**足りないのはフックスクリプトだけ。** `hook/pppoker_hook.js` は Windows ビルド
+専用で、3箇所が動かない:
+
+| | 内容 |
+|---|---|
+| モジュール名 | `GameAssembly.dll` → Android は `libil2cpp.so` |
+| **RVA 5個** | `OnDispatchPacket` `GetPacketKey` `SendPacket` と ctor 2個。**ARM64 では全部別の値**。Android の APK に対して Il2CppDumper を掛け直す必要がある |
+| フィールドオフセット | protobuf オブジェクトの構造。Unity/IL2CPP のバージョン差で変わりうるので要再確認 |
+
+アンチデバッグ部（kernel32/ntdll）は `try/catch` で無害にスキップされるので問題ない。
+
+**端末側の要件:** root + frida-server。非 root なら APK に frida-gadget を
+埋めて再署名だが、ログインや整合性チェックで弾かれる可能性がある。
+**Android エミュレータ（LDPlayer 等）が現実的**で、多くは最初から root が通り、
+GUI も同じ画面に出せる。ただし RVA はエミュレータ上の ABI のビルドに対して取り直す。
+
+**自動配置は動かない。** ドラッグは win32 直呼び。Android でやるなら
+`adb shell input swipe` になるが未実装。**最適配置の「表示」だけなら既定動作**なので、
+フックさえ通れば追加実装は要らない。
+
+**RVA を毎回取り直したくない場合**は、固定オフセットではなく
+`il2cpp_class_from_name` + `il2cpp_class_get_method_from_name` で
+名前解決に変えるのが本筋。そうすればプラットフォームにも
+PPPoker のバージョンアップにも強くなる（現状は更新のたびに RVA が壊れる）。
+ただし `hook/pppoker_hook.js` は AoF ボットと共有なので、
+**書き換えず別スクリプトにすること**。
+
+### 7.7 未完了・既知の制限
 
 - **実卓での配置が未検証**（§1 の5項目）。最優先
 - **Fantasyland 非対応**。別クレート（`fl_solver_regular`）の管轄で、
@@ -480,7 +521,7 @@ SELECT engine, COUNT(*), AVG(ev_loss) FROM decisions GROUP BY engine;
   「何点得か」としては読めない
 - **`baseline` は弱い**（foul率59%）。差し替え前提
 
-### 7.7 リスクの所在
+### 7.8 リスクの所在
 
 **一番危ないのは自動配置。** 実卓を実際に操作する唯一の部分で、かつ未検証。
 拒否条件は厚く積んであるが、「拒否されない」ことと「正しく置く」ことは別物。

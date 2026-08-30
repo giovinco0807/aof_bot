@@ -35,7 +35,7 @@ def _load_extra_solver(path: Path) -> None:
     spec.loader.exec_module(module)
 
 
-def _discover(process_name: str) -> None:
+def _discover(process_name: str, device: str = "local") -> None:
     """Watch until a deal names hero, then say so and stop.
 
     Runs before anything needs a UID, so it deliberately builds no advisor,
@@ -49,6 +49,7 @@ def _discover(process_name: str) -> None:
     found = threading.Event()
     discoverer = Discoverer(on_hero=lambda uid: found.set())
     capture = OfcCapture(process_name=process_name, advisor=discoverer,
+                         device=device,
                          verbose=True)
 
     print(f"watching {process_name} for a deal. Sit at an OFC table and play "
@@ -114,7 +115,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--gui", action="store_true", help="open the board window")
-    parser.add_argument("--process", default="PPPoker.exe")
+    parser.add_argument("--process", default="PPPoker.exe",
+                        help="the client's process name; on Android the app's "
+                             "identifier works too")
+    parser.add_argument("--device", default="local",
+                        help="which Frida device to attach through: local "
+                             "(default), usb for a phone or emulator running "
+                             "frida-server, remote, or a device id")
     parser.add_argument("--hero-uid", type=int, default=0,
                         help="your PPPoker UID — without it no seat is 'yours'")
     parser.add_argument("--solver", default="baseline")
@@ -187,7 +194,7 @@ def main() -> None:
         return
 
     if args.discover:
-        _discover(args.process)
+        _discover(args.process, args.device)
         return
 
     if args.gui:
@@ -249,6 +256,7 @@ def main() -> None:
     if args.auto_place or args.dry_place:
         state["advisor"] = advisor
     capture = OfcCapture(process_name=args.process, advisor=advisor,
+                         device=args.device,
                          verbose=not args.quiet)
 
     print(f"solver: {args.solver} | hero uid: {args.hero_uid} | "

@@ -1289,6 +1289,84 @@ def test_m3_engine():
               advice.best is None and bool(advice.note), advice.note)
 
 
+def test_device_selection():
+    """The capture can attach through a phone as well as this machine.
+
+    Only the connection changes — the packets that come back are the same
+    shape, so state, solver and recording are untouched. The hook script is
+    the part that is not portable yet; this is the plumbing under it.
+    """
+    print("\nattaching through a device")
+    import types
+    from ofc import capture as capture_module
+
+    class FakeDevice:
+        def __init__(self, kind):
+            self.kind = kind
+
+        def enumerate_processes(self):
+            entry = types.SimpleNamespace
+            return [
+                entry(pid=101, name="com.pppoker.android",
+                      parameters={"identifier": "com.pppoker.android"}),
+                entry(pid=102, name="PPPoker",
+                      parameters={"identifier": "com.pppoker.game"}),
+                entry(pid=103, name="something-else", parameters=None),
+            ]
+
+    fake = types.ModuleType("frida")
+    fake.get_local_device = lambda: FakeDevice("local")
+    fake.get_usb_device = lambda timeout=10: FakeDevice("usb")
+    fake.get_remote_device = lambda: FakeDevice("remote")
+
+    def get_device(identifier, timeout=10):
+        if identifier == "nope":
+            raise RuntimeError("device not found")
+        return FakeDevice(identifier)
+
+    fake.get_device = get_device
+
+    real = sys.modules.get("frida")
+    sys.modules["frida"] = fake
+    try:
+        check("local is the local device",
+              capture_module.open_device("local").kind == "local")
+        check("usb reaches a phone or emulator",
+              capture_module.open_device("usb").kind == "usb")
+        check("a device id picks between two of them",
+              capture_module.open_device("emulator-5554").kind == "emulator-5554")
+
+        # A phone that is not there has several causes, and the message names
+        # them: this is the failure an operator will actually hit.
+        try:
+            capture_module.open_device("nope")
+            check("a missing device is refused", False, "no refusal")
+        except RuntimeError as exc:
+            check("a missing device is refused", True)
+            check("and the refusal says what to check",
+                  "frida-server" in str(exc) and "root" in str(exc), str(exc))
+
+        device = FakeDevice("usb")
+        check("the client is found by process name",
+              capture_module.find_pid_on(device, "PPPoker") == 102)
+        # Android names an app twice and the two do not match; either works.
+        check("or by its Android identifier",
+              capture_module.find_pid_on(device, "com.pppoker.android") == 101)
+        check("a process that is not there is not invented",
+              capture_module.find_pid_on(device, "absent") is None)
+        check("a process with no parameters does not raise",
+              capture_module.find_pid_on(device, "something-else") == 103)
+    finally:
+        if real is None:
+            sys.modules.pop("frida", None)
+        else:
+            sys.modules["frida"] = real
+
+    # Nothing changes for anyone who does not ask for a device.
+    check("the default is still this machine",
+          capture_module.OfcCapture().device == "local")
+
+
 def test_engine_identity():
     """A study log has to say which opponent graded it.
 
@@ -1769,6 +1847,7 @@ def main() -> None:
     test_placer_safety()
     test_advisor()
     test_m3_engine()
+    test_device_selection()
     test_engine_identity()
     test_recorder()
     test_time_budget()

@@ -62,6 +62,61 @@ def find_pid(process_name: str) -> Optional[int]:
     return None
 
 
+def open_device(target: str = "local", timeout: float = 10.0):
+    """The Frida device to attach through.
+
+    ``local`` is this machine. ``usb`` is a phone or an emulator reachable
+    over adb with frida-server running on it; ``remote`` is a frida-server
+    reached over the network. Anything else is taken as a device id, which is
+    how you pick between two phones plugged in at once.
+
+    The Python side does not care which of these it is — packets arrive
+    decoded either way — but the hook script does, and today's script resolves
+    its methods by fixed offsets taken from the Windows build. Connecting to
+    an Android device will therefore reach the client and then fail to find
+    what it is looking for. That failure is reported, not papered over.
+    """
+    import frida                                   # noqa: PLC0415
+
+    if target in ("", "local"):
+        return frida.get_local_device()
+    try:
+        if target == "usb":
+            return frida.get_usb_device(timeout=timeout)
+        if target == "remote":
+            return frida.get_remote_device()
+        return frida.get_device(target, timeout=timeout)
+    except Exception as exc:                       # noqa: BLE001
+        raise RuntimeError(
+            f"no {target} device: {type(exc).__name__}: {exc}\n"
+            "  A phone needs USB debugging on, adb able to see it, and "
+            "frida-server\n"
+            "  running on the device (which needs root)."
+        ) from exc
+
+
+def find_pid_on(device, process_name: str) -> Optional[int]:
+    """The client's pid on a Frida device, or None.
+
+    Matched on the process name, and on Android also on the identifier, since
+    what the launcher calls an app and what the process table calls it are
+    not the same string.
+    """
+    wanted = process_name.lower()
+    try:
+        processes = device.enumerate_processes()
+    except Exception as exc:                       # noqa: BLE001
+        raise RuntimeError(f"could not list processes on {device}: "
+                           f"{type(exc).__name__}: {exc}") from exc
+    for process in processes:
+        name = (getattr(process, "name", "") or "").lower()
+        identifier = ((getattr(process, "parameters", None) or {}).get("identifier")
+                      or "").lower()
+        if wanted in (name, identifier):
+            return process.pid
+    return None
+
+
 class OfcCapture:
     """Frida session that feeds OFC packets to an advisor.
 
@@ -75,8 +130,11 @@ class OfcCapture:
     def __init__(self, process_name: str = "PPPoker.exe", advisor=None,
                  hook_script: Path = HOOK_SCRIPT, verbose: bool = True,
                  reconnect: bool = True, poll_interval: float = 2.0,
-                 on_status=None):
+                 on_status=None, device: str = "local"):
         self.process_name = process_name
+        #: Which Frida device to attach through — see :func:`open_device`.
+        self.device = device
+        self._device = None
         self.advisor = advisor
         self.hook_script = Path(hook_script)
         self.verbose = verbose
@@ -97,6 +155,14 @@ class OfcCapture:
         self._stopping = False
 
     # ------------------------------------------------------------ lifecycle
+    def _find(self) -> Optional[int]:
+        """The client's pid, wherever this capture is looking for it."""
+        if self.device in ("", "local"):
+            return find_pid(self.process_name)
+        if self._device is None:
+            self._device = open_device(self.device)
+        return find_pid_on(self._device, self.process_name)
+
     def start(self) -> None:
         """Attach and load the hook. Raises rather than exiting the process.
 
@@ -112,15 +178,26 @@ class OfcCapture:
         if not self.hook_script.is_file():
             raise FileNotFoundError(f"hook script missing: {self.hook_script}")
 
-        pid = find_pid(self.process_name)
-        if pid is None:
-            raise RuntimeError(f"{self.process_name} is not running")
+        if self.device in ("", "local"):
+            pid = find_pid(self.process_name)
+            if pid is None:
+                raise RuntimeError(f"{self.process_name} is not running")
+            attach_via = frida
+        else:
+            self._device = open_device(self.device)
+            pid = find_pid_on(self._device, self.process_name)
+            if pid is None:
+                raise RuntimeError(
+                    f"{self.process_name} is not running on the {self.device} "
+                    "device")
+            attach_via = self._device
 
         if self.verbose:
-            print(f"  [OFC] attaching to {self.process_name} (pid {pid})")
+            where = "" if self.device in ("", "local") else f" on {self.device}"
+            print(f"  [OFC] attaching to {self.process_name} (pid {pid}){where}")
 
         self._dropped.clear()
-        self.session = frida.attach(pid)
+        self.session = attach_via.attach(pid)
         # The client closing, crashing, or being restarted all arrive here;
         # without this the capture would sit on a dead session forever.
         try:
@@ -199,7 +276,7 @@ class OfcCapture:
         announced = False
         try:
             while not self._stopping:
-                if find_pid(self.process_name) is None:
+                if self._find() is None:
                     if not announced:
                         self._status("waiting")
                         if self.verbose:
