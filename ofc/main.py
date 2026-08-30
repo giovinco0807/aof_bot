@@ -124,8 +124,9 @@ def main() -> None:
                              "emulator, the window belongs to the emulator")
     parser.add_argument("--device", default="local",
                         help="which Frida device to attach through: local "
-                             "(default), usb for a phone or emulator running "
-                             "frida-server, remote, or a device id")
+                             "(default), usb for a phone on the cable, an "
+                             "address like 192.168.1.50[:27042] for a phone "
+                             "over the network with no cable, or a device id")
     parser.add_argument("--hero-uid", type=int, default=0,
                         help="your PPPoker UID — without it no seat is 'yours'")
     parser.add_argument("--solver", default="baseline")

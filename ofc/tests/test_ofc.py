@@ -1326,6 +1326,12 @@ def test_device_selection():
 
     fake.get_device = get_device
 
+    class FakeManager:
+        def add_remote_device(self, address):
+            return FakeDevice(f"remote:{address}")
+
+    fake.get_device_manager = lambda: FakeManager()
+
     real = sys.modules.get("frida")
     sys.modules["frida"] = fake
     try:
@@ -1345,6 +1351,27 @@ def test_device_selection():
             check("a missing device is refused", True)
             check("and the refusal says what to check",
                   "frida-server" in str(exc) and "root" in str(exc), str(exc))
+
+        # An address means the machine running this can be somewhere else
+        # entirely — the point of it is that no cable reaches the phone.
+        check("an address reaches a phone over the network",
+              capture_module.open_device("192.168.1.50").kind
+              == "remote:192.168.1.50:27042")
+        check("and an explicit port is kept",
+              capture_module.open_device("192.168.1.50:9999").kind
+              == "remote:192.168.1.50:9999")
+        # A device id is a bare word, and reading one as a hostname would
+        # turn a typo into a connection to whatever that name resolves to.
+        check("a device id is not mistaken for a host",
+              capture_module.open_device("emulator-5554").kind
+              == "emulator-5554")
+        for bad in ("192.168.1.50:", ":27042", "host:notaport"):
+            check(f"{bad!r} is not read as an address",
+                  capture_module._network_address(bad) is None)
+        check("a bare hostname needs a dot or a port",
+              capture_module._network_address("abcdef123456") is None)
+        check("an IPv6 literal is bracketed and given the default port",
+              capture_module._network_address("[::1]") == "[::1]:27042")
 
         device = FakeDevice("usb")
         check("the client is found by process name",

@@ -62,19 +62,34 @@ def find_pid(process_name: str) -> Optional[int]:
     return None
 
 
+#: Where frida-server listens unless told otherwise.
+FRIDA_PORT = 27042
+
+
 def open_device(target: str = "local", timeout: float = 10.0):
     """The Frida device to attach through.
 
-    ``local`` is this machine. ``usb`` is a phone or an emulator reachable
-    over adb with frida-server running on it; ``remote`` is a frida-server
-    reached over the network. Anything else is taken as a device id, which is
-    how you pick between two phones plugged in at once.
+    ==========================  ====================================
+    ``local``                   this machine
+    ``usb``                     a phone or emulator on the cable
+    ``remote``                  frida-server on this machine's port
+    ``192.168.1.50``            frida-server on that host, over the
+                                network — **no cable**
+    ``192.168.1.50:27042``      the same, on a chosen port
+    anything else               a Frida device id, for picking
+                                between two phones on the cable
+    ==========================  ====================================
 
-    The Python side does not care which of these it is — packets arrive
-    decoded either way — but the hook script does, and today's script resolves
-    its methods by fixed offsets taken from the Windows build. Connecting to
-    an Android device will therefore reach the client and then fail to find
-    what it is looking for. That failure is reported, not papered over.
+    The network form is what lets the machine running this sit somewhere
+    else entirely — a box in a cupboard, or a server — while the phone is
+    the only thing in your hands. Frida's own transport carries it; nothing
+    here has to know the difference, because packets arrive decoded either
+    way.
+
+    What does know the difference is the hook script, which resolves its
+    methods by fixed offsets taken from the Windows build. Connecting to an
+    Android device will reach the client and then fail to find what it is
+    looking for. That failure is reported, not papered over.
     """
     import frida                                   # noqa: PLC0415
 
@@ -85,14 +100,45 @@ def open_device(target: str = "local", timeout: float = 10.0):
             return frida.get_usb_device(timeout=timeout)
         if target == "remote":
             return frida.get_remote_device()
+        address = _network_address(target)
+        if address:
+            # add_remote_device, not get_remote_device: the latter only ever
+            # returns the default one, so a host given here would be ignored
+            # and the attach would silently go somewhere else.
+            return frida.get_device_manager().add_remote_device(address)
         return frida.get_device(target, timeout=timeout)
     except Exception as exc:                       # noqa: BLE001
         raise RuntimeError(
             f"no {target} device: {type(exc).__name__}: {exc}\n"
-            "  A phone needs USB debugging on, adb able to see it, and "
-            "frida-server\n"
-            "  running on the device (which needs root)."
+            "  frida-server has to be running on the device (which needs "
+            "root).\n"
+            "  Over the network it must also be listening on all interfaces\n"
+            "  (`frida-server -l 0.0.0.0:27042`) and reachable from here."
         ) from exc
+
+
+def _network_address(target: str) -> Optional[str]:
+    """``host`` or ``host:port`` as an address, or None if it is neither.
+
+    Deliberately narrow. A bare word is a device id — Frida hands those out
+    for phones on the cable — and treating one as a hostname would turn a
+    typo into a connection attempt against whatever that name resolves to.
+    So an address has to look like one: a dotted or numeric host, a bracketed
+    IPv6 literal, or anything carrying an explicit port.
+    """
+    if not target:
+        return None
+    if target.startswith("["):                     # [::1] or [::1]:27042
+        return target if "]:" in target else f"{target}:{FRIDA_PORT}"
+
+    host, colon, port = target.rpartition(":")
+    if colon:
+        if not port.isdigit() or not host:
+            return None
+        return f"{host}:{port}"
+    if "." in target and not target.endswith("."):
+        return f"{target}:{FRIDA_PORT}"
+    return None
 
 
 def find_pid_on(device, process_name: str) -> Optional[int]:
