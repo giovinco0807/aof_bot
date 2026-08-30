@@ -1290,6 +1290,35 @@ def test_m3_engine():
               advice.best is None and bool(advice.note), advice.note)
 
 
+def test_android_reader():
+    """The Android reader decodes with offsets it was not given.
+
+    Runs the JavaScript against a fake IL2CPP heap whose field offsets differ
+    from the Windows dump the schema carries as a fallback, so a pass means
+    the metadata lookup is doing the work rather than the fallback quietly
+    covering for it. Skipped where node is not installed — it is a test-time
+    tool, not something the bot needs to run.
+    """
+    print("\nandroid reader")
+    import shutil
+    import subprocess
+
+    script = Path(__file__).resolve().parent / "hook_android_test.js"
+    reader = Path(__file__).resolve().parents[1] / "hook_android.js"
+    check("the reader is in the package", reader.is_file())
+
+    node = shutil.which("node") or shutil.which("nodejs")
+    if node is None:
+        print("  -- no node, skipped")
+        return
+
+    result = subprocess.run([node, str(script)], capture_output=True, text=True,
+                            timeout=60)
+    check("it decodes a hand and a room status",
+          result.returncode == 0,
+          (result.stdout + result.stderr).strip()[-400:])
+
+
 def test_device_selection():
     """The capture can attach through a phone as well as this machine.
 
@@ -1373,6 +1402,25 @@ def test_device_selection():
               capture_module._network_address("abcdef123456") is None)
         check("an IPv6 literal is bracketed and given the default port",
               capture_module._network_address("[::1]") == "[::1]:27042")
+
+        # A device gets the reader that finds its own offsets; local keeps
+        # the shared script the AoF bot has been running.
+        check("a device loads the self-resolving reader",
+              capture_module.default_hook("usb").name == "hook_android.js")
+        check("an address does too",
+              capture_module.default_hook("192.168.1.50").name == "hook_android.js")
+        check("local keeps the shared script",
+              capture_module.default_hook("local") == capture_module.HOOK_SCRIPT)
+        check("that reader is actually there",
+              capture_module.ANDROID_HOOK.is_file())
+        check("and the capture picks it up without being told",
+              capture_module.OfcCapture(device="usb").hook_script.name
+              == "hook_android.js")
+        check("an explicit script still wins",
+              capture_module.OfcCapture(
+                  device="usb",
+                  hook_script=capture_module.HOOK_SCRIPT).hook_script
+              == capture_module.HOOK_SCRIPT)
 
         device = FakeDevice("usb")
         check("the client is found by process name",
@@ -1966,6 +2014,7 @@ def main() -> None:
     test_placer_safety()
     test_advisor()
     test_m3_engine()
+    test_android_reader()
     test_device_selection()
     test_engine_identity()
     test_recorder()

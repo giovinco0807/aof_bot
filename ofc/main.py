@@ -35,7 +35,7 @@ def _load_extra_solver(path: Path) -> None:
     spec.loader.exec_module(module)
 
 
-def _discover(process_name: str, device: str = "local") -> None:
+def _discover(process_name: str, device: str = "local", hook=None) -> None:
     """Watch until a deal names hero, then say so and stop.
 
     Runs before anything needs a UID, so it deliberately builds no advisor,
@@ -49,7 +49,7 @@ def _discover(process_name: str, device: str = "local") -> None:
     found = threading.Event()
     discoverer = Discoverer(on_hero=lambda uid: found.set())
     capture = OfcCapture(process_name=process_name, advisor=discoverer,
-                         device=device,
+                         device=device, hook_script=hook,
                          verbose=True)
 
     print(f"watching {process_name} for a deal. Sit at an OFC table and play "
@@ -118,6 +118,10 @@ def main() -> None:
     parser.add_argument("--process", default="PPPoker.exe",
                         help="the client's process name; on Android the app's "
                              "identifier works too")
+    parser.add_argument("--hook", type=Path, default=None,
+                        help="the Frida script to load. Defaults to the shared "
+                             "one locally and to ofc/hook_android.js for a "
+                             "device, which resolves its own offsets")
     parser.add_argument("--window", default="PPPoker",
                         help="title of the window the drags land on. Not always "
                              "the client itself: playing through an Android "
@@ -199,7 +203,7 @@ def main() -> None:
         return
 
     if args.discover:
-        _discover(args.process, args.device)
+        _discover(args.process, args.device, args.hook)
         return
 
     if args.gui:
@@ -262,7 +266,7 @@ def main() -> None:
     if args.auto_place or args.dry_place:
         state["advisor"] = advisor
     capture = OfcCapture(process_name=args.process, advisor=advisor,
-                         device=args.device,
+                         device=args.device, hook_script=args.hook,
                          verbose=not args.quiet)
 
     print(f"solver: {args.solver} | hero uid: {args.hero_uid} | "

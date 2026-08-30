@@ -24,6 +24,22 @@ from typing import Optional
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 HOOK_SCRIPT = REPO_ROOT / "hook" / "pppoker_hook.js"
+#: The OFC-only reader that finds its own offsets through IL2CPP metadata
+#: instead of a dump. Required on Android, where the shared script's fixed
+#: offsets belong to a different compilation entirely; usable on Windows too,
+#: which is where it can be checked against a setup known to work.
+ANDROID_HOOK = Path(__file__).resolve().parent / "hook_android.js"
+
+
+def default_hook(device: str) -> Path:
+    """The reader to load for this kind of device.
+
+    Local keeps the shared script, because that is the one the AoF bot has
+    been running and there is no reason to change what works. Anything else
+    is a phone or an emulator, where fixed offsets from the Windows dump are
+    not offsets into anything.
+    """
+    return HOOK_SCRIPT if device in ("", "local") else ANDROID_HOOK
 
 #: Packets this reader cares about. Everything else the hook sends is ignored.
 OFC_PACKETS = frozenset({
@@ -174,7 +190,7 @@ class OfcCapture:
     """
 
     def __init__(self, process_name: str = "PPPoker.exe", advisor=None,
-                 hook_script: Path = HOOK_SCRIPT, verbose: bool = True,
+                 hook_script: Optional[Path] = None, verbose: bool = True,
                  reconnect: bool = True, poll_interval: float = 2.0,
                  on_status=None, device: str = "local"):
         self.process_name = process_name
@@ -182,7 +198,7 @@ class OfcCapture:
         self.device = device
         self._device = None
         self.advisor = advisor
-        self.hook_script = Path(hook_script)
+        self.hook_script = Path(hook_script) if hook_script else default_hook(device)
         self.verbose = verbose
         #: Keep waiting for the process, and re-attach if the session drops.
         self.reconnect = reconnect
@@ -422,7 +438,16 @@ class OfcCapture:
             return
 
         payload = message.get("payload") or {}
-        if payload.get("type") != "packet":
+        kind = payload.get("type")
+        if kind in ("status", "error"):
+            # What the reader resolved, and whether it resolved it. Printing
+            # this is the whole point of the reader saying it: an attach that
+            # found the wrong method looks exactly like one that worked, right
+            # up until no packets arrive.
+            if self.verbose or kind == "error":
+                print(f"  [OFC hook] {payload.get('message', '')}")
+            return
+        if kind != "packet":
             return
 
         name = payload.get("name")
@@ -489,4 +514,4 @@ def detach_from_capture(capture) -> None:
 
 
 __all__ = ["OfcCapture", "attach_to_capture", "detach_from_capture", "find_pid",
-           "OFC_PACKETS", "HOOK_SCRIPT"]
+           "OFC_PACKETS", "HOOK_SCRIPT", "ANDROID_HOOK", "default_hook"]

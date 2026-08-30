@@ -477,16 +477,47 @@ python -m ofc.main --device usb --process com.pppoker.android --hero-uid <UID> -
 接続層は対応済み（`--device local|usb|remote|<device id>`）。
 Android はアプリ名とプロセス名が一致しないので、**identifier でも名前でも**引ける。
 
-**足りないのはフックスクリプトだけ。** `hook/pppoker_hook.js` は Windows ビルド
-専用で、3箇所が動かない:
+**フックは書いた。** `ofc/hook_android.js`。
+`hook/pppoker_hook.js` は Windows ビルド専用で、`GameAssembly.dll` の固定 RVA を
+使うため Android では動かない。そこで**別スクリプト**を用意した
+（共有フックは AoF ボットが依存しているので無改変）。
 
-| | 内容 |
-|---|---|
-| モジュール名 | `GameAssembly.dll` → Android は `libil2cpp.so` |
-| **RVA 5個** | `OnDispatchPacket` `GetPacketKey` `SendPacket` と ctor 2個。**ARM64 では全部別の値**。Android の APK に対して Il2CppDumper を掛け直す必要がある |
-| フィールドオフセット | protobuf オブジェクトの構造。Unity/IL2CPP のバージョン差で変わりうるので要再確認 |
+**Il2CppDumper は不要。** 固定オフセットをやめ、IL2CPP のメタデータに
+実行時に問い合わせる:
 
-アンチデバッグ部（kernel32/ntdll）は `try/catch` で無害にスキップされるので問題ない。
+- モジュールは `libil2cpp.so` → 無ければ `GameAssembly.dll`（Windows でも試せる）
+- `Network.OnDispatchPacket` を**クラス名・メソッド名・引数の数**で解決
+- 各フィールドは `il2cpp_class_get_field_from_name` で**名前から**オフセットを取得
+- 名前で引けなかったものだけ Windows dump の値にフォールバックし、
+  **何個フォールバックしたかを報告する**（黙って使わない）
+
+つまり**クライアントが更新されても壊れない**。RVA 方式は更新のたびに壊れる。
+
+読み込み時に何を解決したか送ってくる。`--device` を指定すると自動でこちらが選ばれ、
+`ofc/capture.py` がそのメッセージを表示する:
+
+```
+[OFC hook] IL2CPP runtime: libil2cpp.so @ 0x7f...
+[OFC hook] resolved Network.OnDispatchPacket at 0x7f... (0x28f2fa0 into the module)
+[OFC hook] OFC reader installed, following the table
+[OFC hook] field offsets: 47 from metadata, 0 from the dumped fallback
+```
+
+**最後の行を必ず見ること。** フォールバックが 0 でなければ、その分は
+Windows の値を当てているので信用できない。
+
+**検証済みの範囲:** 偽の IL2CPP ヒープを、**Windows dump とは意図的に違う
+オフセット**で組んで通した（`ofc/tests/hook_android_test.js`、node があれば
+テストスイートから走る）。フォールバックを使っていたらゴミを読むはずの配置で
+正しくデコードできている。さらにその出力を本物の `Advisor` に流し、
+m3 が 232 候補をランキングするところまで確認した。
+
+**未検証:** 実際の PPPoker では動かしていない。
+クラス名 `Network` とメソッド名 `OnDispatchPacket` が Android ビルドでも
+同じである前提で、これは共有フックのコメントから取った Windows 側の名前。
+違っていれば読み込み時に「見つからない」と言って止まる（黙って誤動作しない）。
+
+アンチデバッグ部（kernel32/ntdll）は共有フック側の話で、こちらには無い。
 
 **端末側の要件:** root + frida-server。非 root なら APK に frida-gadget を
 埋めて再署名だが、ログインや整合性チェックで弾かれる可能性がある。
